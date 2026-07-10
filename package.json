@@ -1,0 +1,13 @@
+{
+  "name": "abschleppdienst-zuerich",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Premium-Website + Lead-Pipeline für einen Abschleppdienst im Kanton Zürich",
+  "scripts": {
+    "build": "node scripts/build-gebiete.mjs",
+    "dev": "npx netlify dev"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  }
+}

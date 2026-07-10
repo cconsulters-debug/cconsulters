@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin – Lead-Dashboard</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#07090c">
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/admin.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="/assets/js/config.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="/assets/js/admin.js"></script>
+</head>
+<body class="admin">
+
+  <!-- ============ LOGIN (Firebase Auth: E-Mail/Passwort) ============ -->
+  <div class="login-wrap" id="login-view">
+    <div class="panel login-card">
+      <div class="panel-title"><h3>Admin-Login</h3></div>
+      <form id="login-form">
+        <div class="field">
+          <label for="login-email">E-Mail</label>
+          <input class="input" id="login-email" type="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="login-pass">Passwort</label>
+          <input class="input" id="login-pass" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="form-error" id="login-error" role="alert"></p>
+        <button type="submit" class="btn btn-primary" style="width:100%">Anmelden</button>
+      </form>
+      <p class="admin-note">Zugang wird in der Firebase Console unter <em>Authentication → Users</em> angelegt (E-Mail/Passwort-Provider aktivieren). Details im README.</p>
+      <p class="admin-note" id="demo-note" hidden>⚠️ Demo-Modus: Firebase ist in <code>assets/js/config.js</code> noch nicht konfiguriert – Login und Live-Daten sind erst danach möglich.</p>
+    </div>
+  </div>
+
+  <!-- ============ DASHBOARD ============ -->
+  <div class="admin-shell" id="app-view">
+    <div class="admin-topbar">
+      <a class="logo" href="/" title="Zur Website">
+        <svg viewBox="0 0 40 40" width="30" height="30" fill="none" aria-hidden="true"><path d="M3 27h22V15h6l6 7v5h-2" stroke="#ffb300" stroke-width="2.6" stroke-linejoin="round"/><circle cx="11" cy="29" r="3.4" stroke="#f2f5f9" stroke-width="2.4"/><circle cx="29" cy="29" r="3.4" stroke="#f2f5f9" stroke-width="2.4"/><path d="M8 15l9-6v6" stroke="#ffb300" stroke-width="2.6" stroke-linejoin="round"/></svg>
+        <span>Lead-Dashboard</span>
+      </a>
+      <span class="live-dot">Live</span>
+      <div class="spacer"></div>
+      <span class="text-dim" id="user-email" style="font-size:.85rem"></span>
+      <button class="btn btn-ghost btn-sm" id="logout-btn">Abmelden</button>
+    </div>
+
+    <main class="admin-main">
+      <!-- KPI-Reihe -->
+      <div class="kpi-row">
+        <div class="kpi"><span class="num" id="kpi-today">0</span><span class="kpi-label">Anfragen heute</span></div>
+        <div class="kpi"><span class="num" id="kpi-week">0</span><span class="kpi-label">Anfragen diese Woche</span></div>
+        <div class="kpi"><span class="num" id="kpi-month">0</span><span class="kpi-label">Anfragen diesen Monat</span></div>
+        <div class="kpi"><span class="num" id="kpi-reaction">–</span><span class="kpi-label">Ø Reaktionszeit (Woche)</span></div>
+        <div class="kpi"><span class="num" id="kpi-conversion">–</span><span class="kpi-label">Conversion (gewonnen/total)</span></div>
+        <div class="kpi"><span class="num" id="kpi-revenue">–</span><span class="kpi-label">Umsatz-Schätzung (gewonnen)</span></div>
+      </div>
+
+      <!-- Filter & Ansicht -->
+      <div class="filter-bar">
+        <input class="input" type="search" id="f-search" placeholder="Suche: Telefon, Adresse, Ticket, Notiz …">
+        <select class="input" id="f-kategorie">
+          <option value="">Alle Kategorien</option>
+          <option value="unfall">Unfall</option>
+          <option value="panne">Panne</option>
+          <option value="falschparker">Falschparker</option>
+          <option value="transport">Transport</option>
+          <option value="b2b">B2B</option>
+          <option value="sonstiges">Sonstiges</option>
+        </select>
+        <select class="input" id="f-bezirk">
+          <option value="">Alle Bezirke</option>
+        </select>
+        <select class="input" id="f-zeitraum">
+          <option value="">Gesamter Zeitraum</option>
+          <option value="today">Heute</option>
+          <option value="week">Diese Woche</option>
+          <option value="month">Dieser Monat</option>
+        </select>
+        <div class="view-toggle" role="tablist">
+          <button id="view-kanban" class="active" role="tab" aria-selected="true">Kanban</button>
+          <button id="view-map" role="tab" aria-selected="false">Karte</button>
+        </div>
+      </div>
+
+      <!-- Kanban-Board -->
+      <div class="kanban" id="kanban">
+        <div class="kanban-col" data-status="neu"><h3>Neu <span class="count">0</span></h3><div class="col-body"></div></div>
+        <div class="kanban-col" data-status="kontaktiert"><h3>Kontaktiert <span class="count">0</span></h3><div class="col-body"></div></div>
+        <div class="kanban-col" data-status="angebot"><h3>Angebot gesendet <span class="count">0</span></h3><div class="col-body"></div></div>
+        <div class="kanban-col" data-status="gewonnen"><h3>Gewonnen <span class="count">0</span></h3><div class="col-body"></div></div>
+        <div class="kanban-col" data-status="verloren"><h3>Verloren <span class="count">0</span></h3><div class="col-body"></div></div>
+      </div>
+
+      <!-- Kartenansicht: offene Leads als Pins -->
+      <div class="admin-map" id="admin-map"></div>
+
+      <p class="admin-note">Karten per Drag&amp;Drop verschieben oder Lead anklicken für Details &amp; Status-Wechsel. Beim Wechsel «Neu → Kontaktiert» wird die Reaktionszeit automatisch erfasst.</p>
+    </main>
+  </div>
+
+  <!-- ============ LEAD-DETAIL-MODAL ============ -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title"><span id="m-ticket">ZH-XXXX</span><button class="close-btn" id="modal-close" aria-label="Schliessen">×</button></h3>
+      <div class="status-pills" id="m-status-pills">
+        <button data-s="neu">Neu</button>
+        <button data-s="kontaktiert">Kontaktiert</button>
+        <button data-s="angebot">Angebot</button>
+        <button data-s="gewonnen">Gewonnen</button>
+        <button data-s="verloren">Verloren</button>
+      </div>
+      <dl class="detail-grid">
+        <div><dt>Kategorie</dt><dd id="m-kategorie">–</dd></div>
+        <div><dt>Quelle</dt><dd id="m-quelle">–</dd></div>
+        <div><dt>Eingegangen</dt><dd id="m-time">–</dd></div>
+        <div><dt>Bezirk</dt><dd id="m-bezirk">–</dd></div>
+        <div><dt>Telefon</dt><dd id="m-telefon">–</dd></div>
+        <div><dt>Kontakt</dt><dd id="m-kontakt">–</dd></div>
+        <div style="grid-column:1/-1"><dt>Standort</dt><dd id="m-standort">–</dd></div>
+        <div style="grid-column:1/-1"><dt>Nachricht</dt><dd id="m-nachricht">–</dd></div>
+      </dl>
+      <img class="lead-photo" id="m-foto" alt="Schadenfoto" hidden>
+      <div class="input-row" style="margin-bottom:12px">
+        <a class="btn btn-primary" id="m-call" href="#">📞 Anrufen</a>
+        <a class="btn btn-wa" id="m-wa" href="#" rel="noopener" target="_blank">WhatsApp antworten</a>
+      </div>
+      <div class="field">
+        <label for="m-preis">Preis / Auftragswert (CHF, für Umsatz-Schätzung)</label>
+        <input class="input" id="m-preis" type="number" min="0" step="5" placeholder="z. B. 320">
+      </div>
+      <div class="field">
+        <label for="m-notizen">Notizen</label>
+        <textarea class="input" id="m-notizen" placeholder="Interne Notizen zum Lead …"></textarea>
+      </div>
+      <button class="btn btn-primary" id="m-save" style="width:100%">Speichern</button>
+      <div class="history">
+        <strong style="font-size:.8rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint)">Verlauf</strong>
+        <ul id="m-history" style="padding:8px 0 0;margin:0"></ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

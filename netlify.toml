@@ -1,0 +1,30 @@
+[build]
+  publish = "."
+  command = "node scripts/build-gebiete.mjs"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Follow-up-Eskalation: prüft alle 10 Minuten auf unbearbeitete Leads (> 30 Min alt)
+[functions."escalate-leads"]
+  schedule = "*/10 * * * *"
+
+# Saubere API-Pfade für die Serverless Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(self)"

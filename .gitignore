@@ -1,0 +1,16 @@
+# Abhängigkeiten
+node_modules/
+
+# Lokale Umgebungsvariablen (Secrets NIEMALS committen)
+.env
+.env.local
+
+# Netlify-Lokalzustand
+.netlify/
+
+# Build-Output (wird bei jedem Netlify-Build aus /scripts generiert)
+gebiete/*.html
+sitemap.xml
+
+# Betriebssystem
+.DS_Store

@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Leads: jeder darf einen Lead ERSTELLEN (öffentliches Formular),
+    // aber nur eingeloggte Admins dürfen lesen/ändern/löschen.
+    match /leads/{leadId} {
+      allow create: if request.resource.data.keys().hasAll(['timestamp', 'kategorie', 'telefon', 'status', 'quelle'])
+                    && request.resource.data.status == 'neu'
+                    && request.resource.data.telefon is string
+                    && request.resource.data.telefon.size() >= 7
+                    && request.resource.data.telefon.size() <= 30
+                    && request.resource.data.kategorie in ['unfall', 'panne', 'falschparker', 'transport', 'b2b', 'sonstiges'];
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // Alles andere ist gesperrt.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
