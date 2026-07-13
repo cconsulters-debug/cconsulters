@@ -156,6 +156,7 @@
       return { "@type": "AdministrativeArea", name: d + ", Kanton Zürich" };
     }),
     priceRange: "CHF",
+    vatID: CFG.uid,
     slogan: "24h Abschleppdienst & Pannenhilfe im Kanton Zürich"
   };
   var s = document.createElement("script");

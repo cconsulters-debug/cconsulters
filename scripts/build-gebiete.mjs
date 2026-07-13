@@ -21,7 +21,7 @@ const headerFooter = (nav) => ({
     <div class="container header-inner">
       <a class="logo" href="/" aria-label="Startseite">
         <svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="M3 27h22V15h6l6 7v5h-2" stroke="#ffb300" stroke-width="2.6" stroke-linejoin="round"/><circle cx="11" cy="29" r="3.4" stroke="#f2f5f9" stroke-width="2.4"/><circle cx="29" cy="29" r="3.4" stroke="#f2f5f9" stroke-width="2.4"/><path d="M8 15l9-6v6" stroke="#ffb300" stroke-width="2.6" stroke-linejoin="round"/><path d="M20 6l2 3M24 4l2 3" stroke="#ff3b30" stroke-width="2.2" stroke-linecap="round"/></svg>
-        <span><span data-cfg="companyName">[FIRMENNAME]</span><span class="logo-24">&nbsp;24H</span></span>
+        <span><span data-cfg="companyName">Abschleppdienst Winti</span><span class="logo-24">&nbsp;24H</span></span>
       </a>
       <button class="nav-toggle" aria-expanded="false" aria-controls="mainnav" aria-label="Menü öffnen">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -35,7 +35,7 @@ const headerFooter = (nav) => ({
       </nav>
       <div class="header-cta">
         <a class="btn btn-ghost btn-sm" data-href="wa" href="#" rel="noopener">WhatsApp</a>
-        <a class="btn btn-primary btn-sm pulse" data-href="tel" href="#"><span data-cfg="phoneDisplay">044 000 00 00</span></a>
+        <a class="btn btn-primary btn-sm pulse" data-href="tel" href="#"><span data-cfg="phoneDisplay">044 312 55 50</span></a>
       </div>
     </div>
   </header>`,
@@ -44,13 +44,13 @@ const headerFooter = (nav) => ({
     <div class="container">
       <div class="footer-grid">
         <div>
-          <h4 data-cfg="companyName">[FIRMENNAME]</h4>
+          <h4 data-cfg="companyName">Abschleppdienst Winti</h4>
           <address class="nap">
-            <span data-cfg="legalName">[FIRMENNAME] GmbH</span><br>
-            <span data-cfg="addressStreet">Musterstrasse 12</span><br>
-            <span data-cfg="addressCity">8005 Zürich</span><br>
-            Tel: <a data-href="tel" href="#"><span data-cfg="phoneDisplay">044 000 00 00</span></a><br>
-            E-Mail: <a data-href="mail" href="#"><span data-cfg="email">info@example.ch</span></a>
+            <span data-cfg="legalName">Abschleppdienst Winti GmbH</span><br>
+            <span data-cfg="addressStreet">Schlachthofstrasse 6</span><br>
+            <span data-cfg="addressCity">8406 Winterthur</span><br>
+            Tel: <a data-href="tel" href="#"><span data-cfg="phoneDisplay">044 312 55 50</span></a><br>
+            E-Mail: <a data-href="mail" href="#"><span data-cfg="email">info@abschleppdienstwinti.ch</span></a>
           </address>
         </div>
         <div>
@@ -76,7 +76,7 @@ const headerFooter = (nav) => ({
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span id="year">2026</span> <span data-cfg="legalName">[FIRMENNAME] GmbH</span></span>
+        <span>© <span id="year">2026</span> <span data-cfg="legalName">Abschleppdienst Winti GmbH</span></span>
         <span>24/7 Abschleppdienst · Pannenhilfe · Kanton Zürich</span>
       </div>
     </div>
@@ -162,7 +162,7 @@ ${header}
       <div class="container">
         <h2>Panne in ${d.name}? Wir sind schon fast da.</h2>
         <p class="lead" style="margin:0 auto 26px">Anfahrt ca. ${d.eta} Minuten – 24 Stunden am Tag.</p>
-        <a class="btn btn-primary btn-lg pulse" data-href="tel" href="#">📞 <span data-cfg="phoneDisplay">044 000 00 00</span></a>
+        <a class="btn btn-primary btn-lg pulse" data-href="tel" href="#">📞 <span data-cfg="phoneDisplay">044 312 55 50</span></a>
         <a class="btn btn-wa btn-lg" data-href="wa" href="#" rel="noopener">WhatsApp</a>
       </div>
     </section>

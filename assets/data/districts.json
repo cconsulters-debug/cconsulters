@@ -6,9 +6,9 @@
       "label": "Stadt Zürich",
       "lat": 47.3769,
       "lng": 8.5417,
-      "eta": 15,
+      "eta": 25,
       "gemeinden": "Kreis 1–12, Altstetten, Oerlikon, Wiedikon, Seefeld, Affoltern, Schwamendingen",
-      "blurb": "Mitten im dichtesten Verkehr der Schweiz zählt jede Minute. Unsere Einsatzfahrzeuge sind in der Stadt Zürich stationiert – Hardbrücke, Bellevue, Milchbuck oder Einfahrt Letten: Wir kennen jede Abkürzung und jede Tiefgaragen-Einfahrt.",
+      "blurb": "Mitten im dichtesten Verkehr der Schweiz zählt jede Minute. Über die A1 sind wir schnell in der Stadt – Hardbrücke, Bellevue, Milchbuck oder Einfahrt Letten: Wir kennen jede Abkürzung und jede Tiefgaragen-Einfahrt.",
       "fall": "Referenz-Einsatz (Platzhalter): Liegengebliebener Elektro-SUV im Milchbucktunnel, geborgen und in 40 Minuten zur Vertragsgarage in Oerlikon überführt."
     },
     {
@@ -17,9 +17,9 @@
       "label": "Bezirk Winterthur",
       "lat": 47.4997,
       "lng": 8.7241,
-      "eta": 25,
+      "eta": 10,
       "gemeinden": "Winterthur, Elgg, Pfungen, Seuzach, Turbenthal, Wiesendangen",
-      "blurb": "Ob auf der A1 zwischen Töss und Ohringen oder in der Altstadt-Begegnungszone: Für den Bezirk Winterthur fahren wir mit Plateau- und Radgreifer-Fahrzeugen, die auch enge Innenhöfe erreichen.",
+      "blurb": "Winterthur ist unser Zuhause: Die Einsatzzentrale liegt an der Schlachthofstrasse, direkt am A1-Anschluss. Ob zwischen Töss und Ohringen oder in der Altstadt-Begegnungszone – niemand ist schneller vor Ort als wir.",
       "fall": "Referenz-Einsatz (Platzhalter): Auffahrunfall auf der A1 bei Winterthur-Wülflingen, zwei Fahrzeuge gesichert und abtransportiert, Fahrbahn nach 35 Minuten wieder frei."
     },
     {
@@ -28,7 +28,7 @@
       "label": "Bezirk Uster",
       "lat": 47.3471,
       "lng": 8.7209,
-      "eta": 20,
+      "eta": 25,
       "gemeinden": "Uster, Dübendorf, Volketswil, Wangen-Brüttisellen, Greifensee, Egg",
       "blurb": "Das Glatttal ist Pendlerland – und die A53 kennt keinen Feierabend. Von Dübendorf bis Mönchaltorf sind wir im Bezirk Uster meist unter 20 Minuten vor Ort, auch bei Feierabendverkehr.",
       "fall": "Referenz-Einsatz (Platzhalter): Reifenplatzer auf der A53 bei Volketswil, Radwechsel direkt auf dem Pannenstreifen – Kundin konnte nach 25 Minuten weiterfahren."
@@ -39,7 +39,7 @@
       "label": "Bezirk Meilen",
       "lat": 47.2701,
       "lng": 8.6437,
-      "eta": 25,
+      "eta": 30,
       "gemeinden": "Meilen, Küsnacht, Zollikon, Stäfa, Männedorf, Herrliberg",
       "blurb": "Die Goldküste hat enge Seestrassen, steile Privatzufahrten und viele Liebhaberfahrzeuge. Wir bergen mit Seilwinde und Softstraps – lackschonend, auch bei Tiefgaragen mit 1,9 m Durchfahrtshöhe.",
       "fall": "Referenz-Einsatz (Platzhalter): Oldtimer mit Getriebeschaden in Küsnacht, schonende Verladung per Seilwinde und Überführung zur Spezialwerkstatt nach Zürich."
@@ -50,7 +50,7 @@
       "label": "Bezirk Horgen",
       "lat": 47.2599,
       "lng": 8.5976,
-      "eta": 25,
+      "eta": 35,
       "gemeinden": "Horgen, Thalwil, Adliswil, Wädenswil, Richterswil, Langnau am Albis",
       "blurb": "A3-Korridor, Sihltal und linkes Seeufer: Im Bezirk Horgen sind wir für Panne und Unfall gleichermassen ausgerüstet – inklusive Bergungen an Steilstrecken Richtung Albispass.",
       "fall": "Referenz-Einsatz (Platzhalter): Marderschaden in Thalwil, Fahrzeug startete nicht mehr – Transport zur Wunschgarage nach Adliswil noch am selben Morgen."
@@ -61,7 +61,7 @@
       "label": "Bezirk Dietikon",
       "lat": 47.4017,
       "lng": 8.4004,
-      "eta": 20,
+      "eta": 35,
       "gemeinden": "Dietikon, Schlieren, Urdorf, Birmensdorf, Oberengstringen, Weiningen",
       "blurb": "Das Limmattal wächst – und mit ihm der Verkehr auf A1 und Mutschellenstrasse. Für Gewerbe und Flotten in Schlieren und Dietikon fahren wir auch Sammeltransporte mehrerer Fahrzeuge.",
       "fall": "Referenz-Einsatz (Platzhalter): Lieferwagen einer Spenglerei mit Kupplungsschaden in Schlieren, Ersatzfahrzeug-Logistik mit der Flottenverantwortlichen direkt koordiniert."
@@ -81,9 +81,9 @@
       "slug": "affoltern",
       "name": "Affoltern",
       "label": "Bezirk Affoltern",
-      "lat": 47.2810,
+      "lat": 47.281,
       "lng": 8.4519,
-      "eta": 25,
+      "eta": 40,
       "gemeinden": "Affoltern am Albis, Bonstetten, Hedingen, Obfelden, Mettmenstetten, Knonau",
       "blurb": "Das Knonauer Amt liegt zwischen A4 und Albis – wer hier liegen bleibt, wartet bei anderen Diensten oft am längsten. Wir decken das Säuliamt fest ab, inklusive Nachteinsätzen auf der A4.",
       "fall": "Referenz-Einsatz (Platzhalter): Wildunfall bei Mettmenstetten um 23:40 Uhr, Fahrzeug gesichert, Abtransport und Heimfahrt für die Insassen organisiert."
@@ -94,7 +94,7 @@
       "label": "Bezirk Pfäffikon",
       "lat": 47.3653,
       "lng": 8.7858,
-      "eta": 25,
+      "eta": 20,
       "gemeinden": "Pfäffikon ZH, Illnau-Effretikon, Fehraltorf, Bauma, Russikon, Wila",
       "blurb": "Vom Kempttal bis ins Tösstal: Der Bezirk Pfäffikon hat viele Landstrassen ohne Pannenstreifen. Unsere Fahrer sichern die Einsatzstelle grossräumig ab, bevor geborgen wird – Sicherheit zuerst.",
       "fall": "Referenz-Einsatz (Platzhalter): Traktor-Kollision auf der Landstrasse bei Fehraltorf, PW nicht mehr fahrbereit – Bergung und Transport zur Karosserie-Werkstatt in Effretikon."
@@ -105,7 +105,7 @@
       "label": "Bezirk Dielsdorf",
       "lat": 47.4803,
       "lng": 8.4552,
-      "eta": 25,
+      "eta": 30,
       "gemeinden": "Dielsdorf, Regensdorf, Niederhasli, Rümlang, Buchs, Otelfingen",
       "blurb": "Furttal und Wehntal, dazu die Gewerbezonen von Regensdorf und Rümlang: Hier fahren wir viele B2B-Einsätze – defekte Firmenfahrzeuge holen wir direkt ab Rampe und bringen Ersatz-Logistik mit.",
       "fall": "Referenz-Einsatz (Platzhalter): Flottenfahrzeug mit Elektronikdefekt in Regensdorf, Abholung ab Firmenparkplatz und Überführung zur Markenvertretung – ohne dass ein Mitarbeiter warten musste."

@@ -5,26 +5,30 @@
  * ============================================================== */
 window.SITE_CONFIG = {
   // --- Firma ---------------------------------------------------
-  companyName: "[FIRMENNAME]",              // z. B. "Blitz Abschleppdienst Zürich"
-  legalName: "[FIRMENNAME] GmbH",           // für Impressum/Schema.org
+  // Quelle: Handelsregister (Zefix) – Abschleppdienst Winti GmbH,
+  // UID CHE-239.815.669, gegründet 20.07.2017
+  companyName: "Abschleppdienst Winti",
+  legalName: "Abschleppdienst Winti GmbH",  // für Impressum/Schema.org
+  uid: "CHE-239.815.669",                   // UID/MWST (Schema.org vatID)
 
   // --- Kontakt -------------------------------------------------
-  phone: "+41440000000",                    // [TELEFON] im tel:-Format, z. B. +41791234567
-  phoneDisplay: "044 000 00 00",            // menschenlesbare Anzeige
-  whatsapp: "41790000000",                  // WhatsApp-Nummer OHNE "+" (wa.me-Format)
-  email: "cconsulters@gmail.com",           // [EMAIL] – öffentliche Kontakt-Adresse
+  phone: "+41443125550",                    // 24h-Hotline (lt. Website)
+  phoneDisplay: "044 312 55 50",            // menschenlesbare Anzeige
+  whatsapp: "41443125550",                  // WhatsApp OHNE "+" – TODO: prüfen, ob eigene WhatsApp-Nummer existiert
+  email: "info@abschleppdienstwinti.ch",    // öffentliche Kontakt-Adresse – TODO: verifizieren
 
   // --- Standort / NAP (lokales SEO) -----------------------------
   address: {
-    street: "Musterstrasse 12",             // PLATZHALTER – echte Adresse eintragen
-    zip: "8005",
-    city: "Zürich",
+    street: "Schlachthofstrasse 6",
+    zip: "8406",
+    city: "Winterthur",
     canton: "ZH",
     country: "CH"
   },
 
   // Basis-Standort der Einsatzzentrale (für Anfahrtszeit-Schätzung)
-  baseLocation: { lat: 47.3886, lng: 8.5169 },
+  // Schlachthofstrasse 6, Winterthur – direkt am A1-Anschluss
+  baseLocation: { lat: 47.4936, lng: 8.7115 },
 
   // Durchschnittliche Einsatz-Kennzahlen (Fallback, wenn /api/stats
   // noch keine Live-Daten liefert – klar als Richtwerte kommuniziert)
