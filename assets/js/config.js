@@ -18,8 +18,10 @@ window.SITE_CONFIG = {
   phoneDisplay: "079 509 66 30",            // TEST-Anzeige
   // phone: "+41443125550",                 // PRODUKTION: 24h-Hotline
   // phoneDisplay: "044 312 55 50",         // PRODUKTION: Anzeige
-  whatsapp: "41796865191",                  // WhatsApp 079 686 51 91 (wa.me-Format ohne "+"; leer lassen blendet alle WhatsApp-Buttons aus)
-  email: "info@abschleppdienstwinti.ch",    // öffentliche Kontakt-Adresse
+  whatsapp: "41795096630",                  // TEST: WhatsApp auf Testnummer (wa.me-Format ohne "+"; leer = Buttons ausblenden)
+  // whatsapp: "41796865191",               // PRODUKTION: WhatsApp 079 686 51 91
+  email: "cconsulters@gmail.com",           // TEST: Kontakt-Mails an Testadresse
+  // email: "info@abschleppdienstwinti.ch", // PRODUKTION: öffentliche Kontakt-Adresse
 
   // --- Standort / NAP (lokales SEO) -----------------------------
   address: {
