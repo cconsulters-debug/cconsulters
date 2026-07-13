@@ -84,6 +84,9 @@ p { margin: 0 0 1em; }
 }
 
 .container { max-width: var(--container); margin: 0 auto; padding: 0 20px; }
+
+/* Anker-Sprünge (#unfall, #b2b …) landen nicht unter dem Sticky-Header */
+main [id] { scroll-margin-top: 88px; }
 .section { padding: clamp(64px, 9vw, 120px) 0; }
 .section-tight { padding: clamp(40px, 6vw, 72px) 0; }
 .section-alt { background: var(--ink-850); }
@@ -235,7 +238,7 @@ p { margin: 0 0 1em; }
 .hero h1 .accent { color: var(--amber); }
 .hero-sub { font-size: clamp(1.05rem, 1.8vw, 1.3rem); color: var(--text-dim); max-width: 54ch; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: 14px; margin: 28px 0 22px; }
-.hero-note { display: flex; align-items: center; gap: 8px; color: var(--text-faint); font-size: 0.92rem; }
+.hero-note { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--text-faint); font-size: 0.92rem; }
 .hero-note .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); animation: breathe 2.2s infinite; }
 
 .badge-247 {
