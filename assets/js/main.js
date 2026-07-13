@@ -30,12 +30,18 @@
   );
   var hrefMap = {
     tel: "tel:" + (CFG.phone || ""),
-    wa: "https://wa.me/" + (CFG.whatsapp || "") + "?text=" + waText,
+    wa: CFG.whatsapp ? "https://wa.me/" + CFG.whatsapp + "?text=" + waText : null,
     mail: "mailto:" + (CFG.email || "")
   };
   document.querySelectorAll("[data-href]").forEach(function (el) {
-    var v = hrefMap[el.getAttribute("data-href")];
-    if (v) el.setAttribute("href", v);
+    var key = el.getAttribute("data-href");
+    var v = hrefMap[key];
+    if (v) {
+      el.setAttribute("href", v);
+    } else if (key === "wa") {
+      // Kein WhatsApp konfiguriert → Button/Link komplett ausblenden
+      el.remove();
+    }
   });
 
   /* ---------- 2) Mobile Navigation ------------------------------- */

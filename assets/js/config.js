@@ -14,8 +14,8 @@ window.SITE_CONFIG = {
   // --- Kontakt -------------------------------------------------
   phone: "+41443125550",                    // 24h-Hotline (lt. Website)
   phoneDisplay: "044 312 55 50",            // menschenlesbare Anzeige
-  whatsapp: "41443125550",                  // WhatsApp OHNE "+" – TODO: prüfen, ob eigene WhatsApp-Nummer existiert
-  email: "info@abschleppdienstwinti.ch",    // öffentliche Kontakt-Adresse – TODO: verifizieren
+  whatsapp: "41796865191",                  // WhatsApp 079 686 51 91 (wa.me-Format ohne "+"; leer lassen blendet alle WhatsApp-Buttons aus)
+  email: "info@abschleppdienstwinti.ch",    // öffentliche Kontakt-Adresse
 
   // --- Standort / NAP (lokales SEO) -----------------------------
   address: {
