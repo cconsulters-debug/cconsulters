@@ -12,8 +12,12 @@ window.SITE_CONFIG = {
   uid: "CHE-239.815.669",                   // UID/MWST (Schema.org vatID)
 
   // --- Kontakt -------------------------------------------------
-  phone: "+41443125550",                    // 24h-Hotline (lt. Website)
-  phoneDisplay: "044 312 55 50",            // menschenlesbare Anzeige
+  // ⚠️ TESTPHASE: Anrufe gehen auf die Testnummer.
+  // Für den Livegang die beiden Zeilen unten einkommentieren und die Testnummer entfernen.
+  phone: "+41795096630",                    // TEST-Nummer
+  phoneDisplay: "079 509 66 30",            // TEST-Anzeige
+  // phone: "+41443125550",                 // PRODUKTION: 24h-Hotline
+  // phoneDisplay: "044 312 55 50",         // PRODUKTION: Anzeige
   whatsapp: "41796865191",                  // WhatsApp 079 686 51 91 (wa.me-Format ohne "+"; leer lassen blendet alle WhatsApp-Buttons aus)
   email: "info@abschleppdienstwinti.ch",    // öffentliche Kontakt-Adresse
 
