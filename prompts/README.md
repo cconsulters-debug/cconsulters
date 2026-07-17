@@ -1,6 +1,8 @@
-# Reise-Prompts
+# Ferien in aller Welt – Reise-Prompts
 
 Die drei meistgenutzten KI-Prompts für die Reiseplanung – zum direkten Kopieren und Verwenden (z. B. mit ChatGPT oder Claude).
+
+**Interaktive Version:** Unter [`/ferien-in-aller-welt.html`](../ferien-in-aller-welt.html) gibt es die Prompts als Web-Seite: Platzhalter im Formular ausfüllen, fertigen Prompt per Klick kopieren.
 
 Die Auswahl basiert auf einer Recherche der populärsten Prompt-Sammlungen für Reisen (Stand 2026). In praktisch jeder Liste tauchen dieselben drei Kategorien ganz oben auf:
 
