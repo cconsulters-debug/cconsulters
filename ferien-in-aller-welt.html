@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ferien in aller Welt – KI-Reise-Prompts</title>
+<meta name="description" content="Ferien in aller Welt: Die drei meistgenutzten KI-Prompts für die Reiseplanung – Reiseplan, Budget und Packliste. Ausfüllen, kopieren, losplanen.">
+<style>
+  :root {
+    --blue: #0e5aa7;
+    --blue-dark: #0a4076;
+    --sand: #f7f3ec;
+    --ink: #1f2933;
+    --muted: #5f6b76;
+    --card: #ffffff;
+    --border: #e3ddd2;
+    --accent: #e8842c;
+    --ok: #1e8f4e;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--sand);
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  header {
+    background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+    color: #fff;
+    padding: 3.5rem 1.5rem 4.5rem;
+    text-align: center;
+  }
+  header .globe { font-size: 3rem; display: block; margin-bottom: .5rem; }
+  header h1 { font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: .5px; }
+  header p {
+    max-width: 40rem;
+    margin: .8rem auto 0;
+    opacity: .92;
+    font-size: 1.05rem;
+  }
+  main {
+    max-width: 60rem;
+    margin: -2.5rem auto 4rem;
+    padding: 0 1.25rem;
+  }
+  .tabs {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  .tabs button {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 600;
+    padding: .7rem 1.3rem;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,.06);
+    transition: all .15s ease;
+  }
+  .tabs button:hover { border-color: var(--blue); }
+  .tabs button.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  section.prompt-card {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,.07);
+  }
+  section.prompt-card.active { display: block; }
+  .prompt-card h2 { font-size: 1.4rem; margin-bottom: .3rem; }
+  .prompt-card > p.lead { color: var(--muted); margin-bottom: 1.5rem; }
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .field label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    margin-bottom: .3rem;
+  }
+  .field input, .field select {
+    width: 100%;
+    font: inherit;
+    padding: .55rem .75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fdfcfa;
+  }
+  .field input:focus, .field select:focus {
+    outline: 2px solid var(--blue);
+    outline-offset: 1px;
+  }
+  .preview {
+    background: #10202f;
+    color: #e6eef6;
+    border-radius: 10px;
+    padding: 1.25rem;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: .88rem;
+    white-space: pre-wrap;
+    max-height: 22rem;
+    overflow-y: auto;
+  }
+  .preview .ph { color: #ffb454; font-weight: 700; }
+  .actions {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .copy-btn {
+    font: inherit;
+    font-weight: 700;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: .7rem 1.5rem;
+    cursor: pointer;
+    transition: background .15s ease;
+  }
+  .copy-btn:hover { background: #cf6f1b; }
+  .copy-btn.copied { background: var(--ok); }
+  .hint { font-size: .85rem; color: var(--muted); }
+  footer {
+    text-align: center;
+    padding: 2rem 1rem 3rem;
+    color: var(--muted);
+    font-size: .85rem;
+  }
+  footer a { color: var(--blue); }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="globe" aria-hidden="true">🌍</span>
+  <h1>Ferien in aller Welt</h1>
+  <p>Die drei meistgenutzten KI-Prompts für deine Reiseplanung. Angaben ausfüllen, fertigen Prompt kopieren und in ChatGPT oder Claude einfügen – schon steht dein Reiseplan, Budget oder deine Packliste.</p>
+</header>
+
+<main>
+  <nav class="tabs" aria-label="Prompt auswählen">
+    <button class="active" data-tab="itinerary">🗺️ Reiseplan</button>
+    <button data-tab="budget">💰 Budget</button>
+    <button data-tab="packing">🎒 Packliste</button>
+  </nav>
+
+  <!-- Prompt 1: Reiseplan -->
+  <section class="prompt-card active" id="tab-itinerary">
+    <h2>Tagesgenauer Reiseplan</h2>
+    <p class="lead">Der meistgenutzte Reise-Prompt: ein Tag-für-Tag-Plan, nach Stadtvierteln gruppiert, mit Highlights, Geheimtipps und den besten Besuchszeiten.</p>
+    <div class="fields">
+      <div class="field">
+        <label for="it-ziel">Reiseziel</label>
+        <input id="it-ziel" data-ph="ziel" type="text" placeholder="z. B. Lissabon, Portugal">
+      </div>
+      <div class="field">
+        <label for="it-tage">Anzahl Tage</label>
+        <input id="it-tage" data-ph="tage" type="number" min="1" max="60" placeholder="z. B. 5">
+      </div>
+      <div class="field">
+        <label for="it-typ">Reisetyp</label>
+        <select id="it-typ" data-ph="typ">
+          <option value="">Bitte wählen …</option>
+          <option>alleine</option>
+          <option>als Paar</option>
+          <option>als Familie mit Kindern</option>
+          <option>mit Freunden</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="it-zeit">Reisezeitraum</label>
+        <input id="it-zeit" data-ph="zeit" type="text" placeholder="z. B. Mitte September">
+      </div>
+      <div class="field">
+        <label for="it-interessen">Interessen</label>
+        <input id="it-interessen" data-ph="interessen" type="text" placeholder="z. B. Essen, Geschichte, Aussichtspunkte">
+      </div>
+    </div>
+    <div class="preview" id="preview-itinerary" aria-live="polite"></div>
+    <div class="actions">
+      <button class="copy-btn" data-target="itinerary">Prompt kopieren</button>
+      <span class="hint">Der Prompt aktualisiert sich automatisch mit deinen Angaben.</span>
+    </div>
+  </section>
+
+  <!-- Prompt 2: Budget -->
+  <section class="prompt-card" id="tab-budget">
+    <h2>Reisebudget-Planung</h2>
+    <p class="lead">Realistische Kostenaufstellung als Tabelle mit Preisspannen, Puffer und drei Spartipps speziell für dein Reiseziel.</p>
+    <div class="fields">
+      <div class="field">
+        <label for="bu-ziel">Reiseziel</label>
+        <input id="bu-ziel" data-ph="ziel" type="text" placeholder="z. B. Thailand (Bangkok + Chiang Mai)">
+      </div>
+      <div class="field">
+        <label for="bu-tage">Anzahl Tage</label>
+        <input id="bu-tage" data-ph="tage" type="number" min="1" max="90" placeholder="z. B. 7">
+      </div>
+      <div class="field">
+        <label for="bu-personen">Reisende</label>
+        <input id="bu-personen" data-ph="personen" type="text" placeholder="z. B. 2 Erwachsene">
+      </div>
+      <div class="field">
+        <label for="bu-monat">Reisemonat</label>
+        <input id="bu-monat" data-ph="monat" type="text" placeholder="z. B. Februar">
+      </div>
+      <div class="field">
+        <label for="bu-niveau">Preisniveau Unterkunft</label>
+        <select id="bu-niveau" data-ph="niveau">
+          <option value="">Bitte wählen …</option>
+          <option>Budget</option>
+          <option>Mittelklasse</option>
+          <option>gehoben</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="bu-waehrung">Währung</label>
+        <select id="bu-waehrung" data-ph="waehrung">
+          <option value="">Bitte wählen …</option>
+          <option>CHF</option>
+          <option>EUR</option>
+          <option>USD</option>
+        </select>
+      </div>
+    </div>
+    <div class="preview" id="preview-budget" aria-live="polite"></div>
+    <div class="actions">
+      <button class="copy-btn" data-target="budget">Prompt kopieren</button>
+      <span class="hint">KI kennt keine Live-Preise – Angaben vor der Buchung immer prüfen.</span>
+    </div>
+  </section>
+
+  <!-- Prompt 3: Packliste -->
+  <section class="prompt-card" id="tab-packing">
+    <h2>Packliste</h2>
+    <p class="lead">Eine auf Ziel, Jahreszeit und Aktivitäten zugeschnittene Checkliste zum Abhaken – inklusive Hinweisen wie Adapter oder Mückenschutz.</p>
+    <div class="fields">
+      <div class="field">
+        <label for="pa-ziel">Reiseziel</label>
+        <input id="pa-ziel" data-ph="ziel" type="text" placeholder="z. B. Schweizer Alpen">
+      </div>
+      <div class="field">
+        <label for="pa-tage">Anzahl Tage</label>
+        <input id="pa-tage" data-ph="tage" type="number" min="1" max="90" placeholder="z. B. 10">
+      </div>
+      <div class="field">
+        <label for="pa-monat">Reisemonat</label>
+        <input id="pa-monat" data-ph="monat" type="text" placeholder="z. B. Oktober">
+      </div>
+      <div class="field">
+        <label for="pa-aktivitaeten">Geplante Aktivitäten</label>
+        <input id="pa-aktivitaeten" data-ph="aktivitaeten" type="text" placeholder="z. B. Wandern, Städtetrip, Strand">
+      </div>
+      <div class="field">
+        <label for="pa-reisende">Reisende</label>
+        <input id="pa-reisende" data-ph="reisende" type="text" placeholder="z. B. 1 Erwachsener">
+      </div>
+      <div class="field">
+        <label for="pa-gepaeck">Gepäck</label>
+        <select id="pa-gepaeck" data-ph="gepaeck">
+          <option value="">Bitte wählen …</option>
+          <option>nur Handgepäck</option>
+          <option>Koffer</option>
+          <option>Koffer + Tagesrucksack</option>
+          <option>Trekkingrucksack</option>
+        </select>
+      </div>
+    </div>
+    <div class="preview" id="preview-packing" aria-live="polite"></div>
+    <div class="actions">
+      <button class="copy-btn" data-target="packing">Prompt kopieren</button>
+      <span class="hint">Checkliste kommt fertig zum Abhaken zurück.</span>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Ferien in aller Welt · Die Prompt-Vorlagen liegen auch als Markdown im Ordner <a href="prompts/README.md">prompts/</a>.
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  var TEMPLATES = {
+    itinerary: [
+      "Agiere als lokaler Reiseführer in {ziel}.",
+      "",
+      "Erstelle mir einen detaillierten {tage}-tägigen Reiseplan für eine Reise {typ} im Zeitraum {zeit}.",
+      "",
+      "Meine Interessen: {interessen}.",
+      "",
+      "Anforderungen:",
+      "- Gruppiere die Aktivitäten pro Tag nach Stadtvierteln, damit wir nicht unnötig hin- und herfahren; Gehzeiten zwischen den Stopps möglichst unter 20 Minuten.",
+      "- Mische bekannte Sehenswürdigkeiten mit Geheimtipps, die vor allem Einheimische kennen.",
+      "- Nenne für jede Sehenswürdigkeit die beste Tageszeit für den Besuch (z. B. um Menschenmassen zu vermeiden).",
+      "- Schlage pro Tag ein Restaurant oder Café für Mittag- und Abendessen in der Nähe vor.",
+      "- Plane pro Tag realistische Pausen ein und überlade den Plan nicht.",
+      "",
+      "Format: Übersichtliche Gliederung pro Tag (Vormittag / Nachmittag / Abend) mit kurzen Begründungen, warum sich jeder Stopp lohnt."
+    ].join("\n"),
+
+    budget: [
+      "Agiere als Finanzassistent für Reisen.",
+      "",
+      "Erstelle eine detaillierte Budget-Aufstellung für eine {tage}-tägige Reise nach {ziel} für {personen} im Monat {monat}.",
+      "",
+      "Berücksichtige:",
+      "- Unterkunft im Bereich {niveau}",
+      "- Öffentliche Verkehrsmittel vor Ort (inkl. Transfer vom Flughafen)",
+      "- Tägliche Verpflegung: Mischung aus Streetfood/Selbstverpflegung und Restaurantbesuchen",
+      "- Eintritte für die wichtigsten Sehenswürdigkeiten",
+      "- Einen Puffer von ca. 10–15 % für Unvorhergesehenes",
+      "",
+      "Anforderungen:",
+      "- Gib Preisspannen statt exakter Beträge an und weise darauf hin, wo die Angaben unsicher oder saisonabhängig sind.",
+      "- Rechne alles in {waehrung} um.",
+      "- Formatiere das Ergebnis als übersichtliche Tabelle mit Kategorien, Kosten pro Tag und Gesamtsumme.",
+      "- Nenne zum Schluss 3 konkrete Spartipps, die speziell für {ziel} gelten."
+    ].join("\n"),
+
+    packing: [
+      "Erstelle mir eine vollständige Packliste für eine {tage}-tägige Reise nach {ziel} im {monat}.",
+      "",
+      "Geplante Aktivitäten: {aktivitaeten}.",
+      "Reisende: {reisende}.",
+      "Gepäck: {gepaeck}.",
+      "",
+      "Anforderungen:",
+      "- Berücksichtige das typische Wetter am Reiseziel in diesem Monat (inkl. Regen-/Kälteschutz, falls sinnvoll).",
+      "- Sortiere die Liste nach Kategorien: Kleidung, Schuhe, Hygiene/Apotheke, Elektronik, Dokumente, Sonstiges.",
+      "- Gib bei Kleidung konkrete Stückzahlen an, passend zur Reisedauer.",
+      "- Weise auf Besonderheiten des Reiseziels hin (z. B. Steckdosen-Adapter, Dresscode für religiöse Stätten, Mückenschutz, Trinkwasser).",
+      "- Nenne am Ende 3 Dinge, die oft vergessen werden.",
+      "",
+      "Format: Checkliste mit Kästchen zum Abhaken (- [ ])."
+    ].join("\n")
+  };
+
+  var FALLBACKS = {
+    ziel: "[Reiseziel]", tage: "[Anzahl]", typ: "[Reisetyp]", zeit: "[Zeitraum]",
+    interessen: "[Interessen]", personen: "[Reisende]", monat: "[Monat]",
+    niveau: "[Preisniveau]", waehrung: "[Währung]", aktivitaeten: "[Aktivitäten]",
+    reisende: "[Reisende]", gepaeck: "[Gepäck]"
+  };
+
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function buildPrompt(key, asHtml) {
+    var card = document.getElementById("tab-" + key);
+    var values = {};
+    card.querySelectorAll("[data-ph]").forEach(function (el) {
+      values[el.dataset.ph] = el.value.trim();
+    });
+    return TEMPLATES[key].replace(/\{(\w+)\}/g, function (_, name) {
+      var v = values[name];
+      if (v) return asHtml ? escapeHtml(v) : v;
+      var fb = FALLBACKS[name] || "[…]";
+      return asHtml ? '<span class="ph">' + fb + "</span>" : fb;
+    });
+  }
+
+  function render(key) {
+    document.getElementById("preview-" + key).innerHTML = buildPrompt(key, true);
+  }
+
+  ["itinerary", "budget", "packing"].forEach(function (key) {
+    render(key);
+    document.getElementById("tab-" + key).querySelectorAll("[data-ph]").forEach(function (el) {
+      el.addEventListener("input", function () { render(key); });
+    });
+  });
+
+  document.querySelectorAll(".tabs button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".tabs button").forEach(function (b) { b.classList.remove("active"); });
+      document.querySelectorAll(".prompt-card").forEach(function (c) { c.classList.remove("active"); });
+      btn.classList.add("active");
+      document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var text = buildPrompt(btn.dataset.target, false);
+      function done() {
+        btn.classList.add("copied");
+        btn.textContent = "✓ Kopiert!";
+        setTimeout(function () {
+          btn.classList.remove("copied");
+          btn.textContent = "Prompt kopieren";
+        }, 2000);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        done();
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
