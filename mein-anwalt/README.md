@@ -8,6 +8,7 @@ der offiziellen Schweizer Rechtsquellen zum Nachschlagen und Verifizieren.
 
 | Datei | Zweck |
 |---|---|
+| [`MEIN-ANWALT-KOMPLETT.md`](MEIN-ANWALT-KOMPLETT.md) | ⭐ **Alles in einem Dokument** (System-Prompt + 10 Prompts + Quellen). Ideal zum Hochladen als Projekt-/Wissensdokument in dein KI-Projekt «Mein Anwalt». |
 | [`system-prompt-schweizer-anwalt.md`](system-prompt-schweizer-anwalt.md) | **Der Kern.** System-Prompt, der die KI zum «Schweizer Anwalt» macht – Rolle, Arbeitsweise (Subsumtion), Zitierregeln, rechtliche Grenzen. |
 | [`prompts/10-beste-prompts-fuer-anwaelte.md`](prompts/10-beste-prompts-fuer-anwaelte.md) | Die **10 besten Prompts** für typische Anwaltsaufgaben (Gutachten, Vertrag, Prüfung, Recherche, Schreiben, Fristen, Prozessstrategie …), auf CH-Recht angepasst. |
 | [`quellen/schweizer-rechtsquellen.md`](quellen/schweizer-rechtsquellen.md) | **Alle Quellen-Dokumente:** Gesetze mit SR-Nummern + Fedlex-Links, Rechtsprechung, kantonale Sammlungen, Fachportale. |
