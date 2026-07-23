@@ -1,4 +1,4 @@
-<title>Mein Anwalt — KI-Baukasten für Schweizer Recht</title>
+<title>Mein Rechtshelfer &amp; Assistent — KI-Baukasten für Schweizer Recht</title>
 <style>
   :root{
     --bg:#F1F2F0; --surface:#FFFFFF; --surface-2:#E9EBE7; --surface-3:#FBFBFA;
@@ -169,7 +169,7 @@
 
 <header class="bar">
   <div class="wrap">
-    <div class="brand"><span class="cross"></span> Mein&nbsp;Anwalt</div>
+    <div class="brand"><span class="cross"></span> Mein&nbsp;Rechtshelfer</div>
     <nav class="links">
       <a href="#system">System-Prompt</a>
       <a href="#composer">Composer</a>
@@ -185,8 +185,8 @@
   <div class="wrap">
     <div class="eyebrow"><span class="cross" style="width:26px;height:26px"></span>
       <span class="label">KI-Baukasten · Schweizer Recht</span></div>
-    <h1 class="title">Bau dir deinen<br><span class="red">Schweizer Anwalt.</span></h1>
-    <p class="lede">System-Prompt, zehn erprobte Anwalts-Prompts und der komplette Katalog
+    <h1 class="title">Dein Rechtshelfer<br><span class="red">für Schweizer Recht.</span></h1>
+    <p class="lede">System-Prompt, zehn erprobte Rechts-Prompts und der komplette Katalog
       offizieller Rechtsquellen — zusammengestellt, damit du in deinem KI-Projekt einen
       verlässlichen Assistenten für Schweizer Recht betreibst.</p>
     <div class="meta">
@@ -210,7 +210,7 @@
       <div><h2 class="h">Der System-Prompt</h2>
         <p class="sub">Kopiere diesen Text in die <b>Projektanweisung</b> deines KI-Tools
           (Claude-Projekt · ChatGPT Custom Instructions · API-<span class="mono">system</span>).
-          Damit wird die KI zum «Mein Anwalt» für Schweizer Recht.</p></div>
+          Damit wird die KI zum «Mein Rechtshelfer» für Schweizer Recht.</p></div>
     </div>
     <div class="card pad">
       <div class="label" style="margin-bottom:10px">Kurzform — sofort einsetzbar</div>
@@ -229,7 +229,7 @@
     <div class="sechead"><span class="snum">02</span>
       <div><h2 class="h">Prompt-Composer</h2>
         <p class="sub">Wähle eine Aufgabe, ergänze deine Angaben — die Seite baut daraus den
-          fertigen Prompt. Kopieren und in deinen KI-Anwalt einfügen.
+          fertigen Prompt. Kopieren und in deinen KI-Rechtshelfer einfügen.
           <br><span style="color:var(--ink-3);font-size:.9rem">Hinweis: Dies ist ein Prompt-Generator, kein Live-Chat —
           die eigentliche Antwort erzeugt dein KI-Tool (z.&nbsp;B. dein Claude-Projekt).</span></p></div>
     </div>
@@ -268,7 +268,7 @@
       <div class="flow">
         <span class="step">1 · System-Prompt gesetzt</span><span class="arr">→</span>
         <span class="step">2 · Prompt kopieren</span><span class="arr">→</span>
-        <span class="step">3 · in KI-Anwalt einfügen</span><span class="arr">→</span>
+        <span class="step">3 · in KI-Rechtshelfer einfügen</span><span class="arr">→</span>
         <span class="step">4 · Fundstellen prüfen</span>
       </div>
     </div>
@@ -279,7 +279,7 @@
 <section class="sec" id="prompts">
   <div class="wrap">
     <div class="sechead"><span class="snum">03</span>
-      <div><h2 class="h">Die 10 besten Anwalts-Prompts</h2>
+      <div><h2 class="h">Die 10 besten Rechts-Prompts</h2>
         <p class="sub">Erprobte Vorlagen für typische Aufgaben, auf Schweizer Recht und
           Terminologie angepasst. Aufklappen, kopieren, Platzhalter ersetzen.</p></div>
     </div>
@@ -292,7 +292,7 @@
   <div class="wrap">
     <div class="sechead"><span class="snum">04</span>
       <div><h2 class="h">Offizielle Rechtsquellen</h2>
-        <p class="sub">Womit dein KI-Anwalt jede Aussage belegen kann — und du sie nachprüfst.
+        <p class="sub">Womit dein KI-Rechtshelfer jede Aussage belegen kann — und du sie nachprüfst.
           Zuerst die amtlichen Portale, dann die wichtigsten Gesetze mit SR-Nummer.</p></div>
     </div>
     <div class="portals" id="portals"></div>
@@ -304,7 +304,7 @@
 <footer>
   <div class="wrap foot-grid">
     <div>
-      <h3><span class="cross" style="width:18px;height:18px;display:inline-grid;vertical-align:-3px"></span>&nbsp; Mein Anwalt</h3>
+      <h3><span class="cross" style="width:18px;height:18px;display:inline-grid;vertical-align:-3px"></span>&nbsp; Mein Rechtshelfer &amp; Assistent</h3>
       <p><b>Haftungshinweis:</b> Dieser Baukasten liefert allgemeine rechtliche Information und
         Werkzeuge, <b>keine rechtsverbindliche Beratung</b> und begründet kein Mandatsverhältnis.
         Prüfe zentrale Fundstellen an der offiziellen Quelle. Bei fristgebundenen, existenziellen
@@ -329,10 +329,10 @@
 
 <script>
 // ---------- System prompt texts ----------
-const SYS_SHORT = `Du bist «Mein Anwalt», ein juristischer Assistent für SCHWEIZER RECHT. Antworte präzise in Schweizer Hochdeutsch nach dem Schema: Sachverhalt → Rechtsfrage → Normen (mit Art. + Gesetz + SR-Nummer) → Subsumtion → Ergebnis/Empfehlung. Frag nach dem KANTON und nach fehlenden Fakten, bevor du verbindlich einschätzt. ERFINDE NIE Artikel, BGE-Fundstellen oder Fristen — kennzeichne Unsicheres als «zu verifizieren». Du gibst ALLGEMEINE rechtliche Information, KEINE verbindliche Beratung, und begründest kein Mandatsverhältnis; bei Fristen oder Strafsachen verweise auf eine zugelassene Anwältin/einen Anwalt. Nenne laufende Fristen deutlich.`;
+const SYS_SHORT = `Du bist «Mein Rechtshelfer», ein juristischer Assistent für SCHWEIZER RECHT. Antworte präzise in Schweizer Hochdeutsch nach dem Schema: Sachverhalt → Rechtsfrage → Normen (mit Art. + Gesetz + SR-Nummer) → Subsumtion → Ergebnis/Empfehlung. Frag nach dem KANTON und nach fehlenden Fakten, bevor du verbindlich einschätzt. ERFINDE NIE Artikel, BGE-Fundstellen oder Fristen — kennzeichne Unsicheres als «zu verifizieren». Du gibst ALLGEMEINE rechtliche Information, KEINE verbindliche Beratung, und begründest kein Mandatsverhältnis; bei Fristen oder Strafsachen verweise auf eine zugelassene Anwältin/einen Anwalt. Nenne laufende Fristen deutlich.`;
 
 const SYS_FULL = `ROLLE
-Du bist «Mein Anwalt», ein spezialisierter juristischer Assistent für Schweizer Recht. Du denkst wie eine erfahrene, zugelassene Schweizer Rechtsanwältin / ein Rechtsanwalt mit Praxis in Zivilrecht (ZGB/OR), Arbeits-, Miet-, Straf- und Strafprozessrecht, SchKG, Verwaltungs- und Sozialversicherungsrecht, Datenschutz (revDSG) und Gesellschaftsrecht. Du beachtest die föderale Struktur (Bund/Kanton/Gemeinde) und fragst nach dem Kanton, sobald kantonales Recht oder kantonale Zuständigkeit relevant sein könnte.
+Du bist «Mein Rechtshelfer», ein spezialisierter juristischer Assistent für Schweizer Recht. Du denkst wie eine erfahrene, zugelassene Schweizer Rechtsanwältin / ein Rechtsanwalt mit Praxis in Zivilrecht (ZGB/OR), Arbeits-, Miet-, Straf- und Strafprozessrecht, SchKG, Verwaltungs- und Sozialversicherungsrecht, Datenschutz (revDSG) und Gesellschaftsrecht. Du beachtest die föderale Struktur (Bund/Kanton/Gemeinde) und fragst nach dem Kanton, sobald kantonales Recht oder kantonale Zuständigkeit relevant sein könnte.
 
 SPRACHE
 Klares Schweizer Hochdeutsch («ss» statt «ß»); Schweizer Terminologie (Betreibung, Schlichtungsbehörde, Rechtsvorschlag, Verrechnung …). Ausschliesslich Schweizer Recht, sofern nicht anders verlangt; auf IPRG-Konstellationen (Auslandsbezug) aktiv hinweisen.
