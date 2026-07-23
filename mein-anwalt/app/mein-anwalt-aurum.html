@@ -213,7 +213,7 @@
     <div class="stp"><div class="sn">2</div><h3>Dokument wird erstellt</h3>
       <p class="note" style="color:var(--ink-2)">Unser geprüftes System erzeugt aus der passenden Fach-Vorlage dein auf Schweizer Recht zugeschnittenes Dokument.</p></div>
     <div class="stp"><div class="sn">3</div><h3>Bezahlen &amp; herunterladen</h3>
-      <p class="note" style="color:var(--ink-2)">Je nach Typ CHF 0.50–1.90 aus deinem Guthaben. Das Dokument landet in deinem persönlichen Archiv.</p></div>
+      <p class="note" style="color:var(--ink-2)">Je nach Typ CHF 9.90–39.90 aus deinem Guthaben — Bruchteil eines Anwaltshonorars. Das Dokument landet in deinem persönlichen Archiv.</p></div>
   </div>
 </div></section>
 
@@ -256,7 +256,7 @@
     <div class="acct">
       <div id="acctNew">
         <div class="kicker" style="margin-bottom:8px">Neu hier?</div>
-        <p class="note" style="margin:0 0 14px">Konto erstellen — du erhältst eine Kundennummer (= dein Einladungscode) und <b>CHF&nbsp;0.50 Startguthaben</b> für dein erstes Dokument.</p>
+        <p class="note" style="margin:0 0 14px">Konto erstellen — du erhältst eine Kundennummer (= dein Einladungscode) und dein <b>erstes Dokument gratis</b> zum Testen.</p>
         <button class="gbtn solid" id="createAcct">Kostenlos Konto erstellen</button>
         <div style="margin-top:20px;border-top:1px solid var(--line-2);padding-top:16px">
           <div class="kicker" style="margin-bottom:8px">Schon Kunde?</div>
@@ -295,7 +295,7 @@
         <div class="price"><span id="kachelPrice">CHF 0.50</span> <small id="kachelTier">/ Dokument</small></div>
         <ul>
           <li>Erstellt das im <a href="#composer" style="color:var(--gold-2)">Assistenten</a> vorbereitete Dokument</li>
-          <li>Preis nach Typ: Info 0.50 · Standard 0.90 · Premium 1.90</li>
+          <li>Preis nach Typ: Info 9.90 · Standard 19.90 · Premium 39.90</li>
           <li>Bezahlte Dokumente bleiben im Archiv — gratis erneut ladbar</li>
           <li>Jedes neue Dokument wird neu verrechnet</li>
         </ul>
@@ -305,16 +305,16 @@
       <div>
         <div class="kicker" style="margin-bottom:10px">Guthaben aufladen — mit Bonus</div>
         <div class="packs">
-          <div class="pack" data-pay="5" data-credit="5">
-            <div class="pt">CHF 5</div><div class="pb">5.00 Guthaben</div><div class="pm">Starter</div></div>
-          <div class="pack feat" data-pay="10" data-credit="11">
+          <div class="pack" data-pay="20" data-credit="20">
+            <div class="pt">CHF 20</div><div class="pb">20.00 Guthaben</div><div class="pm">Starter</div></div>
+          <div class="pack feat" data-pay="50" data-credit="55">
             <span class="tag">Beliebt</span>
-            <div class="pt">CHF 10</div><div class="pb">+1 Bonus → 11.00</div><div class="pm">Regelmässig</div></div>
-          <div class="pack" data-pay="20" data-credit="24">
-            <div class="pt">CHF 20</div><div class="pb">+4 Bonus → 24.00</div><div class="pm">Bester Preis</div></div>
+            <div class="pt">CHF 50</div><div class="pb">+5 Bonus → 55.00</div><div class="pm">Regelmässig</div></div>
+          <div class="pack" data-pay="100" data-credit="115">
+            <div class="pt">CHF 100</div><div class="pb">+15 Bonus → 115.00</div><div class="pm">Bester Preis</div></div>
           <div class="pack feat" style="grid-column:1/-1;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:default">
-            <div><div class="pt" style="font-size:1.15rem">Flatrate · CHF 19 / Monat</div>
-              <div class="pm" style="letter-spacing:0;text-transform:none;color:var(--ink-2)">Unbegrenzt Dokumente aller Stufen — für Vielnutzer.</div></div>
+            <div><div class="pt" style="font-size:1.15rem">Flatrate · CHF 49 / Monat</div>
+              <div class="pm" style="letter-spacing:0;text-transform:none;color:var(--ink-2)">Unbegrenzt Dokumente aller Stufen — für Vielnutzer, KMU &amp; Treuhänder.</div></div>
             <button class="gbtn solid" id="aboBtn">Abo aktivieren</button>
           </div>
         </div>
@@ -381,7 +381,7 @@ const DOCS=[
  {t:"Dokument / Urteil zusammenfassen",b:"Kernaussagen, Dispositiv und nächste Schritte."},
  {t:"Kosten & Vorgehen einschätzen",b:"Optionen, Kostenfaktoren und To-do-Liste."}
 ];
-const TIER=[["Premium",1.90],["Premium",1.90],["Premium",1.90],["Standard",0.90],["Standard",0.90],["Info",0.50],["Standard",0.90],["Premium",1.90],["Standard",0.90],["Info",0.50]];
+const TIER=[["Premium",39.90],["Premium",39.90],["Premium",39.90],["Standard",19.90],["Standard",19.90],["Info",9.90],["Standard",19.90],["Premium",39.90],["Standard",19.90],["Info",9.90]];
 const KANTONE=["","(Bund / national)","Aargau","Appenzell Ausserrhoden","Appenzell Innerrhoden","Basel-Landschaft","Basel-Stadt","Bern","Freiburg","Genf","Glarus","Graubünden","Jura","Luzern","Neuenburg","Nidwalden","Obwalden","Schaffhausen","Schwyz","Solothurn","St. Gallen","Tessin","Thurgau","Uri","Waadt","Wallis","Zug","Zürich"];
 const PORTALS=[
  {n:"Fedlex",d:"Amtliche, konsolidierte Sammlung des Bundesrechts (SR/AS/BBl), 4 Sprachen.",u:"https://www.fedlex.admin.ch"},
@@ -464,22 +464,27 @@ CATS.forEach((cat,i)=>{const t=document.createElement("button");t.className="tab
   block.innerHTML=`<div class="tablewrap"><table><thead><tr><th>Abk.</th><th>Gesetz</th><th>SR-Nr.</th><th>Quelle</th></tr></thead><tbody>${rows}</tbody></table></div>`;cats.appendChild(block);});
 
 /* ---- Konto / Guthaben / Vorteile (Demo, Testmodus) ---- */
-const LS_KEY="mrhelfer_demo_v3";
+const LS_KEY="mrhelfer_demo_v4";
 let acct=(function(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return window._acct||null}})();
 function saveAcct(){try{localStorage.setItem(LS_KEY,JSON.stringify(acct))}catch(e){window._acct=acct}}
 function genKnr(){const y=new Date().getFullYear();let s="";for(let i=0;i<6;i++)s+="ABCDEFGHJKLMNPRSTUVWXYZ23456789"[Math.floor(Math.random()*31)];return "MR-"+y+"-"+s}
 function loyaltyFree(){return !!acct && ((acct.paid||0)%10)===9;}
-function currentPrice(){ if(acct&&acct.abo)return 0; if(loyaltyFree())return 0; return TIER[selTask()][1]; }
+function priceInfo(){ if(!acct)return {price:TIER[selTask()][1],free:null};
+  if(acct.abo)return {price:0,free:"abo"};
+  if((acct.freeDocs||0)>0)return {price:0,free:"test"};
+  if(loyaltyFree())return {price:0,free:"loyalty"};
+  return {price:TIER[selTask()][1],free:null}; }
+function currentPrice(){return priceInfo().price;}
 function updateKachel(){
-  const t=TIER[selTask()];
-  if(acct&&acct.abo){g("kachelPrice").textContent="Im Abo";g("kachelTier").textContent="· Flatrate";}
-  else if(loyaltyFree()){g("kachelPrice").textContent="GRATIS";g("kachelTier").textContent="· Treue-Bonus ("+t[0]+")";}
+  const t=TIER[selTask()];const pi=priceInfo();
+  if(pi.free==="abo"){g("kachelPrice").textContent="Im Abo";g("kachelTier").textContent="· Flatrate";}
+  else if(pi.free==="test"){g("kachelPrice").textContent="GRATIS";g("kachelTier").textContent="· Gratis-Testdokument";}
+  else if(pi.free==="loyalty"){g("kachelPrice").textContent="GRATIS";g("kachelTier").textContent="· Treue-Bonus ("+t[0]+")";}
   else{g("kachelPrice").textContent=fmt(t[1]);g("kachelTier").textContent="· "+t[0];}
   const btn=g("kachelBtn");
   if(!acct){btn.disabled=true;btn.textContent="Zuerst Konto erstellen";return;}
-  const p=currentPrice();
-  if(p>0&&acct.bal<p){btn.disabled=true;btn.textContent="Guthaben zu tief — bitte aufladen";}
-  else{btn.disabled=false;btn.textContent=p>0?("Dokument erstellen & herunterladen · "+fmt(p)):"Dokument erstellen & herunterladen · gratis";}
+  if(pi.price>0&&acct.bal<pi.price){btn.disabled=true;btn.textContent="Guthaben zu tief — bitte aufladen";}
+  else{btn.disabled=false;btn.textContent=pi.price>0?("Dokument erstellen & herunterladen · "+fmt(pi.price)):"Dokument erstellen & herunterladen · gratis";}
 }
 function renderAcct(){
   const has=!!acct;
@@ -497,8 +502,8 @@ function renderAcct(){
   }
   updateKachel();
 }
-g("createAcct").onclick=()=>{acct={knr:genKnr(),bal:0.5,hist:[],paid:0,abo:false,refUsed:false};saveAcct();renderAcct();
-  alert("Konto erstellt.\n\nKundennummer / Einladungscode: "+acct.knr+"\nStartguthaben: CHF 0.50\n\nBitte notieren — damit öffnest du dein Profil wieder.");};
+g("createAcct").onclick=()=>{acct={knr:genKnr(),bal:0,hist:[],paid:0,abo:false,refUsed:false,freeDocs:1};saveAcct();renderAcct();
+  alert("Konto erstellt.\n\nKundennummer / Einladungscode: "+acct.knr+"\nDein erstes Dokument ist GRATIS (Testdokument).\n\nBitte Kundennummer notieren — damit öffnest du dein Profil wieder.");};
 g("openAcct").onclick=()=>{const v=(g("knrInput").value||"").trim().toUpperCase();
   if(!v){alert("Bitte Kundennummer eingeben.");return;}
   let stored=null;try{const r=localStorage.getItem(LS_KEY);stored=r?JSON.parse(r):null}catch(e){stored=window._acct}
@@ -516,7 +521,7 @@ document.querySelectorAll(".pack[data-pay]").forEach(p=>p.onclick=()=>{if(!acct)
   pendingPay=parseFloat(p.dataset.pay);pendingCredit=parseFloat(p.dataset.credit);pendingAbo=false;
   g("topAmt").textContent=fmt(pendingPay);g("twintModal").classList.add("on");});
 g("aboBtn").onclick=()=>{if(!acct){alert("Bitte zuerst ein Konto erstellen.");return;}
-  pendingPay=19;pendingCredit=0;pendingAbo=true;g("topAmt").textContent=fmt(19)+" / Monat";g("twintModal").classList.add("on");};
+  pendingPay=49;pendingCredit=0;pendingAbo=true;g("topAmt").textContent=fmt(49)+" / Monat";g("twintModal").classList.add("on");};
 g("twintCancel").onclick=()=>g("twintModal").classList.remove("on");
 g("twintConfirm").onclick=()=>{if(acct){if(pendingAbo){acct.abo=true;}else{acct.bal=+(acct.bal+pendingCredit).toFixed(2);}saveAcct();renderAcct();}g("twintModal").classList.remove("on");};
 async function deliver(doc,fname){
@@ -528,14 +533,15 @@ async function deliver(doc,fname){
 }
 g("kachelBtn").onclick=async()=>{
   if(!acct)return;
-  const price=currentPrice();
-  if(price>0&&acct.bal<price){alert("Guthaben zu tief. Bitte lade Guthaben auf.");return;}
+  const pi=priceInfo();
+  if(pi.price>0&&acct.bal<pi.price){alert("Guthaben zu tief. Bitte lade Guthaben auf.");return;}
   const i=selTask();const taskName=DOCS[i].t;const now=new Date();
   const doc=fullDoc(i);
   const fname="Rechtsdokument_"+taskName.replace(/[^0-9A-Za-zÄÖÜäöü]+/g,"-").replace(/^-|-$/g,"")+"_"+acct.knr+".md";
   const ok=await deliver(doc,fname);
-  if(ok){ if(price>0)acct.bal=+(acct.bal-price).toFixed(2); if(!acct.abo)acct.paid=(acct.paid||0)+1;
-    acct.hist.push({t:taskName,d:now.toLocaleDateString("de-CH"),price:price,doc:doc,fname:fname});saveAcct();renderAcct();}
+  if(ok){ if(pi.price>0)acct.bal=+(acct.bal-pi.price).toFixed(2); if(pi.free==="test")acct.freeDocs=(acct.freeDocs||1)-1;
+    if(!acct.abo)acct.paid=(acct.paid||0)+1;
+    acct.hist.push({t:taskName,d:now.toLocaleDateString("de-CH"),price:pi.price,doc:doc,fname:fname});saveAcct();renderAcct();}
 };
 
 build();renderAcct();
