@@ -30,12 +30,14 @@ Verkaufsargument = **Ergebnis + Vertrauen**, nicht tiefster Preis. Ankerwerbung:
 
 | Stufe | Beispiele | Preis | Anker |
 |---|---|---|---|
-| Info | Klartext-Erklärung, Fristen-Check | **CHF 9.90** | Konkurrenz CHF 50 |
-| Standard | Schreiben, Recherche, Zusammenfassung | **CHF 19.90** | Anwalt-Schreiben CHF 90 |
-| Premium | Vertrag, Redlining, Gutachten, Prozess | **CHF 39.90** | Anwalt-Vertrag CHF 590 |
+| Info | Klartext-Erklärung, Fristen-Check | **CHF 3.30** | Konkurrenz CHF 50 |
+| Standard | Schreiben, Recherche, Zusammenfassung | **CHF 6.60** | Anwalt-Schreiben CHF 90 |
+| Premium | Vertrag, Redlining, Gutachten, Prozess | **CHF 13.30** | Anwalt-Vertrag CHF 590 |
 
 Ergänzt: **1. Dokument gratis** (Köder), **Treue-Bonus** (jedes 10. gratis),
-**Guthaben-Pakete** (20 / 50+5 / 100+15), **Flatrate CHF 49/Monat**.
+**Guthaben-Pakete** (5 / 15+1.50 / 30+4), **Flatrate CHF 16.90/Monat**,
+**eigene Dokumente beifügbar** (Upload). Bewusst tiefpreisig gewählt, um die Einstiegshürde
+gering zu halten — der Wert kommt aus Menge, Wiederkehr, Abo und Upsells.
 
 ## 4. Drei Profitabilitäts-Hebel
 

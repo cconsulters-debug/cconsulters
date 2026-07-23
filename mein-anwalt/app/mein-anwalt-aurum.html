@@ -168,6 +168,12 @@
   .mini{font-size:.76rem;color:var(--ink-2);line-height:1.4}
   .hitem .rd{cursor:pointer;color:var(--gold);border:1px solid var(--gold-line);border-radius:6px;padding:2px 7px;font-size:.7rem;font-weight:700;background:none;margin-left:6px}
   .hitem .rd:hover{background:var(--gold);color:#1A1406}
+  .drop{border:1.5px dashed var(--gold-line);border-radius:10px;padding:16px;text-align:center;color:var(--ink-2);font-size:.85rem;cursor:pointer;background:#0A0F1A}
+  .drop.over{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+  .drop .u{color:var(--gold-2);text-decoration:underline}
+  .chip2{margin-top:9px;font-size:.82rem;color:var(--gold-2);display:inline-flex;gap:9px;align-items:center;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:8px;padding:6px 11px}
+  .chip2 .x{cursor:pointer;color:var(--ink-2);font-weight:800}
+  .chip2 .x:hover{color:var(--gold)}
 </style>
 
 <header class="bar"><div class="wrap">
@@ -182,9 +188,10 @@
 <section class="hero"><div class="wrap">
   <div class="kicker">KI-Dokumente · Schweizer Recht</div>
   <h1 class="title serif">Ihr digitaler Rechtsberater —<br><em>fundiert. souverän. Schweizerisch.</em></h1>
-  <p class="lede">Beschreibe dein Anliegen — «Mein Rechtshelfer» erstellt dir das passende, auf
-    Schweizer Recht zugeschnittene Dokument und klärt deine Rechtsfragen. Fundiert auf Gesetz und
-    Rechtsprechung, jede Fundstelle überprüfbar. Du bezahlst nur pro fertigem Dokument.</p>
+  <p class="lede">Beschreibe dein Anliegen — «Mein Rechtshelfer» erstellt dir in Minuten das
+    passende, auf Schweizer Recht zugeschnittene Dokument und klärt deine Rechtsfragen. Du kannst
+    <b>eigene Dokumente beifügen</b>, das erste Dokument ist <b>gratis</b>, danach <b>ab CHF 3.30</b>
+    — ein Bruchteil eines Anwaltshonorars.</p>
   <div class="cta">
     <a class="btn primary" href="#composer">Dokument erstellen →</a>
     <a class="btn ghost" href="#system">So funktioniert's</a>
@@ -213,15 +220,16 @@
     <div class="stp"><div class="sn">2</div><h3>Dokument wird erstellt</h3>
       <p class="note" style="color:var(--ink-2)">Unser geprüftes System erzeugt aus der passenden Fach-Vorlage dein auf Schweizer Recht zugeschnittenes Dokument.</p></div>
     <div class="stp"><div class="sn">3</div><h3>Bezahlen &amp; herunterladen</h3>
-      <p class="note" style="color:var(--ink-2)">Je nach Typ CHF 9.90–39.90 aus deinem Guthaben — Bruchteil eines Anwaltshonorars. Das Dokument landet in deinem persönlichen Archiv.</p></div>
+      <p class="note" style="color:var(--ink-2)">Je nach Typ CHF 3.30–13.30 aus deinem Guthaben — ein Bruchteil eines Anwaltshonorars. Das Dokument landet in deinem persönlichen Archiv.</p></div>
   </div>
 </div></section>
 
 <section class="sec" id="composer"><div class="wrap">
   <div class="sechead"><span class="snum">II.</span>
     <div><h2 class="h">Dein Dokument vorbereiten</h2>
-      <p class="sub">Angaben ausfüllen — rechts siehst du eine <b>gesperrte Vorschau</b>. Das
-        vollständige Dokument erhältst du nach Bezahlung im Abschnitt «Guthaben &amp; Konto».</p></div></div>
+      <p class="sub">Angaben ausfüllen — und optional <b>dein eigenes Dokument beifügen</b> (z. B. den
+        zu prüfenden Vertrag). Das erleichtert die Arbeit und macht das Ergebnis präziser. Rechts siehst
+        du eine <b>gesperrte Vorschau</b>; das vollständige Dokument erhältst du nach Bezahlung.</p></div></div>
   <div class="card pad">
     <div class="comp">
       <div>
@@ -230,7 +238,12 @@
         <div class="field"><label for="partei">Meine Rolle / Partei</label><input id="partei" placeholder="z. B. Arbeitnehmer · Vermieterin · Beschuldigter"></div>
         <div class="field"><label for="ziel">Ziel</label><input id="ziel" placeholder="z. B. Kündigung anfechten · Forderung durchsetzen"></div>
         <div class="field"><label for="sv">Sachverhalt / Details</label><textarea id="sv" placeholder="Fakten, Daten und Fristen kurz schildern…"></textarea></div>
-        <div class="hint"><span style="color:var(--gold);font-weight:800">↳</span> Deine Angaben fliessen ins Dokument ein. Der vollständige Text wird erst beim bezahlten Download erzeugt.</div>
+        <div class="field"><label>Eigenes Dokument beifügen (optional)</label>
+          <div id="drop" class="drop">📎 Datei hierher ziehen oder <span class="u">auswählen</span> — .txt, .md
+            <input type="file" id="file" accept=".txt,.md,text/plain,text/markdown" hidden></div>
+          <div id="fileChip" class="chip2" style="display:none"></div>
+        </div>
+        <div class="hint"><span style="color:var(--gold);font-weight:800">↳</span> Deine Angaben und ein beigefügtes Dokument fliessen ins Ergebnis ein. Der vollständige Text wird erst beim bezahlten Download erzeugt.</div>
       </div>
       <div class="out"><div class="oh"><span class="kicker">Vorschau</span><span class="lockpill">🔒 Vollständig nach Bezahlung</span></div>
         <div class="prewrap"><pre id="compOut"></pre>
@@ -295,7 +308,7 @@
         <div class="price"><span id="kachelPrice">CHF 0.50</span> <small id="kachelTier">/ Dokument</small></div>
         <ul>
           <li>Erstellt das im <a href="#composer" style="color:var(--gold-2)">Assistenten</a> vorbereitete Dokument</li>
-          <li>Preis nach Typ: Info 9.90 · Standard 19.90 · Premium 39.90</li>
+          <li>Preis nach Typ: Info 3.30 · Standard 6.60 · Premium 13.30</li>
           <li>Bezahlte Dokumente bleiben im Archiv — gratis erneut ladbar</li>
           <li>Jedes neue Dokument wird neu verrechnet</li>
         </ul>
@@ -305,15 +318,15 @@
       <div>
         <div class="kicker" style="margin-bottom:10px">Guthaben aufladen — mit Bonus</div>
         <div class="packs">
-          <div class="pack" data-pay="20" data-credit="20">
-            <div class="pt">CHF 20</div><div class="pb">20.00 Guthaben</div><div class="pm">Starter</div></div>
-          <div class="pack feat" data-pay="50" data-credit="55">
+          <div class="pack" data-pay="5" data-credit="5">
+            <div class="pt">CHF 5</div><div class="pb">5.00 Guthaben</div><div class="pm">Starter</div></div>
+          <div class="pack feat" data-pay="15" data-credit="16.5">
             <span class="tag">Beliebt</span>
-            <div class="pt">CHF 50</div><div class="pb">+5 Bonus → 55.00</div><div class="pm">Regelmässig</div></div>
-          <div class="pack" data-pay="100" data-credit="115">
-            <div class="pt">CHF 100</div><div class="pb">+15 Bonus → 115.00</div><div class="pm">Bester Preis</div></div>
+            <div class="pt">CHF 15</div><div class="pb">+1.50 Bonus → 16.50</div><div class="pm">Regelmässig</div></div>
+          <div class="pack" data-pay="30" data-credit="34">
+            <div class="pt">CHF 30</div><div class="pb">+4 Bonus → 34.00</div><div class="pm">Bester Preis</div></div>
           <div class="pack feat" style="grid-column:1/-1;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:default">
-            <div><div class="pt" style="font-size:1.15rem">Flatrate · CHF 49 / Monat</div>
+            <div><div class="pt" style="font-size:1.15rem">Flatrate · CHF 16.90 / Monat</div>
               <div class="pm" style="letter-spacing:0;text-transform:none;color:var(--ink-2)">Unbegrenzt Dokumente aller Stufen — für Vielnutzer, KMU &amp; Treuhänder.</div></div>
             <button class="gbtn solid" id="aboBtn">Abo aktivieren</button>
           </div>
@@ -381,7 +394,7 @@ const DOCS=[
  {t:"Dokument / Urteil zusammenfassen",b:"Kernaussagen, Dispositiv und nächste Schritte."},
  {t:"Kosten & Vorgehen einschätzen",b:"Optionen, Kostenfaktoren und To-do-Liste."}
 ];
-const TIER=[["Premium",39.90],["Premium",39.90],["Premium",39.90],["Standard",19.90],["Standard",19.90],["Info",9.90],["Standard",19.90],["Premium",39.90],["Standard",19.90],["Info",9.90]];
+const TIER=[["Premium",13.30],["Premium",13.30],["Premium",13.30],["Standard",6.60],["Standard",6.60],["Info",3.30],["Standard",6.60],["Premium",13.30],["Standard",6.60],["Info",3.30]];
 const KANTONE=["","(Bund / national)","Aargau","Appenzell Ausserrhoden","Appenzell Innerrhoden","Basel-Landschaft","Basel-Stadt","Bern","Freiburg","Genf","Glarus","Graubünden","Jura","Luzern","Neuenburg","Nidwalden","Obwalden","Schaffhausen","Schwyz","Solothurn","St. Gallen","Tessin","Thurgau","Uri","Waadt","Wallis","Zug","Zürich"];
 const PORTALS=[
  {n:"Fedlex",d:"Amtliche, konsolidierte Sammlung des Bundesrechts (SR/AS/BBl), 4 Sprachen.",u:"https://www.fedlex.admin.ch"},
@@ -423,11 +436,16 @@ const SKEL=[
  m=>`KOSTEN- & VORGEHENS-EINSCHÄTZUNG (Entwurf)\nAnliegen: ${m.Z}\nDetails: ${m.S}\nRolle: ${m.P} · Kanton: ${m.K} · Streitwert: [Betrag]\n\nVorgehensoptionen\n- Aussergerichtlich: [Vor-/Nachteile]\n- Schlichtung: [...]\n- Klage: [...]\n\nKostenfaktoren\n- Gerichts-/Anwaltskosten · Prozessrisiko · Rechtsschutz · unentgeltliche Rechtspflege\n\nTo-do (14 Tage)\n1. [...]\n2. [...]\n3. [...]\n\nHinweis: Tarife sind kantonal geregelt.`
 ];
 function selTask(){return parseInt(g("task").value)||0;}
+let uploaded={name:"",text:""};
 function fullDoc(i){
   const m=inp();const now=new Date();
+  let attach="";
+  if(uploaded.text){attach="\n\n"+"-".repeat(52)+"\nBEIGEFÜGTES DOKUMENT DES KUNDEN — "+uploaded.name
+    +"\n"+"-".repeat(52)+"\n"+uploaded.text.slice(0,4000)+(uploaded.text.length>4000?"\n…[gekürzt]":"");}
   return "MEIN RECHTSHELFER & ASSISTENT\n"+"=".repeat(52)
     +"\nDokumenttyp: "+DOCS[i].t+" ("+TIER[i][0]+")\nKanton: "+m.K+"   Erstellt: "+now.toLocaleString("de-CH")
-    +"\n"+"=".repeat(52)+"\n\n"+SKEL[i](m)
+    +(uploaded.name?"\nBeigefügt: "+uploaded.name:"")
+    +"\n"+"=".repeat(52)+"\n\n"+SKEL[i](m)+attach
     +"\n\n"+"-".repeat(52)+"\nAllgemeine rechtliche Information, keine verbindliche Beratung. Entwurf zur eigenen Weiterbearbeitung; zentrale Fundstellen auf fedlex.admin.ch / bger.ch prüfen. Bei Fristen/Strafsachen zugelassene Anwältin/Anwalt beiziehen.\n";
 }
 /* Vorschau: nur die ersten Zeilen, Rest gesperrt */
@@ -449,6 +467,23 @@ DOCS.forEach((p,i)=>{const c=document.createElement("div");c.className="card pca
 pg.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{taskSel.value=b.dataset.pick;build();updateKachel();
   document.getElementById("composer").scrollIntoView({behavior:"smooth"});});
 [taskSel,kSel,g("partei"),g("ziel"),g("sv")].forEach(el=>el.addEventListener("input",()=>{build();updateKachel();}));
+
+/* Eigenes Dokument beifügen */
+const drop=g("drop"),fileIn=g("file");
+drop.onclick=()=>fileIn.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add("over");};
+drop.ondragleave=()=>drop.classList.remove("over");
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");if(e.dataTransfer.files&&e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);};
+fileIn.onchange=()=>{if(fileIn.files[0])readFile(fileIn.files[0]);};
+function readFile(f){
+  if(!/\.(txt|md)$/i.test(f.name)){alert("In dieser Vorschau werden Textdateien (.txt, .md) gelesen.\nIn der Live-Version zusätzlich PDF & Word.");return;}
+  if(f.size>200000){alert("Datei zu gross für die Vorschau (max. ~200 KB Text).");return;}
+  const r=new FileReader();r.onload=()=>{uploaded={name:f.name,text:String(r.result||"")};showChip();build();};r.readAsText(f);
+}
+function showChip(){const c=g("fileChip");
+  if(uploaded.name){c.style.display="inline-flex";c.innerHTML=`📎 ${uploaded.name} <span class="x" id="fileX" title="Entfernen">✕</span>`;
+    g("fileX").onclick=()=>{uploaded={name:"",text:""};c.style.display="none";build();};}
+  else c.style.display="none";}
 
 /* Quellen */
 const pel=g("portals");
@@ -521,7 +556,7 @@ document.querySelectorAll(".pack[data-pay]").forEach(p=>p.onclick=()=>{if(!acct)
   pendingPay=parseFloat(p.dataset.pay);pendingCredit=parseFloat(p.dataset.credit);pendingAbo=false;
   g("topAmt").textContent=fmt(pendingPay);g("twintModal").classList.add("on");});
 g("aboBtn").onclick=()=>{if(!acct){alert("Bitte zuerst ein Konto erstellen.");return;}
-  pendingPay=49;pendingCredit=0;pendingAbo=true;g("topAmt").textContent=fmt(49)+" / Monat";g("twintModal").classList.add("on");};
+  pendingPay=16.90;pendingCredit=0;pendingAbo=true;g("topAmt").textContent=fmt(16.90)+" / Monat";g("twintModal").classList.add("on");};
 g("twintCancel").onclick=()=>g("twintModal").classList.remove("on");
 g("twintConfirm").onclick=()=>{if(acct){if(pendingAbo){acct.abo=true;}else{acct.bal=+(acct.bal+pendingCredit).toFixed(2);}saveAcct();renderAcct();}g("twintModal").classList.remove("on");};
 async function deliver(doc,fname){
