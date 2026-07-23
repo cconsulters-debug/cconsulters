@@ -141,6 +141,33 @@
   .foot-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:34px}
   @media(max-width:680px){.foot-grid{grid-template-columns:1fr}nav.links{display:none}}
   .srcline{line-height:2}
+  /* ---- Shop / Konto (Demo) ---- */
+  .demo-badge{display:inline-flex;align-items:center;gap:6px;font-size:.64rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#1A1406;background:linear-gradient(160deg,var(--gold-2),var(--gold));padding:4px 9px;border-radius:6px;vertical-align:middle}
+  .shop{display:grid;grid-template-columns:1fr 1.05fr;gap:20px}
+  @media(max-width:860px){.shop{grid-template-columns:1fr}}
+  .acct{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--line);border-radius:14px;padding:22px}
+  .acct .bal{font-family:var(--serif);font-size:2.4rem;color:var(--gold-2);line-height:1;margin:8px 0 2px}
+  .knr{font-family:var(--mono);font-size:.9rem;color:var(--ink);letter-spacing:.03em;background:#0A0F1A;border:1px solid var(--line-2);border-radius:8px;padding:8px 11px;display:inline-flex;gap:8px;align-items:center}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .gbtn{font-family:var(--sans);font-weight:700;font-size:.86rem;padding:10px 15px;border-radius:9px;cursor:pointer;border:1px solid var(--gold-line);background:var(--surface);color:var(--gold)}
+  .gbtn:hover{background:var(--gold);color:#1A1406;border-color:var(--gold)}
+  .gbtn.solid{background:linear-gradient(160deg,var(--gold-2),var(--gold));color:#1A1406;border-color:transparent}
+  .gbtn.solid:hover{filter:brightness(1.06)}
+  .gbtn:disabled{opacity:.45;cursor:not-allowed}
+  .kachel{background:linear-gradient(165deg,#15110A,#0F1424);border:1px solid var(--gold-line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:13px}
+  .kachel .price{font-family:var(--serif);font-size:2.2rem;color:var(--gold-2)}
+  .kachel .price small{font-size:.9rem;color:var(--ink-2);font-family:var(--sans)}
+  .kachel ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:.9rem;line-height:1.75}
+  .hist{margin-top:18px;border-top:1px solid var(--line-2);padding-top:14px}
+  .hist .hitem{display:flex;justify-content:space-between;gap:10px;font-size:.85rem;padding:7px 0;border-bottom:1px dashed var(--line-2);color:var(--ink-2)}
+  .hist .hitem b{color:var(--ink);font-weight:600}
+  .note{font-size:.82rem;color:var(--ink-3);line-height:1.5}
+  .twint{font-weight:900;color:#fff;background:#000;border-radius:6px;padding:2px 7px;font-size:.78rem;letter-spacing:.02em}
+  .modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;background:rgba(4,7,12,.74);backdrop-filter:blur(4px);padding:20px}
+  .modal.on{display:grid}
+  .mbox{background:var(--surface);border:1px solid var(--gold-line);border-radius:16px;max-width:420px;width:100%;padding:26px;text-align:center}
+  .qr{width:148px;height:148px;margin:16px auto;border-radius:10px;background:repeating-linear-gradient(90deg,#0A0F1A 0 8px,#fff 8px 16px);border:6px solid #fff;box-shadow:0 0 0 1px var(--line);position:relative}
+  .qr::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,#0A0F1A 0 8px,transparent 8px 16px)}
 </style>
 
 <header class="bar"><div class="wrap">
@@ -148,7 +175,7 @@
     <div><b class="serif">Mein Rechtshelfer</b><small>&amp; Assistent · Schweizer Recht</small></div></div>
   <nav class="links">
     <a href="#system">System-Prompt</a><a href="#composer">Composer</a>
-    <a href="#prompts">Prompts</a><a href="#quellen">Rechtsquellen</a>
+    <a href="#shop">Dokument &amp; Konto</a><a href="#prompts">Prompts</a><a href="#quellen">Rechtsquellen</a>
   </nav>
 </div></header>
 
@@ -212,15 +239,64 @@
   </div>
 </div></section>
 
-<section class="sec" id="prompts"><div class="wrap">
+<section class="sec" id="shop"><div class="wrap">
   <div class="sechead"><span class="snum">III.</span>
+    <div><h2 class="h">Dokument erstellen &amp; herunterladen <span class="demo-badge">Demo</span></h2>
+      <p class="sub">Pro erstelltem Dokument zahlst du <b>CHF 0.50</b> aus deinem Guthaben. Das Guthaben
+        lädst du einmal per <span class="twint">TWINT</span> auf — so bleibt der 50-Rappen-Preis günstig.
+        Mit deiner <b>Kundennummer</b> öffnest du dein Profil jederzeit wieder und erarbeitest weitere Aufträge.</p></div></div>
+  <div class="shop">
+    <div class="acct">
+      <div id="acctNew">
+        <div class="kicker" style="margin-bottom:8px">Neu hier?</div>
+        <p class="note" style="margin:0 0 14px">Erstelle dein Konto — du erhältst eine Kundennummer für dein Profil.</p>
+        <button class="gbtn solid" id="createAcct">Konto erstellen</button>
+        <div style="margin-top:20px;border-top:1px solid var(--line-2);padding-top:16px">
+          <div class="kicker" style="margin-bottom:8px">Schon Kunde?</div>
+          <div class="row">
+            <input id="knrInput" placeholder="MR-2026-XXXXXX" style="font-family:var(--mono);flex:1;min-width:150px;background:#0A0F1A;border:1px solid var(--line);border-radius:9px;padding:10px 12px;color:var(--ink)">
+            <button class="gbtn" id="openAcct">Profil öffnen</button>
+          </div>
+        </div>
+      </div>
+      <div id="acctView" style="display:none">
+        <div class="kicker" style="margin-bottom:8px">Mein Konto</div>
+        <div class="knr">Kundennr.:&nbsp;<b id="knrVal"></b></div>
+        <div class="bal" id="balVal">CHF 0.00</div>
+        <div class="note">Verfügbares Guthaben</div>
+        <div class="row">
+          <button class="gbtn" data-top="5">+ CHF 5</button>
+          <button class="gbtn" data-top="10">+ CHF 10</button>
+          <button class="gbtn" data-top="20">+ CHF 20</button>
+        </div>
+        <div class="hist"><div class="kicker" style="margin-bottom:8px">Meine Dokumente</div>
+          <div id="histList"></div></div>
+      </div>
+    </div>
+    <div class="kachel">
+      <span class="demo-badge">Demo · Testmodus</span>
+      <div class="price">CHF&nbsp;0.50 <small>/ Dokument</small></div>
+      <ul>
+        <li>Nutzt deinen im <a href="#composer" style="color:var(--gold-2)">Composer</a> erstellten Prompt</li>
+        <li>Sofortiger Download als Dokument (.md)</li>
+        <li>Jedes neue Dokument wird neu verrechnet (−CHF 0.50)</li>
+        <li>Erscheint in deinem Profil-Verlauf</li>
+      </ul>
+      <button class="gbtn solid" id="kachelBtn" disabled style="font-size:.95rem;padding:14px 20px">Zuerst Konto erstellen</button>
+      <p class="note" id="kachelNote">Testmodus: kein echtes Geld — der Download ist echt. In der Live-Version läuft die Zahlung über Netlify&nbsp;+&nbsp;Firebase&nbsp;+&nbsp;Stripe/TWINT.</p>
+    </div>
+  </div>
+</div></section>
+
+<section class="sec" id="prompts"><div class="wrap">
+  <div class="sechead"><span class="snum">IV.</span>
     <div><h2 class="h">Die zehn besten Rechts-Prompts</h2>
       <p class="sub">Erprobte Vorlagen für typische Aufgaben, auf Schweizer Recht und Terminologie angepasst.</p></div></div>
   <div class="pgrid" id="pgrid"></div>
 </div></section>
 
 <section class="sec" id="quellen"><div class="wrap">
-  <div class="sechead"><span class="snum">IV.</span>
+  <div class="sechead"><span class="snum">V.</span>
     <div><h2 class="h">Offizielle Rechtsquellen</h2>
       <p class="sub">Womit dein KI-Rechtshelfer jede Aussage belegt — und du sie nachprüfst.</p></div></div>
   <div class="portals" id="portals"></div>
@@ -241,6 +317,18 @@
     <a href="https://www.lexfind.ch" target="_blank" rel="noopener">Lexfind</a><br>
     <a href="https://www.sav-fsa.ch" target="_blank" rel="noopener">SAV / FSA</a></div></div>
 </div></footer>
+
+<div class="modal" id="twintModal"><div class="mbox">
+  <span class="demo-badge">Demo · Testmodus</span>
+  <h3 style="margin:14px 0 4px;font-family:var(--serif);font-weight:700">Guthaben aufladen</h3>
+  <p class="note">Betrag: <b id="topAmt" style="color:var(--gold-2)">CHF 0.00</b> &nbsp;via&nbsp; <span class="twint">TWINT</span></p>
+  <div class="qr"></div>
+  <p class="note">QR-Code mit der TWINT-App scannen — in dieser Demo simuliert, es fliesst <b>kein echtes Geld</b>.</p>
+  <div class="row" style="justify-content:center;margin-top:16px">
+    <button class="gbtn" id="twintCancel">Abbrechen</button>
+    <button class="gbtn solid" id="twintConfirm">Zahlung bestätigen (Demo)</button>
+  </div>
+</div></div>
 
 <script>
 const SYS_SHORT=`Du bist «Mein Rechtshelfer», ein juristischer Assistent für SCHWEIZER RECHT. Antworte präzise in Schweizer Hochdeutsch nach dem Schema: Sachverhalt → Rechtsfrage → Normen (mit Art. + Gesetz + SR-Nummer) → Subsumtion → Ergebnis/Empfehlung. Frag nach dem KANTON und nach fehlenden Fakten, bevor du verbindlich einschätzt. ERFINDE NIE Artikel, BGE-Fundstellen oder Fristen — kennzeichne Unsicheres als «zu verifizieren». Du gibst ALLGEMEINE rechtliche Information, KEINE verbindliche Beratung, und begründest kein Mandatsverhältnis; bei Fristen oder Strafsachen verweise auf eine zugelassene Anwältin/einen Anwalt. Nenne laufende Fristen deutlich.`;
@@ -371,4 +459,67 @@ CATS.forEach((cat,i)=>{const t=document.createElement("button");t.className="tab
   let rows=cat.r.map(r=>`<tr><td class="ab">${r[0]}</td><td>${r[1]}</td><td class="sr">SR ${r[2]}</td>
      <td><a href="https://www.fedlex.admin.ch/de/cc/internal-law" target="_blank" rel="noopener" style="color:var(--gold-2);text-decoration:none;font-weight:700">Fedlex ↗</a></td></tr>`).join("");
   block.innerHTML=`<div class="tablewrap"><table><thead><tr><th>Abk.</th><th>Gesetz</th><th>SR-Nr.</th><th>Quelle</th></tr></thead><tbody>${rows}</tbody></table></div>`;cats.appendChild(block);});
+
+/* ---- Shop / Konto / Guthaben (Demo, Testmodus) ---- */
+const LS_KEY="mrhelfer_demo_v1";
+let acct=(function(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return window._acct||null}})();
+function saveAcct(){try{localStorage.setItem(LS_KEY,JSON.stringify(acct))}catch(e){window._acct=acct}}
+function genKnr(){const y=new Date().getFullYear();let s="";for(let i=0;i<6;i++)s+="ABCDEFGHJKLMNPRSTUVWXYZ23456789"[Math.floor(Math.random()*31)];return "MR-"+y+"-"+s}
+function fmt(n){return "CHF "+n.toFixed(2)}
+const g=id=>document.getElementById(id);
+function renderAcct(){
+  const has=!!acct;
+  g("acctNew").style.display=has?"none":"block";
+  g("acctView").style.display=has?"block":"none";
+  const btn=g("kachelBtn");
+  if(!has){btn.disabled=true;btn.textContent="Zuerst Konto erstellen";return;}
+  g("knrVal").textContent=acct.knr;
+  g("balVal").textContent=fmt(acct.bal);
+  const h=g("histList");
+  h.innerHTML=acct.hist.length
+    ? acct.hist.slice().reverse().map(x=>`<div class="hitem"><b>${x.t}</b><span>${x.d} · −CHF 0.50</span></div>`).join("")
+    : '<div class="note">Noch keine Dokumente erstellt.</div>';
+  if(acct.bal>=0.5){btn.disabled=false;btn.textContent="Dokument erstellen & herunterladen · CHF 0.50";}
+  else{btn.disabled=true;btn.textContent="Guthaben zu tief — bitte aufladen";}
+}
+g("createAcct").onclick=()=>{acct={knr:genKnr(),bal:0,hist:[]};saveAcct();renderAcct();
+  alert("Konto erstellt.\n\nDeine Kundennummer: "+acct.knr+"\n\nBitte notieren — damit öffnest du dein Profil wieder.");};
+g("openAcct").onclick=()=>{const v=(g("knrInput").value||"").trim().toUpperCase();
+  if(!v){alert("Bitte Kundennummer eingeben.");return;}
+  let stored=null;try{const r=localStorage.getItem(LS_KEY);stored=r?JSON.parse(r):null}catch(e){stored=window._acct}
+  if(stored&&stored.knr===v){acct=stored;saveAcct();renderAcct();alert("Profil geöffnet: "+v);}
+  else{alert("In dieser Demo ist nur die zuletzt in DIESEM Browser erstellte Kundennummer gespeichert.\nIn der echten App liegt dein Profil serverseitig (Firebase) und ist überall abrufbar.");}
+};
+let pendingTop=0;
+document.querySelectorAll("[data-top]").forEach(b=>b.onclick=()=>{pendingTop=parseFloat(b.dataset.top);
+  g("topAmt").textContent=fmt(pendingTop);g("twintModal").classList.add("on");});
+g("twintCancel").onclick=()=>g("twintModal").classList.remove("on");
+g("twintConfirm").onclick=()=>{if(acct){acct.bal=+(acct.bal+pendingTop).toFixed(2);saveAcct();renderAcct();}g("twintModal").classList.remove("on");};
+g("kachelBtn").onclick=async()=>{
+  if(!acct||acct.bal<0.5)return;
+  const sel=g("task");const taskName=sel.options[sel.selectedIndex].text.replace(/^\d+\.\s*/,"");
+  const raw=(g("compOut").dataset.raw||"").trim();
+  const now=new Date();
+  const doc="MEIN RECHTSHELFER & ASSISTENT — Rechtsdokument\n"+"=".repeat(50)
+    +"\nKundennummer: "+acct.knr+"\nErstellt:     "+now.toLocaleString("de-CH")
+    +"\nVorlage:      "+taskName+"\n"+"-".repeat(50)+"\n\n"
+    +(raw||"[Bitte oben im Composer Aufgabe, Kanton und Angaben ausfüllen.]")
+    +"\n\n"+"-".repeat(50)
+    +"\nAllgemeine rechtliche Information, keine verbindliche Beratung. Fundstellen auf fedlex.admin.ch / bger.ch prüfen.\n";
+  const fname="Rechtsdokument_"+taskName.replace(/[^0-9A-Za-zÄÖÜäöü]+/g,"-").replace(/^-|-$/g,"")+"_"+acct.knr+".md";
+  let saved=false;
+  if(window.claude&&window.claude.downloads){
+    try{await window.claude.downloads.save({filename:fname,data:doc});saved=true;}
+    catch(e){if(e&&e.code==="declined")return; saved=false;}
+  }
+  if(!saved){
+    try{const blob=new Blob([doc],{type:"text/markdown"});const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1500);saved=true;}
+    catch(e){saved=false;}
+  }
+  if(saved){acct.bal=+(acct.bal-0.5).toFixed(2);acct.hist.push({t:taskName,d:now.toLocaleDateString("de-CH")});saveAcct();renderAcct();}
+  else{alert("Download in dieser Vorschau nicht möglich. In der echten App wird das Dokument als PDF/Word geliefert.");}
+};
+renderAcct();
 </script>
