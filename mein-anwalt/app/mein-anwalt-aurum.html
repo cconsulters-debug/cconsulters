@@ -23,13 +23,9 @@
   .serif{font-family:var(--serif)}
   .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
   .kicker{font-size:.72rem;text-transform:uppercase;letter-spacing:.28em;font-weight:700;color:var(--gold)}
-  .rule{height:1px;background:linear-gradient(90deg,var(--gold-line),transparent)}
-
-  /* monogram */
   .mono-mark{width:40px;height:40px;border:1px solid var(--gold);border-radius:3px;display:grid;place-items:center;
     color:var(--gold);font-family:var(--serif);font-weight:700;font-size:1.05rem;letter-spacing:.02em;flex:none;
     background:linear-gradient(160deg,rgba(203,162,76,.14),transparent)}
-
   header.bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px) saturate(1.3);
     background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--line-2)}
   .bar .wrap{display:flex;align-items:center;gap:18px;height:66px}
@@ -39,8 +35,6 @@
   nav.links{margin-left:auto;display:flex;gap:2px;flex-wrap:wrap}
   nav.links a{font-size:.8rem;font-weight:600;color:var(--ink-2);text-decoration:none;padding:8px 12px;border-radius:6px;letter-spacing:.01em}
   nav.links a:hover{color:var(--gold);background:var(--surface)}
-
-  /* hero */
   .hero{padding:78px 0 54px;position:relative}
   .hero .kicker{margin-bottom:20px;display:flex;align-items:center;gap:14px}
   .hero .kicker::after{content:"";height:1px;width:70px;background:var(--gold-line)}
@@ -54,7 +48,6 @@
   .btn.primary:hover{filter:brightness(1.06)}
   .btn.ghost{border-color:var(--line);color:var(--ink);background:var(--surface)}
   .btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
-
   .trustband{margin-top:52px;border-top:1px solid var(--line-2);border-bottom:1px solid var(--line-2);
     display:grid;grid-template-columns:repeat(4,1fr);gap:0}
   @media(max-width:720px){.trustband{grid-template-columns:repeat(2,1fr)}}
@@ -62,41 +55,29 @@
   .trustband .t:last-child{border-right:none}
   .trustband .n{font-family:var(--serif);font-size:1.9rem;color:var(--gold-2);line-height:1}
   .trustband .l{font-size:.76rem;color:var(--ink-2);margin-top:7px;letter-spacing:.02em}
-
   .disc{margin-top:30px;display:flex;gap:13px;align-items:flex-start;max-width:70ch;
     background:var(--gold-soft);border:1px solid var(--gold-line);padding:15px 17px;border-radius:11px;font-size:.9rem}
   .disc .b{color:var(--gold);font-weight:900;flex:none}
-
   section.sec{padding:60px 0;border-top:1px solid var(--line-2)}
   .sechead{display:flex;gap:18px;align-items:baseline;margin-bottom:30px;flex-wrap:wrap}
   .snum{font-family:var(--serif);color:var(--gold);font-size:1.1rem;font-style:italic}
   h2.h{font-family:var(--serif);font-weight:700;font-size:clamp(1.7rem,3.4vw,2.5rem);letter-spacing:-.005em}
   .sub{color:var(--ink-2);max-width:66ch;margin:12px 0 0}
-
   .card{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--line);border-radius:14px}
   .pad{padding:24px}
-
-  .code{position:relative;background:#0A0F1A;border:1px solid var(--line-2);border-radius:10px;font-family:var(--mono);
-    font-size:.82rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;padding:16px;color:#D7DCE8;max-height:330px;overflow:auto}
-  .copy{position:absolute;top:9px;right:9px;font-family:var(--sans);font-size:.72rem;font-weight:800;letter-spacing:.04em;
-    padding:6px 11px;border-radius:7px;cursor:pointer;border:1px solid var(--gold-line);background:var(--surface);color:var(--gold)}
-  .copy:hover{background:var(--gold);color:#1A1406;border-color:var(--gold)}
-  .copy.done{background:var(--ok);color:#06120C;border-color:var(--ok)}
-
-  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:760px){.steps{grid-template-columns:1fr}}
+  .stp{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--line);border-radius:14px;padding:22px}
+  .stp .sn{font-family:var(--serif);font-style:italic;color:var(--gold);font-size:1.7rem;line-height:1}
+  .stp h3{font-family:var(--serif);font-weight:700;margin:8px 0 7px;font-size:1.15rem}
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
   .pcard{display:flex;flex-direction:column;overflow:hidden}
   .pcard .top{display:flex;gap:14px;padding:20px 20px 14px;align-items:flex-start}
   .pcard .no{font-family:var(--serif);font-style:italic;font-size:1.25rem;color:var(--gold);line-height:1;flex:none;padding-top:2px}
   .pcard h3{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
   .pcard .bl{color:var(--ink-2);font-size:.87rem;margin-top:5px;line-height:1.45}
-  .pcard details{margin-top:auto;border-top:1px solid var(--line-2)}
-  .pcard summary{cursor:pointer;list-style:none;padding:13px 20px;font-size:.8rem;font-weight:700;color:var(--gold);
-    display:flex;justify-content:space-between;letter-spacing:.03em;text-transform:uppercase}
-  .pcard summary::-webkit-details-marker{display:none}
-  .pcard summary .a{transition:transform .2s}
-  .pcard details[open] summary .a{transform:rotate(90deg)}
-  .pcard .body{padding:0 15px 15px}
-
+  .pfoot{margin-top:auto;border-top:1px solid var(--line-2);padding:13px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .ptier{font-size:.8rem;color:var(--gold-2);font-weight:700}
   .comp{display:grid;grid-template-columns:.92fr 1.08fr;gap:22px}
   @media(max-width:860px){.comp{grid-template-columns:1fr}}
   .field{display:flex;flex-direction:column;gap:7px;margin-bottom:15px}
@@ -106,16 +87,21 @@
   .field textarea{resize:vertical;min-height:96px;line-height:1.5}
   .field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--gold) 50%),linear-gradient(135deg,var(--gold) 50%,transparent 50%);
     background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
-  input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-color:transparent}
+  input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-color:transparent}
   .hint{font-size:.82rem;color:var(--ink-2);display:flex;gap:8px}
-  .out{background:#0A0F1A;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column}
+  .out{background:#0A0F1A;border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
   .out .oh{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid var(--line-2)}
-  .out pre{margin:0;padding:15px;font-family:var(--mono);font-size:.82rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;overflow:auto;flex:1;color:#D7DCE8;min-height:220px}
-  .out pre .ph{color:var(--gold-2);background:var(--gold-soft);border-radius:3px;padding:0 3px}
+  .lockpill{font-size:.7rem;font-weight:700;color:var(--gold-2);border:1px solid var(--gold-line);border-radius:999px;padding:4px 10px}
+  .prewrap{position:relative;flex:1;min-height:240px}
+  .prewrap pre{margin:0;padding:15px;font-family:var(--mono);font-size:.8rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;
+    color:#B8C0D0;height:100%;overflow:hidden;user-select:none;-webkit-user-select:none}
+  .lockover{position:absolute;left:0;right:0;bottom:0;top:35%;pointer-events:none;
+    background:linear-gradient(180deg,transparent,#0A0F1A 62%);display:flex;align-items:flex-end;justify-content:center;text-align:center;padding:18px}
+  .lockover .lk{pointer-events:auto}
+  .lockover .lktxt{color:var(--ink);font-weight:700;font-size:.92rem;margin-bottom:10px}
   .flow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:16px;font-size:.83rem;color:var(--ink-2)}
   .flow .step{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:600}
   .flow .arr{color:var(--gold)}
-
   .portals{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:13px;margin-bottom:24px}
   .portal{display:block;text-decoration:none;padding:16px;border-radius:12px;border:1px solid var(--line);
     background:linear-gradient(180deg,var(--surface),var(--bg2))}
@@ -134,14 +120,12 @@
   td.ab{font-weight:800;font-family:var(--serif)}
   td.sr{font-family:var(--mono);font-weight:700;color:var(--gold-2);white-space:nowrap}
   .catblock{display:none}.catblock.on{display:block}
-
   footer{border-top:1px solid var(--line-2);padding:44px 0 64px;color:var(--ink-2);font-size:.88rem}
   footer h3{font-family:var(--serif);font-size:1.1rem;color:var(--ink);margin-bottom:11px}
   footer a{color:var(--gold);text-decoration:none}footer a:hover{text-decoration:underline}
   .foot-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:34px}
   @media(max-width:680px){.foot-grid{grid-template-columns:1fr}nav.links{display:none}}
   .srcline{line-height:2}
-  /* ---- Shop / Konto (Demo) ---- */
   .demo-badge{display:inline-flex;align-items:center;gap:6px;font-size:.64rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#1A1406;background:linear-gradient(160deg,var(--gold-2),var(--gold));padding:4px 9px;border-radius:6px;vertical-align:middle}
   .shop{display:grid;grid-template-columns:1fr 1.05fr;gap:20px}
   @media(max-width:860px){.shop{grid-template-columns:1fr}}
@@ -153,6 +137,7 @@
   .gbtn:hover{background:var(--gold);color:#1A1406;border-color:var(--gold)}
   .gbtn.solid{background:linear-gradient(160deg,var(--gold-2),var(--gold));color:#1A1406;border-color:transparent}
   .gbtn.solid:hover{filter:brightness(1.06)}
+  .gbtn.small{padding:7px 12px;font-size:.78rem}
   .gbtn:disabled{opacity:.45;cursor:not-allowed}
   .kachel{background:linear-gradient(165deg,#15110A,#0F1424);border:1px solid var(--gold-line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:13px}
   .kachel .price{font-family:var(--serif);font-size:2.2rem;color:var(--gold-2)}
@@ -186,28 +171,28 @@
 </style>
 
 <header class="bar"><div class="wrap">
-  <div class="brand"><span class="mono-mark">MA</span>
+  <div class="brand"><span class="mono-mark">MR</span>
     <div><b class="serif">Mein Rechtshelfer</b><small>&amp; Assistent · Schweizer Recht</small></div></div>
   <nav class="links">
-    <a href="#system">System-Prompt</a><a href="#composer">Composer</a>
-    <a href="#shop">Dokument &amp; Konto</a><a href="#prompts">Prompts</a><a href="#quellen">Rechtsquellen</a>
+    <a href="#system">So funktioniert's</a><a href="#composer">Dokument erstellen</a>
+    <a href="#shop">Guthaben &amp; Konto</a><a href="#prompts">Dokumenttypen</a><a href="#quellen">Rechtsquellen</a>
   </nav>
 </div></header>
 
 <section class="hero"><div class="wrap">
-  <div class="kicker">KI-Baukasten · Schweizer Recht</div>
+  <div class="kicker">KI-Dokumente · Schweizer Recht</div>
   <h1 class="title serif">Ihr digitaler Rechtsberater —<br><em>fundiert. souverän. Schweizerisch.</em></h1>
-  <p class="lede">Ein präzise kalibrierter KI-Assistent für Schweizer Recht: System-Prompt,
-    zehn erprobte Rechts-Prompts und der komplette Katalog offizieller Rechtsquellen —
-    damit jede Auskunft auf Gesetz und Rechtsprechung fusst.</p>
+  <p class="lede">Beschreibe dein Anliegen — «Mein Rechtshelfer» erstellt dir das passende, auf
+    Schweizer Recht zugeschnittene Dokument und klärt deine Rechtsfragen. Fundiert auf Gesetz und
+    Rechtsprechung, jede Fundstelle überprüfbar. Du bezahlst nur pro fertigem Dokument.</p>
   <div class="cta">
-    <a class="btn primary" href="#composer">Prompt erstellen →</a>
-    <a class="btn ghost" href="#system">System-Prompt kopieren</a>
+    <a class="btn primary" href="#composer">Dokument erstellen →</a>
+    <a class="btn ghost" href="#system">So funktioniert's</a>
   </div>
   <div class="trustband">
     <div class="t"><div class="n">26</div><div class="l">Kantone berücksichtigt</div></div>
     <div class="t"><div class="n">~40</div><div class="l">Gesetze mit SR-Nummer</div></div>
-    <div class="t"><div class="n">10</div><div class="l">Rechts-Prompt-Vorlagen</div></div>
+    <div class="t"><div class="n">10</div><div class="l">Dokumenttypen</div></div>
     <div class="t"><div class="n serif" style="font-style:italic">Fedlex</div><div class="l">&amp; BGer verifizierbar</div></div>
   </div>
   <div class="disc"><span class="b">§</span>
@@ -218,48 +203,55 @@
 
 <section class="sec" id="system"><div class="wrap">
   <div class="sechead"><span class="snum">I.</span>
-    <div><h2 class="h">Der System-Prompt</h2>
-      <p class="sub">In die <b>Projektanweisung</b> deines KI-Tools kopieren (Claude-Projekt ·
-        ChatGPT Custom Instructions · API-<span class="mono">system</span>). Damit wird die KI zum «Mein Rechtshelfer».</p></div></div>
-  <div class="card pad">
-    <div class="kicker" style="margin-bottom:12px">Kurzform — sofort einsetzbar</div>
-    <div class="code" id="sysShort"></div>
-    <details style="margin-top:16px"><summary style="cursor:pointer;font-weight:700;color:var(--gold);letter-spacing:.02em">▸ Vollständige Fassung (Rolle · Arbeitsweise · Zitierregeln · Grenzen)</summary>
-      <div class="code" style="margin-top:12px;max-height:440px" id="sysFull"></div></details>
+    <div><h2 class="h">So funktioniert's</h2>
+      <p class="sub">Du beschreibst dein Anliegen, wählst den Dokumenttyp und erhältst gegen eine
+        kleine Gebühr das fertige Dokument. Die zugrunde liegenden Fach-Vorlagen bleiben
+        geschützt im Hintergrund — du bekommst das Ergebnis, nicht die Rezeptur.</p></div></div>
+  <div class="steps">
+    <div class="stp"><div class="sn">1</div><h3>Angaben machen</h3>
+      <p class="note" style="color:var(--ink-2)">Dokumenttyp, Kanton, deine Rolle und den Sachverhalt eingeben — je genauer, desto besser das Ergebnis.</p></div>
+    <div class="stp"><div class="sn">2</div><h3>Dokument wird erstellt</h3>
+      <p class="note" style="color:var(--ink-2)">Unser geprüftes System erzeugt aus der passenden Fach-Vorlage dein auf Schweizer Recht zugeschnittenes Dokument.</p></div>
+    <div class="stp"><div class="sn">3</div><h3>Bezahlen &amp; herunterladen</h3>
+      <p class="note" style="color:var(--ink-2)">Je nach Typ CHF 0.50–1.90 aus deinem Guthaben. Das Dokument landet in deinem persönlichen Archiv.</p></div>
   </div>
 </div></section>
 
 <section class="sec" id="composer"><div class="wrap">
   <div class="sechead"><span class="snum">II.</span>
-    <div><h2 class="h">Prompt-Composer</h2>
-      <p class="sub">Aufgabe wählen, Angaben ergänzen — die Seite baut den fertigen Prompt.
-        Kopieren und in deinen KI-Rechtshelfer einfügen. <span style="color:var(--ink-3)">Prompt-Generator, kein Live-Chat.</span></p></div></div>
+    <div><h2 class="h">Dein Dokument vorbereiten</h2>
+      <p class="sub">Angaben ausfüllen — rechts siehst du eine <b>gesperrte Vorschau</b>. Das
+        vollständige Dokument erhältst du nach Bezahlung im Abschnitt «Guthaben &amp; Konto».</p></div></div>
   <div class="card pad">
     <div class="comp">
       <div>
-        <div class="field"><label for="task">Aufgabe</label><select id="task"></select></div>
+        <div class="field"><label for="task">Dokumenttyp</label><select id="task"></select></div>
         <div class="field"><label for="kanton">Kanton</label><select id="kanton"></select></div>
         <div class="field"><label for="partei">Meine Rolle / Partei</label><input id="partei" placeholder="z. B. Arbeitnehmer · Vermieterin · Beschuldigter"></div>
         <div class="field"><label for="ziel">Ziel</label><input id="ziel" placeholder="z. B. Kündigung anfechten · Forderung durchsetzen"></div>
         <div class="field"><label for="sv">Sachverhalt / Details</label><textarea id="sv" placeholder="Fakten, Daten und Fristen kurz schildern…"></textarea></div>
-        <div class="hint"><span style="color:var(--gold);font-weight:800">↳</span> Leere Felder bleiben als <span class="mono" style="color:var(--gold-2)">[PLATZHALTER]</span> stehen.</div>
+        <div class="hint"><span style="color:var(--gold);font-weight:800">↳</span> Deine Angaben fliessen ins Dokument ein. Der vollständige Text wird erst beim bezahlten Download erzeugt.</div>
       </div>
-      <div class="out"><div class="oh"><span class="kicker">Dein fertiger Prompt</span>
-        <button class="copy" id="copyComp" style="position:static">Kopieren</button></div><pre id="compOut"></pre></div>
+      <div class="out"><div class="oh"><span class="kicker">Vorschau</span><span class="lockpill">🔒 Vollständig nach Bezahlung</span></div>
+        <div class="prewrap"><pre id="compOut"></pre>
+          <div class="lockover"><div class="lk"><div class="lktxt">🔒 Vollständiges Dokument nach Bezahlung</div>
+            <a class="btn primary" href="#shop" style="font-size:.85rem;padding:9px 16px">Zum Download →</a></div></div>
+        </div>
+      </div>
     </div>
-    <div class="flow"><span class="step">1 · System-Prompt gesetzt</span><span class="arr">→</span>
-      <span class="step">2 · Prompt kopieren</span><span class="arr">→</span>
-      <span class="step">3 · in KI-Rechtshelfer einfügen</span><span class="arr">→</span>
-      <span class="step">4 · Fundstellen prüfen</span></div>
+    <div class="flow"><span class="step">1 · Angaben ausfüllen</span><span class="arr">→</span>
+      <span class="step">2 · Dokumenttyp wählen</span><span class="arr">→</span>
+      <span class="step">3 · Guthaben &amp; bezahlen</span><span class="arr">→</span>
+      <span class="step">4 · Dokument herunterladen</span></div>
   </div>
 </div></section>
 
 <section class="sec" id="shop"><div class="wrap">
   <div class="sechead"><span class="snum">III.</span>
-    <div><h2 class="h">Dokumente, Guthaben &amp; Vorteile <span class="demo-badge">Demo</span></h2>
-      <p class="sub">Jedes fertige Dokument, das du herunterlädst, wird aus deinem Guthaben verrechnet.
-        Guthaben lädst du per <span class="twint">TWINT</span> auf (mit Bonus) — oder nimm die Flatrate.
-        Deine <b>Kundennummer</b> öffnet Profil, Archiv und Treue-Vorteile jederzeit wieder.</p></div></div>
+    <div><h2 class="h">Guthaben, Konto &amp; Vorteile <span class="demo-badge">Demo</span></h2>
+      <p class="sub">Jedes fertige Dokument wird aus deinem Guthaben verrechnet. Guthaben lädst du per
+        <span class="twint">TWINT</span> auf (mit Bonus) — oder nimm die Flatrate. Deine
+        <b>Kundennummer</b> öffnet Profil, Archiv und Treue-Vorteile jederzeit wieder.</p></div></div>
   <div class="shop">
     <div class="acct">
       <div id="acctNew">
@@ -302,8 +294,8 @@
         <span class="demo-badge">Demo · Testmodus</span>
         <div class="price"><span id="kachelPrice">CHF 0.50</span> <small id="kachelTier">/ Dokument</small></div>
         <ul>
-          <li>Preis nach gewählter <a href="#composer" style="color:var(--gold-2)">Aufgabe</a>: Info 0.50 · Standard 0.90 · Premium 1.90</li>
-          <li>Sofortiger Download als Dokument (.md)</li>
+          <li>Erstellt das im <a href="#composer" style="color:var(--gold-2)">Assistenten</a> vorbereitete Dokument</li>
+          <li>Preis nach Typ: Info 0.50 · Standard 0.90 · Premium 1.90</li>
           <li>Bezahlte Dokumente bleiben im Archiv — gratis erneut ladbar</li>
           <li>Jedes neue Dokument wird neu verrechnet</li>
         </ul>
@@ -333,8 +325,9 @@
 
 <section class="sec" id="prompts"><div class="wrap">
   <div class="sechead"><span class="snum">IV.</span>
-    <div><h2 class="h">Die zehn besten Rechts-Prompts</h2>
-      <p class="sub">Erprobte Vorlagen für typische Aufgaben, auf Schweizer Recht und Terminologie angepasst.</p></div></div>
+    <div><h2 class="h">Dokumenttypen</h2>
+      <p class="sub">Zehn Dokumente für typische Anliegen im Schweizer Recht. Auswählen, im
+        Assistenten ausfüllen, herunterladen. <span style="color:var(--ink-3)">Die Fach-Vorlagen dahinter sind geschützt.</span></p></div></div>
   <div class="pgrid" id="pgrid"></div>
 </div></section>
 
@@ -374,83 +367,21 @@
 </div></div>
 
 <script>
-const SYS_SHORT=`Du bist «Mein Rechtshelfer», ein juristischer Assistent für SCHWEIZER RECHT. Antworte präzise in Schweizer Hochdeutsch nach dem Schema: Sachverhalt → Rechtsfrage → Normen (mit Art. + Gesetz + SR-Nummer) → Subsumtion → Ergebnis/Empfehlung. Frag nach dem KANTON und nach fehlenden Fakten, bevor du verbindlich einschätzt. ERFINDE NIE Artikel, BGE-Fundstellen oder Fristen — kennzeichne Unsicheres als «zu verifizieren». Du gibst ALLGEMEINE rechtliche Information, KEINE verbindliche Beratung, und begründest kein Mandatsverhältnis; bei Fristen oder Strafsachen verweise auf eine zugelassene Anwältin/einen Anwalt. Nenne laufende Fristen deutlich.`;
-const SYS_FULL=`ROLLE
-Du bist «Mein Rechtshelfer», ein spezialisierter juristischer Assistent für Schweizer Recht. Du denkst wie eine erfahrene, zugelassene Schweizer Rechtsanwältin / ein Rechtsanwalt mit Praxis in Zivilrecht (ZGB/OR), Arbeits-, Miet-, Straf- und Strafprozessrecht, SchKG, Verwaltungs- und Sozialversicherungsrecht, Datenschutz (revDSG) und Gesellschaftsrecht. Du beachtest die föderale Struktur (Bund/Kanton/Gemeinde) und fragst nach dem Kanton, sobald kantonales Recht oder kantonale Zuständigkeit relevant sein könnte.
-
-SPRACHE
-Klares Schweizer Hochdeutsch («ss» statt «ß»); Schweizer Terminologie (Betreibung, Schlichtungsbehörde, Rechtsvorschlag, Verrechnung …). Ausschliesslich Schweizer Recht, sofern nicht anders verlangt; auf IPRG-Konstellationen (Auslandsbezug) aktiv hinweisen.
-
-ARBEITSWEISE (Gutachten-/Subsumtionsschema)
-1) Sachverhalt klären — bei fehlenden Angaben (Kanton, Daten/Fristen, Vertragsart, Streitwert, Parteien) gezielt nachfragen.
-2) Rechtsfrage(n) benennen.
-3) Anwendbare Normen zitieren — mit Artikel + Gesetz + SR-Nummer (z. B. «Art. 336c OR [SR 220]»), bei Bedarf BGE.
-4) Subsumtion — Voraussetzungen, Rechtsfolgen, Fristen, Beweislast.
-5) Ergebnis & priorisierte Handlungsempfehlung — nächste Schritte, Zuständigkeit, Risiken.
-6) Restunsicherheiten offenlegen.
-Antworte mit Zwischenüberschriften und Aufzählungen; erkläre Fachbegriffe kurz.
-
-ZITIER- & GENAUIGKEITSREGELN
-Erfinde niemals Artikel, Artikelnummern, BGE-Fundstellen, Urteile oder Fristen. Unsicheres ausdrücklich als «zu verifizieren» kennzeichnen. Format «Art. 336c Abs. 1 lit. b OR» (kein «§»). Zentrale Gesetze mit SR-Nummer nennen. Auf Stand des Rechts und mögliche kantonale Abweichungen hinweisen.
-
-RECHTLICHE GRENZEN
-Du bist KI-Assistent, kein zugelassener Anwalt; kein Mandatsverhältnis; allgemeine Information statt verbindlicher Einzelfallberatung. Bei fristgebundenen, existenziellen oder strafrechtlichen Sachen: rechtzeitig zugelassene Anwältin/Anwalt (SAV/FSA) oder zuständige Behörde beiziehen. Fristen aktiv und deutlich benennen. Keine Beihilfe zu rechtswidrigem Handeln. Sparsam mit Personendaten Dritter.
-
-TON
-Sachlich, ruhig, verständlich, lösungsorientiert; ehrlich über Unsicherheiten.`;
-const PROMPTS=[
- {t:"Rechtsgutachten / Fallanalyse",b:"Strukturierte Subsumtion mit Normen, Fristen und Empfehlung.",x:`Erstelle ein strukturiertes Kurzgutachten zu folgendem Fall nach Schweizer Recht.
-Sachverhalt: {{SACHVERHALT}}
-Kanton: {{KANTON}}
-Meine Rolle / Partei: {{PARTEI}}
-Ziel: {{ZIEL}}
-Gliedere: 1) Relevanter Sachverhalt 2) Rechtsfrage(n) 3) Anwendbare Normen (Art. + Gesetz + SR-Nr., ggf. BGE) 4) Subsumtion (Voraussetzungen, Rechtsfolgen, Beweislast, Fristen) 5) Ergebnis + priorisierte Empfehlung 6) Offene Fragen.
-Fehlende Fakten zuerst erfragen. Unsichere Fundstellen als «zu verifizieren» kennzeichnen.`},
- {t:"Vertrag entwerfen",b:"Gesetzeskonformer OR-Vertrag mit Prüf-Checkliste.",x:`Entwirf einen [VERTRAGSART: Arbeitsvertrag / Mietvertrag / Werkvertrag …] nach Schweizer Obligationenrecht.
-Parteien: {{PARTEI}} und [GEGENPARTEI]
-Kanton / Gerichtsstand: {{KANTON}}
-Ziel / Zweck: {{ZIEL}}
-Eckpunkte: {{SACHVERHALT}}
-Anforderungen: gesetzeskonforme OR-Klauseln; klare, eindeutige Definitionen; Klauseln markieren, die zwingendes Recht betreffen oder anzupassen sind; Formvorschriften nennen (Schriftform, öffentliche Beurkundung); am Ende Checkliste «vor Unterschrift prüfen».`},
- {t:"Vertrag prüfen (Redlining)",b:"Risiken, unzulässige Klauseln und Formulierungsvorschläge.",x:`Prüfe den folgenden Vertrag aus Sicht von {{PARTEI}} nach Schweizer Recht.
-Kanton: {{KANTON}}
-[VERTRAGSTEXT HIER EINFÜGEN]
-Gib mir: 5–10 grösste Risiken (nach Wichtigkeit); Klauseln gegen zwingendes Recht oder einseitig; je Problemstelle Grund + konkreter Formulierungsvorschlag; fehlende übliche Klauseln (Gerichtsstand, anwendbares Recht, Haftung, Datenschutz). Abschluss als Tabelle: Klausel | Risiko | Empfehlung | Priorität.`},
- {t:"Rechtsrecherche",b:"Normen, Leitentscheide und Suchbegriffe zum Nachrecherchieren.",x:`Ich recherchiere zu folgender Rechtsfrage im Schweizer Recht: {{ZIEL}}
-Kontext / Sachverhalt: {{SACHVERHALT}}
-Kanton: {{KANTON}}
-1) einschlägige Artikel (Art. + Gesetz + SR-Nr.) 2) relevante BGE/Urteile — falls unsicher, ausdrücklich «Fundstelle zu verifizieren» 3) herrschende Lehre + Streitpunkte 4) Kernaussage in einem Satz 5) drei Suchbegriffe/Filter für fedlex.admin.ch und entscheidsuche.ch.
-Keine Urteile/Artikel erfinden.`},
- {t:"Schreiben an Gegenpartei / Behörde",b:"Sachliches, fundiertes Schreiben mit Frist.",x:`Verfasse ein sachliches, juristisch fundiertes Schreiben nach Schweizer Recht.
-Absender (ich): {{PARTEI}}
-Empfänger: [GEGENPARTEI / BEHÖRDE]
-Kanton: {{KANTON}}
-Anliegen / Ziel: {{ZIEL}}
-Relevante Fakten & Daten: {{SACHVERHALT}}
-Höflich, bestimmt, faktenbasiert; Rechtsgrundlage nennen; angemessene Frist + nächste Schritte bei Nichteinhaltung. Struktur: Betreff, Sachverhalt, Rechtsgrundlage, Forderung, Frist, Grussformel.`},
- {t:"Klartext-Erklärung für Laien",b:"Rechtslage, Vertrag oder Urteil einfach erklärt.",x:`Erkläre mir in einfachem Deutsch (für eine Person ohne juristische Ausbildung) folgende Rechtslage nach Schweizer Recht:
-Thema / Text: {{SACHVERHALT}}
-Meine Situation: {{PARTEI}}, Kanton {{KANTON}}
-- Was bedeutet das konkret für mich? - Welche Rechte und Pflichten habe ich? - Was sind die nächsten sinnvollen Schritte?
-Vermeide Fachjargon; nötige Fachbegriffe in einem Halbsatz erklären.`},
- {t:"Fristen- & Zuständigkeits-Check",b:"Alle Fristen, Rechtsweg und Warnung bei Versäumnis.",x:`Prüfe für folgenden Fall die relevanten Fristen und Zuständigkeiten nach Schweizer Recht.
-Fall (mit Daten!): {{SACHVERHALT}}
-Meine Rolle: {{PARTEI}} — Kanton: {{KANTON}}
-Gib mir: alle laufenden/drohenden Fristen (Anfechtung, Beschwerde, Verjährung, Rechtsvorschlag) mit Fristbeginn, Dauer und Rechtsgrundlage; die zuständige Behörde/Instanz und den Rechtsweg; Warnung bei knappen Fristen (Folge bei Versäumnis). Fehlt ein Datum zur Fristberechnung, danach fragen.`},
- {t:"Argumente pro & contra",b:"Prozessstrategie inkl. Beweislast und Chancen.",x:`Ich vertrete {{PARTEI}} in folgender Streitsache nach Schweizer Recht.
-Sachverhalt: {{SACHVERHALT}}
-Ziel: {{ZIEL}} — Kanton: {{KANTON}}
-Erstelle eine ausgewogene Analyse: stärkste Argumente FÜR meine Position (mit Rechtsgrundlage); stärkste Argumente der GEGENSEITE; Beweisfragen (Beweislast, nötige Beweismittel); realistische Prozesschancen und Risiken (Kosten/Streitwert); Alternativen (Schlichtung, Vergleich, Mediation).`},
- {t:"Dokument / Urteil zusammenfassen",b:"Kernaussagen, Dispositiv und nächste Schritte.",x:`Fasse das folgende Dokument (Vertrag / Urteil / Verfügung / Schriftsatz) nach Schweizer Recht zusammen.
-Meine Rolle: {{PARTEI}} — Kanton: {{KANTON}}
-[DOKUMENT HIER EINFÜGEN]
-Struktur: worum es geht (1–2 Sätze); wichtigste Kernaussagen (Stichpunkte); bei Urteil: Sachverhalt, Rechtsfrage, Dispositiv, zentrale Begründung; Rechtsfolgen + offene Punkte für mich; was ich als Nächstes tun/prüfen sollte. Nur den Inhalt verwenden, nichts hinzuerfinden.`},
- {t:"Kosten & Vorgehen einschätzen",b:"Optionen, Kostenfaktoren und To-do-Liste.",x:`Hilf mir, Vorgehen und Kosten für folgende Angelegenheit nach Schweizer Recht einzuschätzen.
-Anliegen: {{ZIEL}}
-Details: {{SACHVERHALT}}
-Meine Rolle: {{PARTEI}} — Kanton: {{KANTON}} — Streitwert (falls bekannt): [BETRAG]
-Gib mir: Vorgehensoptionen (aussergerichtlich / Schlichtung / Klage) mit Vor- und Nachteilen; grobe Kostenfaktoren (Gerichts-/Anwaltskosten, Prozessrisiko, Rechtsschutzversicherung, unentgeltliche Rechtspflege); wann sich der Beizug einer zugelassenen Anwältin/eines Anwalts lohnt; priorisierte To-do-Liste für die nächsten 14 Tage. Hinweis: Tarife sind kantonal geregelt.`}
+/* Dokumenttypen — nur Titel + Kurzbeschrieb sichtbar. Die eigentlichen Fach-Prompts
+   liegen NICHT im Browser (echter Schutz erst in der Backend-Version). */
+const DOCS=[
+ {t:"Rechtsgutachten / Fallanalyse",b:"Strukturierte Einschätzung mit Rechtsfragen, Grundlagen und Empfehlung."},
+ {t:"Vertrag entwerfen",b:"Vertragsentwurf nach Schweizer OR inkl. Prüf-Checkliste."},
+ {t:"Vertrag prüfen (Redlining)",b:"Risiko-Übersicht, kritische Klauseln, Verbesserungen."},
+ {t:"Rechtsrecherche",b:"Einschlägige Grundlagen, Rechtsprechung, Suchbegriffe."},
+ {t:"Schreiben an Gegenpartei / Behörde",b:"Sachliches Schreiben mit Rechtsgrundlage und Frist."},
+ {t:"Klartext-Erklärung für Laien",b:"Deine Rechte, Pflichten und nächsten Schritte einfach erklärt."},
+ {t:"Fristen- & Zuständigkeits-Check",b:"Fristen, Rechtsweg und Warnung bei Versäumnis."},
+ {t:"Argumente pro & contra",b:"Prozess-Einschätzung mit Beweislage und Chancen."},
+ {t:"Dokument / Urteil zusammenfassen",b:"Kernaussagen, Dispositiv und nächste Schritte."},
+ {t:"Kosten & Vorgehen einschätzen",b:"Optionen, Kostenfaktoren und To-do-Liste."}
 ];
+const TIER=[["Premium",1.90],["Premium",1.90],["Premium",1.90],["Standard",0.90],["Standard",0.90],["Info",0.50],["Standard",0.90],["Premium",1.90],["Standard",0.90],["Info",0.50]];
 const KANTONE=["","(Bund / national)","Aargau","Appenzell Ausserrhoden","Appenzell Innerrhoden","Basel-Landschaft","Basel-Stadt","Bern","Freiburg","Genf","Glarus","Graubünden","Jura","Luzern","Neuenburg","Nidwalden","Obwalden","Schaffhausen","Schwyz","Solothurn","St. Gallen","Tessin","Thurgau","Uri","Waadt","Wallis","Zug","Zürich"];
 const PORTALS=[
  {n:"Fedlex",d:"Amtliche, konsolidierte Sammlung des Bundesrechts (SR/AS/BBl), 4 Sprachen.",u:"https://www.fedlex.admin.ch"},
@@ -469,50 +400,74 @@ const CATS=[
  {c:"Datenschutz · Wirtschaft · Steuern",r:[["revDSG","Datenschutzgesetz","235.1"],["UWG","Unlauterer Wettbewerb","241"],["KG","Kartellgesetz","251"],["MWSTG","Mehrwertsteuer","641.20"],["DBG","Direkte Bundessteuer","642.11"],["StHG","Steuerharmonisierung","642.14"]]}
 ];
 const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
-function addCopy(el,text){const b=document.createElement("button");b.className="copy";b.textContent="Kopieren";b.onclick=()=>doCopy(text,b);el.appendChild(b);}
-function doCopy(text,btn){const ok=()=>{const o=btn.textContent;btn.textContent="Kopiert ✓";btn.classList.add("done");setTimeout(()=>{btn.textContent=o;btn.classList.remove("done")},1400)};
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok).catch(()=>fb(text,ok))}else fb(text,ok);}
-function fb(text,ok){const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){}document.body.removeChild(ta)}
-function esc(s){return s.replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]))}
-$("#sysShort").textContent=SYS_SHORT;addCopy($("#sysShort"),SYS_SHORT);
-$("#sysFull").textContent=SYS_FULL;addCopy($("#sysFull"),SYS_FULL);
-const pg=$("#pgrid");
-PROMPTS.forEach((p,i)=>{const c=document.createElement("div");c.className="card pcard";
-  c.innerHTML=`<div class="top"><span class="no">${String(i+1).padStart(2,"0")}</span><div><h3>${p.t}</h3><div class="bl">${p.b}</div></div></div>
-    <details><summary>Prompt anzeigen <span class="a">›</span></summary><div class="body"><div class="code"></div></div></details>`;
-  const code=c.querySelector(".code");code.textContent=p.x;addCopy(code,p.x);pg.appendChild(c);});
-const taskSel=$("#task"),kSel=$("#kanton");
-PROMPTS.forEach((p,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${i+1}. ${p.t}`;taskSel.appendChild(o)});
+const g=id=>document.getElementById(id);
+function fmt(n){return "CHF "+n.toFixed(2)}
+
+/* Dokument-Vorlagen (Struktur, KEIN Prompt). Fülle mit den Nutzerangaben. */
+function inp(){return {
+  K:(g("kanton").value||"[Kanton]"),
+  P:(g("partei").value.trim()||"[Rolle/Partei]"),
+  Z:(g("ziel").value.trim()||"[Ziel]"),
+  S:(g("sv").value.trim()||"[Sachverhalt/Details]")
+};}
+const SKEL=[
+ m=>`RECHTLICHE KURZEINSCHÄTZUNG (Entwurf)\n\n1. Sachverhalt\n${m.S}\n\n2. Partei / Kanton\n${m.P} · Kanton ${m.K}\n\n3. Rechtsfrage(n)\n- [Zu prüfende Rechtsfrage]\n\n4. Massgebende Grundlagen (auf fedlex.admin.ch verifizieren)\n- [Artikel · Gesetz · SR-Nr.]\n\n5. Würdigung / Subsumtion\n[Voraussetzungen · Rechtsfolgen · Beweislast · Fristen]\n\n6. Ergebnis & Empfehlung\nZiel: ${m.Z}\n[Priorisierte nächste Schritte · Zuständigkeit · Risiken]`,
+ m=>`VERTRAG (Entwurf nach Schweizer OR)\n\nParteien\n- Partei A: ${m.P}\n- Partei B: [Gegenpartei]\n- Gerichtsstand / Kanton: ${m.K}\n\nZweck\n${m.Z}\n\nEckpunkte\n${m.S}\n\n§1 Vertragsgegenstand\n[…]\n§2 Leistung & Vergütung\n[…]\n§3 Dauer & Kündigung\n[…]\n§4 Haftung / Gewährleistung\n[…]\n§5 Schlussbestimmungen (anwendbares Recht · Gerichtsstand)\n[…]\n\nCheckliste vor Unterschrift\n- Formvorschrift geprüft (Schriftform / öffentliche Beurkundung)?\n- Zwingendes Recht beachtet?\n- Klare, eindeutige Definitionen?`,
+ m=>`VERTRAGSPRÜFUNG (Entwurf) — Sicht: ${m.P}\nKanton: ${m.K}\n\nGeprüfter Vertrag / Kontext\n${m.S}\n\nRisiko-Übersicht\n| # | Klausel | Risiko | Empfehlung | Priorität |\n| 1 | [...] | [...] | [...] | hoch |\n| 2 | [...] | [...] | [...] | mittel |\n\nFehlende übliche Klauseln\n- Gerichtsstand / anwendbares Recht\n- Haftung / Datenschutz\n\nFazit\n[Empfehlung — Ziel: ${m.Z}]`,
+ m=>`RECHTSRECHERCHE (Entwurf)\nFrage: ${m.Z}\nKontext: ${m.S}\nKanton: ${m.K}\n\nEinschlägige Grundlagen (verifizieren)\n- [Artikel · Gesetz · SR-Nr.]\n\nRechtsprechung\n- [BGE / Urteil — Fundstelle zu verifizieren]\n\nKernaussage\n[...]\n\nWeiterrecherchieren\n- fedlex.admin.ch: [Suchbegriffe]\n- entscheidsuche.ch: [Suchbegriffe]`,
+ m=>`[Ort], [Datum]\n\nAbsender: ${m.P}\nEmpfänger: [Gegenpartei / Behörde]\nKanton: ${m.K}\n\nBetreff: ${m.Z}\n\nSehr geehrte Damen und Herren\n\nSachverhalt:\n${m.S}\n\nRechtliche Grundlage: [Artikel · Gesetz]\n\nIch fordere Sie auf, [Forderung] bis [Frist: TT.MM.JJJJ] zu erfüllen. Nach unbenutztem Fristablauf behalte ich mir weitere rechtliche Schritte vor.\n\nFreundliche Grüsse\n${m.P}`,
+ m=>`KLARTEXT-ERKLÄRUNG (Entwurf)\nSituation: ${m.P}, Kanton ${m.K}\nThema: ${m.S}\n\nWas das für dich bedeutet\n[Einfach erklärt]\n\nDeine Rechte\n- [...]\n\nDeine Pflichten\n- [...]\n\nNächste sinnvolle Schritte\n1. [...]\n2. [...]`,
+ m=>`FRISTEN- & ZUSTÄNDIGKEITS-CHECK (Entwurf)\nFall: ${m.S}\nRolle: ${m.P} · Kanton: ${m.K}\n\nLaufende / drohende Fristen\n| Frist | Beginn | Dauer | Grundlage |\n| [Anfechtung/Beschwerde/Verjährung] | [Datum] | [...] | [Art. · Gesetz] |\n\nZuständigkeit / Rechtsweg\n- [Schlichtungsbehörde / Gericht / Amt]\n\n⚠ Achtung: Fristversäumnis bedeutet Rechtsverlust.`,
+ m=>`PROZESS-EINSCHÄTZUNG (Entwurf) — Partei: ${m.P}\nSachverhalt: ${m.S}\nZiel: ${m.Z} · Kanton: ${m.K}\n\nArgumente FÜR meine Position\n- [... mit Rechtsgrundlage]\n\nArgumente der Gegenseite\n- [...]\n\nBeweislage\n- Beweislast: [...]\n- Beweismittel: [...]\n\nChancen & Risiken\n[...]\n\nAlternativen\n- Schlichtung / Vergleich / Mediation`,
+ m=>`ZUSAMMENFASSUNG (Entwurf) — Rolle: ${m.P} · Kanton: ${m.K}\n\nWorum es geht\n${m.S}\n\nKernaussagen\n- [...]\n\nBei Urteil: Sachverhalt / Rechtsfrage / Dispositiv / Begründung\n[...]\n\nFolgen & offene Punkte für mich\n[...]\n\nNächste Schritte\n[...]`,
+ m=>`KOSTEN- & VORGEHENS-EINSCHÄTZUNG (Entwurf)\nAnliegen: ${m.Z}\nDetails: ${m.S}\nRolle: ${m.P} · Kanton: ${m.K} · Streitwert: [Betrag]\n\nVorgehensoptionen\n- Aussergerichtlich: [Vor-/Nachteile]\n- Schlichtung: [...]\n- Klage: [...]\n\nKostenfaktoren\n- Gerichts-/Anwaltskosten · Prozessrisiko · Rechtsschutz · unentgeltliche Rechtspflege\n\nTo-do (14 Tage)\n1. [...]\n2. [...]\n3. [...]\n\nHinweis: Tarife sind kantonal geregelt.`
+];
+function selTask(){return parseInt(g("task").value)||0;}
+function fullDoc(i){
+  const m=inp();const now=new Date();
+  return "MEIN RECHTSHELFER & ASSISTENT\n"+"=".repeat(52)
+    +"\nDokumenttyp: "+DOCS[i].t+" ("+TIER[i][0]+")\nKanton: "+m.K+"   Erstellt: "+now.toLocaleString("de-CH")
+    +"\n"+"=".repeat(52)+"\n\n"+SKEL[i](m)
+    +"\n\n"+"-".repeat(52)+"\nAllgemeine rechtliche Information, keine verbindliche Beratung. Entwurf zur eigenen Weiterbearbeitung; zentrale Fundstellen auf fedlex.admin.ch / bger.ch prüfen. Bei Fristen/Strafsachen zugelassene Anwältin/Anwalt beiziehen.\n";
+}
+/* Vorschau: nur die ersten Zeilen, Rest gesperrt */
+function build(){
+  const i=selTask();const lines=fullDoc(i).split("\n");
+  const shown=lines.slice(0,9).join("\n");const hidden=Math.max(0,lines.length-9);
+  g("compOut").textContent=shown+(hidden>0?("\n\n… + "+hidden+" weitere Zeilen (gesperrt)"):"");
+}
+
+/* Dropdowns & Karten */
+const taskSel=g("task"),kSel=g("kanton");
+DOCS.forEach((p,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${i+1}. ${p.t}`;taskSel.appendChild(o)});
 KANTONE.forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=k||"— wählen —";kSel.appendChild(o)});
-function build(){const p=PROMPTS[taskSel.value];
-  const map={KANTON:kSel.value,PARTEI:$("#partei").value.trim(),ZIEL:$("#ziel").value.trim(),SACHVERHALT:$("#sv").value.trim()};
-  let out=p.x.replace(/{{(\w+)}}/g,(m,k)=>map[k]?map[k]:"["+k+"]");
-  $("#compOut").innerHTML=esc(out).replace(/\[([A-ZÄÖÜ /…]+)\]/g,'<span class="ph">[$1]</span>');
-  $("#compOut").dataset.raw=out;}
-[taskSel,kSel,$("#partei"),$("#ziel"),$("#sv")].forEach(el=>el.addEventListener("input",build));
-$("#copyComp").onclick=function(){doCopy($("#compOut").dataset.raw,this)};build();
-const pel=$("#portals");
+const pg=g("pgrid");
+DOCS.forEach((p,i)=>{const c=document.createElement("div");c.className="card pcard";
+  c.innerHTML=`<div class="top"><span class="no">${String(i+1).padStart(2,"0")}</span><div><h3>${p.t}</h3><div class="bl">${p.b}</div></div></div>
+    <div class="pfoot"><span class="ptier">${TIER[i][0]} · ${fmt(TIER[i][1])}</span><button class="gbtn small" data-pick="${i}">Auswählen</button></div>`;
+  pg.appendChild(c);});
+pg.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{taskSel.value=b.dataset.pick;build();updateKachel();
+  document.getElementById("composer").scrollIntoView({behavior:"smooth"});});
+[taskSel,kSel,g("partei"),g("ziel"),g("sv")].forEach(el=>el.addEventListener("input",()=>{build();updateKachel();}));
+
+/* Quellen */
+const pel=g("portals");
 PORTALS.forEach(p=>{const a=document.createElement("a");a.className="portal";a.href=p.u;a.target="_blank";a.rel="noopener";
   a.innerHTML=`<div class="pn">${p.n}</div><div class="pd">${p.d}</div><div class="lk">${p.u.replace("https://","")}</div>`;pel.appendChild(a)});
-const tabs=$("#cattabs"),cats=$("#cats");
+const tabs=g("cattabs"),cats=g("cats");
 CATS.forEach((cat,i)=>{const t=document.createElement("button");t.className="tab";t.textContent=cat.c;t.setAttribute("aria-selected",i===0);
   t.onclick=()=>{$$("#cattabs .tab").forEach(x=>x.setAttribute("aria-selected","false"));t.setAttribute("aria-selected","true");
-    $$(".catblock").forEach(b=>b.classList.remove("on"));$("#cat"+i).classList.add("on")};tabs.appendChild(t);
+    $$(".catblock").forEach(b=>b.classList.remove("on"));g("cat"+i).classList.add("on")};tabs.appendChild(t);
   const block=document.createElement("div");block.className="catblock"+(i===0?" on":"");block.id="cat"+i;
   let rows=cat.r.map(r=>`<tr><td class="ab">${r[0]}</td><td>${r[1]}</td><td class="sr">SR ${r[2]}</td>
      <td><a href="https://www.fedlex.admin.ch/de/cc/internal-law" target="_blank" rel="noopener" style="color:var(--gold-2);text-decoration:none;font-weight:700">Fedlex ↗</a></td></tr>`).join("");
   block.innerHTML=`<div class="tablewrap"><table><thead><tr><th>Abk.</th><th>Gesetz</th><th>SR-Nr.</th><th>Quelle</th></tr></thead><tbody>${rows}</tbody></table></div>`;cats.appendChild(block);});
 
-/* ---- Shop / Konto / Guthaben / Vorteile (Demo, Testmodus) ---- */
-const LS_KEY="mrhelfer_demo_v2";
+/* ---- Konto / Guthaben / Vorteile (Demo, Testmodus) ---- */
+const LS_KEY="mrhelfer_demo_v3";
 let acct=(function(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r):null}catch(e){return window._acct||null}})();
 function saveAcct(){try{localStorage.setItem(LS_KEY,JSON.stringify(acct))}catch(e){window._acct=acct}}
 function genKnr(){const y=new Date().getFullYear();let s="";for(let i=0;i<6;i++)s+="ABCDEFGHJKLMNPRSTUVWXYZ23456789"[Math.floor(Math.random()*31)];return "MR-"+y+"-"+s}
-function fmt(n){return "CHF "+n.toFixed(2)}
-const g=id=>document.getElementById(id);
-// Preisstufen je Aufgabe (Index 0..9): [Stufe, Preis]
-const TIER=[["Premium",1.90],["Premium",1.90],["Premium",1.90],["Standard",0.90],["Standard",0.90],["Info",0.50],["Standard",0.90],["Premium",1.90],["Standard",0.90],["Info",0.50]];
-function selTask(){return parseInt(g("task").value)||0;}
 function loyaltyFree(){return !!acct && ((acct.paid||0)%10)===9;}
 function currentPrice(){ if(acct&&acct.abo)return 0; if(loyaltyFree())return 0; return TIER[selTask()][1]; }
 function updateKachel(){
@@ -531,13 +486,9 @@ function renderAcct(){
   g("acctNew").style.display=has?"none":"block";
   g("acctView").style.display=has?"block":"none";
   if(has){
-    g("knrVal").textContent=acct.knr;
-    g("refCode").textContent=acct.knr;
-    g("balVal").textContent=fmt(acct.bal);
+    g("knrVal").textContent=acct.knr;g("refCode").textContent=acct.knr;g("balVal").textContent=fmt(acct.bal);
     g("aboBadge").style.display=acct.abo?"inline-block":"none";
-    const m=(acct.paid||0)%10;
-    g("loyTxt").textContent=m+"/10";
-    g("loyBar").style.width=(m*10)+"%";
+    const m=(acct.paid||0)%10;g("loyTxt").textContent=m+"/10";g("loyBar").style.width=(m*10)+"%";
     const h=g("histList");
     h.innerHTML=acct.hist.length
       ? acct.hist.map((x,idx)=>({x,idx})).reverse().map(o=>`<div class="hitem"><b>${o.x.t}</b><span>${o.x.d} · ${o.x.price>0?("−"+fmt(o.x.price)):"gratis"} <button class="rd" data-idx="${o.idx}">⤓ laden</button></span></div>`).join("")
@@ -579,18 +530,13 @@ g("kachelBtn").onclick=async()=>{
   if(!acct)return;
   const price=currentPrice();
   if(price>0&&acct.bal<price){alert("Guthaben zu tief. Bitte lade Guthaben auf.");return;}
-  const i=selTask();const sel=g("task");const taskName=sel.options[sel.selectedIndex].text.replace(/^\d+\.\s*/,"");
-  const raw=(g("compOut").dataset.raw||"").trim();const now=new Date();
-  const doc="MEIN RECHTSHELFER & ASSISTENT — Rechtsdokument\n"+"=".repeat(50)
-    +"\nKundennummer: "+acct.knr+"\nErstellt:     "+now.toLocaleString("de-CH")
-    +"\nVorlage:      "+taskName+" ("+TIER[i][0]+")\n"+"-".repeat(50)+"\n\n"
-    +(raw||"[Bitte oben im Composer Aufgabe, Kanton und Angaben ausfüllen.]")
-    +"\n\n"+"-".repeat(50)+"\nAllgemeine rechtliche Information, keine verbindliche Beratung. Fundstellen auf fedlex.admin.ch / bger.ch prüfen.\n";
+  const i=selTask();const taskName=DOCS[i].t;const now=new Date();
+  const doc=fullDoc(i);
   const fname="Rechtsdokument_"+taskName.replace(/[^0-9A-Za-zÄÖÜäöü]+/g,"-").replace(/^-|-$/g,"")+"_"+acct.knr+".md";
   const ok=await deliver(doc,fname);
   if(ok){ if(price>0)acct.bal=+(acct.bal-price).toFixed(2); if(!acct.abo)acct.paid=(acct.paid||0)+1;
     acct.hist.push({t:taskName,d:now.toLocaleDateString("de-CH"),price:price,doc:doc,fname:fname});saveAcct();renderAcct();}
 };
-g("task").addEventListener("change",updateKachel);
-renderAcct();
+
+build();renderAcct();
 </script>
