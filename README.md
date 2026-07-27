@@ -101,6 +101,18 @@ Die Scheduled Function (Eskalation alle 10 Min) ist in `netlify.toml` konfigurie
 
 ---
 
+## Business-Agenten
+
+Unter `.claude/agents/` liegen 26 spezialisierte KI-Agenten für die Unternehmensführung —
+Strategie, Marketing, Vertrieb, Kundenservice, Finanzen, Recht, Betrieb, Daten.
+Übersicht und Anleitung: **[`docs/business-agenten.md`](docs/business-agenten.md)**.
+
+Vor dem ersten Einsatz `docs/firmenprofil.md` ausfüllen — alle Agenten lesen diese Datei
+als gemeinsame Wissensbasis. Wer nicht weiss, welcher Agent passt, startet mit
+`business-orchestrator`.
+
+---
+
 ## Hinweise
 
 - **Platzhalter:** Alles, was ersetzt werden muss, ist im UI sichtbar als „Platzhalter“ markiert (Testimonials, Preise, Fuhrpark-Fotos, Partner-Logos, Referenz-Einsätze in `districts.json`).
