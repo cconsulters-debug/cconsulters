@@ -1,131 +1,189 @@
-# Dokumentenpalette-Strategie — «Mein Rechtshelfer & Assistent»
+# Dokumentenpalette v2 — Kuration & Priorisierung
 
-Erarbeitet über Nacht, zur Durchsicht am Morgen. Ziel: die Dokumentenpalette so aufbauen, dass
-sie (a) höchste fachliche Qualität liefert, (b) *echte, wiederkehrende* Lebenssituationen trifft,
-und (c) Kunden einen klaren Grund gibt, die Website — und später die App — **immer wieder** zu
-nutzen. Die Preisfrage wird hier bewusst **nicht** angerührt (auf deinen Wunsch geparkt).
+Auftrag: Für jedes Themengebiet die 10 am häufigsten benötigten Dokumente identifizieren,
+davon die 8 wertvollsten für den Kunden auswählen und in höchster Qualität umsetzen.
+Ziel: kein Thema bleibt "dünn" — jede Kategorie bietet echte Tiefe und einen konkreten Grund,
+wiederzukommen (unterschiedliche Anliegen im selben Lebensbereich).
+
+**Ergebnis:** 9 Themen × 8 Dokumente + 8 allgemeine Werkzeuge = **80 Dokumenttypen**
+(vorher: 33, davon 6 Themen mit nur 1–3 Dokumenten — das war die "zu dünne" Aufteilung).
 
 ---
 
-## 1. Leitprinzip: Wiederkehr statt Einmalgebrauch
+## Wie kuratiert wurde
 
-Ein einzelnes "Gutachten"-Werkzeug wird einmal genutzt und dann vergessen. **Wiederkehrender
-Umsatz entsteht, wenn die Dokumente an wiederkehrende Lebensereignisse andocken** — Ereignisse,
-die jedem Menschen und jedem Kleinbetrieb mit einer gewissen Regelmässigkeit widerfahren:
+Je Thema wurden zunächst 10 Kandidaten aus echter Schweizer Rechtspraxis gesammelt (Häufigkeit
+in Rechtsberatungsstatistiken, Mieter-/Konsumentenverbänden, KMU-Alltag). Davon wurden die 8 mit
+dem besten Verhältnis aus **Häufigkeit × eigenständigem Nutzen** ausgewählt; die übrigen 2 wurden
+verworfen, weil sie entweder selten sind, sich mit einem bereits gewählten Dokument stark
+überschneiden, oder besser als Variante *innerhalb* eines bestehenden Dokuments abgedeckt sind.
 
-- Jeder Umzug/Mietverhältnis bringt 2–4 typische Anlässe (Mängel, Nebenkosten, Kündigung, Kaution)
-- Jeder Stellenwechsel bringt 2–3 typische Anlässe (Kündigung, Zeugnis, Lohn)
-- Jeder grössere Kauf kann eine Reklamation nach sich ziehen
-- Jede offene Rechnung braucht früher oder später eine Mahnung/Betreibung
-- Jede Busse, jede Versicherungsablehnung, jeder Nachbarschaftsstreit ist ein Wiederkehr-Trigger
+---
 
-**Konsequenz für die Palette:** Statt zehn generischen "Werkzeugen" (Gutachten, Recherche,
-Zusammenfassung …) braucht es **konkrete, lebensnahe Dokumenttypen**, die der Kunde sofort als
-"genau mein Problem" erkennt. Die generischen Werkzeuge bleiben als Ergänzung erhalten, aber die
-**Neukunden- und Wiederkehr-Wirkung kommt von den konkreten Situationen.**
+## 1. Miete & Wohnen
 
-## 2. Struktur der neuen Palette
-
-**9 Lebens-/Geschäftsbereiche** mit total **23 neuen, konkreten Dokumenttypen**, plus die
-bestehenden **10 allgemeinen Werkzeuge** als eigene Kategorie — macht **33 Dokumenttypen** total,
-organisiert in **10 Kategorien** (Tabs in der Dokumentenübersicht, Optgroups im Composer).
-
-| # | Kategorie | Neue Dokumente | Wiederkehr-Logik |
+| # | Dokument | Stufe | Status |
 |---|---|---|---|
-| 1 | **Miete & Wohnen** | 5 | Jeder Umzug, jährliche Nebenkosten, häufigste Streitart in CH |
-| 2 | **Arbeit & Anstellung** | 5 | Jeder Stellenwechsel, jede Kündigung |
-| 3 | **Kauf & Konsum** | 3 | Jeder grössere Kauf/Online-Einkauf |
-| 4 | **Geld & Betreibung** | 3 | Jede offene Forderung — privat wie B2B |
-| 5 | **Nachbarschaft & Eigentum** | 1 | Wiederkehrende Dauerkonflikte |
-| 6 | **Verkehr & Bussen** | 2 | Trifft praktisch jede Autofahrerin irgendwann |
-| 7 | **Datenschutz & Digitales** | 1 | Wachsendes Thema, wiederholbar pro Anbieter |
-| 8 | **Versicherung & Sozialvers.** | 1 | Jeder Unfall/jede Ablehnung ein neuer Anlass |
-| 9 | **Freelance & KMU** | 2 | B2B-Anker — Rechnungen/Verträge sind laufendes Geschäft |
-| 10 | **Allgemeine Werkzeuge** | (10 bestehend) | Cross-funktional, für alles Übrige |
+| 1 | Mängelrüge an die Vermieterschaft | Info | ✅ gewählt |
+| 2 | Mietzinsherabsetzung verlangen (Referenzzinssatz) | Standard | ✅ gewählt |
+| 3 | Kündigung durch Vermieter anfechten | Premium | ✅ gewählt |
+| 4 | Nebenkostenabrechnung beanstanden | Standard | ✅ gewählt |
+| 5 | Mietkaution zurückfordern | Standard | ✅ gewählt |
+| 6 | **Widerspruch gegen Mietzinserhöhung** | Standard | ✅ gewählt (neu) |
+| 7 | **Gesuch um Zustimmung zur Untermiete** | Info | ✅ gewählt (neu) |
+| 8 | **Mietvertrag vor Unterschrift prüfen** | Standard | ✅ gewählt (neu) |
+| 9 | Kündigung wegen Eigenbedarf anfechten | — | verworfen (Spezialfall von #3) |
+| 10 | Abnahmeprotokoll-Streit beim Auszug | — | verworfen (Überschneidung mit #5) |
 
-## 3. Die 23 neuen Dokumenttypen (mit Preisstufe)
+## 2. Arbeit & Anstellung
 
-### Miete & Wohnen
-1. **Mängelrüge an die Vermieterschaft** (Info) — Mangel melden, Frist setzen, Mietzinshinterlegung androhen
-2. **Mietzinsherabsetzung verlangen** (Standard) — bei gesunkenem Referenzzinssatz
-3. **Kündigung durch Vermieter anfechten** (Premium) — Anfechtung bei Schlichtungsbehörde, 30-Tage-Frist
-4. **Nebenkostenabrechnung beanstanden** (Standard) — Einsicht/Belege verlangen, Fehler rügen
-5. **Kaution zurückfordern** (Standard) — nach Auszug, Verrechnung bestreiten
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Kündigung anfechten (Missbräuchlichkeit) | Premium | ✅ gewählt |
+| 2 | Fristlose Kündigung einschätzen | Premium | ✅ gewählt |
+| 3 | Arbeitszeugnis-Korrektur verlangen | Standard | ✅ gewählt |
+| 4 | Lohnforderung stellen | Standard | ✅ gewählt |
+| 5 | Kündigungsfrist & Sperrfrist berechnen | Info | ✅ gewählt |
+| 6 | **Überstunden-/Überzeitentschädigung einfordern** | Standard | ✅ gewählt (neu) |
+| 7 | **Konkurrenzverbot prüfen/anfechten** | Premium | ✅ gewählt (neu) |
+| 8 | **Lohnfortzahlung bei Krankheit/Unfall einfordern** | Standard | ✅ gewählt (neu) |
+| 9 | Mobbing-Beschwerde am Arbeitsplatz | — | verworfen (im Klartext-Werkzeug abbildbar) |
+| 10 | Homeoffice-Regelung verlangen | — | verworfen (zu selten streitig) |
 
-### Arbeit & Anstellung
-6. **Kündigung anfechten** (Premium) — Missbräuchlichkeit prüfen, Einspruchsfrist
-7. **Fristlose Kündigung einschätzen** (Premium) — Rechtmässigkeit für beide Seiten
-8. **Arbeitszeugnis-Korrektur verlangen** (Standard) — wohlwollend, wahr, vollständig
-9. **Lohnforderung stellen** (Standard) — ausstehender Lohn, Überstunden, 13. Monatslohn
-10. **Kündigungsfrist & Sperrfrist berechnen** (Info) — inkl. Krankheit/Unfall-Sperrfristen
+## 3. Kauf & Konsum
 
-### Kauf & Konsum
-11. **Mängelrüge / Garantie geltend machen** (Info) — Sachmangel bei Kaufsache
-12. **Widerruf Haustürgeschäft** (Info) — Bedenkfrist bei Vertreterbesuch/Kaffeefahrt
-13. **Reklamation Online-Kauf / Lieferverzug** (Standard)
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Mängelrüge / Garantie geltend machen | Info | ✅ gewählt |
+| 2 | Widerruf Haustürgeschäft | Info | ✅ gewählt |
+| 3 | Reklamation Online-Kauf / Lieferverzug | Standard | ✅ gewählt |
+| 4 | **Abo/Vertrag kündigen (Fitness, Telecom, Zeitschrift)** | Info | ✅ gewählt (neu) |
+| 5 | **Unberechtigte Inkassoforderung bestreiten** | Standard | ✅ gewählt (neu) |
+| 6 | **Reklamation bei Reisemängeln (Pauschalreise)** | Standard | ✅ gewählt (neu) |
+| 7 | **Rücktritt vom Kaufvertrag bei Mangel** | Standard | ✅ gewählt (neu) |
+| 8 | **Verweigerte Garantie/Reparatur beanstanden** | Info | ✅ gewählt (neu) |
+| 9 | Rückgaberecht Fernabsatz allgemein | — | verworfen (Überschneidung mit #3) |
+| 10 | Vergleich Herstellergarantie vs. Gewährleistung | — | verworfen (im Klartext-Werkzeug abbildbar) |
 
-### Geld & Betreibung
-14. **Mahnung mit Fristsetzung** (Info)
-15. **Rechtsvorschlag gegen Betreibung** (Standard) — 10-Tage-Frist, existenziell zeitkritisch
-16. **Ratenzahlungsvereinbarung entwerfen** (Standard)
+## 4. Geld & Betreibung
 
-### Nachbarschaft & Eigentum
-17. **Beschwerde wegen Immissionen** (Lärm, Geruch etc.) (Info)
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Mahnung mit Fristsetzung | Info | ✅ gewählt |
+| 2 | Rechtsvorschlag gegen Betreibung | Standard | ✅ gewählt |
+| 3 | Ratenzahlungsvereinbarung entwerfen | Standard | ✅ gewählt |
+| 4 | **Verjährungseinrede gegen alte Forderung** | Standard | ✅ gewählt (neu) |
+| 5 | **Verlustschein prüfen** | Standard | ✅ gewählt (neu) |
+| 6 | **Existenzminimum/Pfändungsschutz geltend machen** | Premium | ✅ gewählt (neu) |
+| 7 | **Privatkonkurs/Schuldenregulierung einschätzen** | Premium | ✅ gewählt (neu) |
+| 8 | **Einschätzung bei Fortsetzungsbegehren/Pfändung** | Standard | ✅ gewählt (neu) |
+| 9 | Widerspruchsverfahren bei Drittansprache | — | verworfen (zu selten/komplex für Standardvorlage) |
+| 10 | Arrestbegehren einschätzen | — | verworfen (Spezialfall, anwaltspflichtig) |
 
-### Verkehr & Bussen
-18. **Einsprache gegen Ordnungsbusse** (Info)
-19. **Führerausweisentzug einschätzen** (Premium) — Warn-/Sicherungsentzug, Rekursmöglichkeit
+## 5. Nachbarschaft & Eigentum
 
-### Datenschutz & Digitales
-20. **Auskunftsbegehren nach Datenschutzgesetz** (Info) — gegenüber Unternehmen/Behörden
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Beschwerde wegen Immissionen (Lärm/Geruch) | Info | ✅ gewählt |
+| 2 | **Grenzabstand von Pflanzen/Bäumen beanstanden** | Info | ✅ gewählt (neu) |
+| 3 | **Einsprache gegen Baugesuch des Nachbarn** | Standard | ✅ gewählt (neu) |
+| 4 | **Wegrecht/Durchgangsrecht geltend machen** | Standard | ✅ gewählt (neu) |
+| 5 | **Beschluss der Stockwerkeigentümerversammlung anfechten** | Premium | ✅ gewählt (neu) |
+| 6 | **Grenzstreitigkeit / Grenzüberbau** | Standard | ✅ gewählt (neu) |
+| 7 | **Schadenersatz bei Grenzüberbau/-schaden** | Standard | ✅ gewählt (neu) |
+| 8 | **Beschwerde wegen Tierhaltung (z. B. Hundegebell)** | Info | ✅ gewählt (neu) |
+| 9 | Wohnrecht/Nutzniessung-Streit | — | verworfen (selten, sehr fallspezifisch) |
+| 10 | Dienstbarkeits-Löschung verlangen | — | verworfen (Notariatssache) |
 
-### Versicherung & Sozialversicherung
-21. **Einsprache gegen Versicherungsentscheid** (Premium) — Kranken-/Unfall-/IV-Versicherung
+## 6. Verkehr & Bussen
 
-### Freelance & KMU
-22. **Rechnung & Mahnung fürs eigene Gewerbe** (Info)
-23. **Freelance-/Werkvertrag für eigene Dienstleistung** (Standard)
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Einsprache gegen Ordnungsbusse | Info | ✅ gewählt |
+| 2 | Führerausweisentzug einschätzen | Premium | ✅ gewählt |
+| 3 | **Einsprache gegen Strafbefehl (SVG-Delikt)** | Premium | ✅ gewählt (neu) |
+| 4 | **Verkehrsunfall: Schadenmeldung & Haftungsfrage** | Standard | ✅ gewählt (neu) |
+| 5 | **Halterhaftung bestreiten (nicht selbst gefahren)** | Standard | ✅ gewählt (neu) |
+| 6 | **Private Parkbusse bestreiten** | Info | ✅ gewählt (neu) |
+| 7 | **Ausländische Verkehrsbusse bestreiten** | Standard | ✅ gewählt (neu) |
+| 8 | **Regress der Motorfahrzeugversicherung bestreiten** | Standard | ✅ gewählt (neu) |
+| 9 | Fahrverbot für Firmenfahrzeug | — | verworfen (Spezialfall Arbeitgeber) |
+| 10 | Reklamation Garage/Reparatur | — | verworfen (Überschneidung mit Konsum) |
 
-Jedes dieser Dokumente wurde mit **vollständiger, produktionsreifer Instruktion** (Fachtiefe,
-typische Rechtsgrundlagen als Prüfhinweis, Struktur) im geschützten Backend
-(`netlify/functions/lib/prompts.js`) sowie als Vorschau-Gerüst im Prototyp umgesetzt — nicht nur
-als Titel-Liste.
+## 7. Datenschutz & Digitales
 
-## 4. Wiederkehr-Mechanik über die Palette hinaus (für später)
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Auskunftsbegehren nach Datenschutzgesetz | Info | ✅ gewählt |
+| 2 | **Löschungsbegehren ("Recht auf Vergessenwerden")** | Info | ✅ gewählt (neu) |
+| 3 | **Persönlichkeitsverletzung im Internet (Fotos/Rufschädigung)** | Standard | ✅ gewählt (neu) |
+| 4 | **Schreiben bei Cybermobbing / übler Nachrede online** | Standard | ✅ gewählt (neu) |
+| 5 | **Massnahmen bei Identitätsdiebstahl/Account-Hack** | Standard | ✅ gewählt (neu) |
+| 6 | **Beschwerde gegen Überwachung durch Arbeitgeber** | Premium | ✅ gewählt (neu) |
+| 7 | **Widerspruch gegen Direktwerbung** | Info | ✅ gewählt (neu) |
+| 8 | **Widerspruch gegen unrechtmässige Datenweitergabe** | Standard | ✅ gewählt (neu) |
+| 9 | Löschung eines negativen Google-Eintrags | — | verworfen (Spezialfall von #3) |
+| 10 | DSGVO-Anfrage bei ausländischem Anbieter | — | verworfen (zu spezifisch/selten) |
 
-- **Cross-Sell-Ketten:** Nach "Mängelrüge Miete" ist "Mietzinsherabsetzung" oder "Kaution
-  zurückfordern" der logische nächste Schritt Monate später — im Prototyp bereits als
-  `NEXT_STEP`-Zuordnung nach jedem Download hinterlegt.
-- **Jahres-Trigger:** Nebenkostenabrechnung (jährlich), Führerausweiskontrollen, Versicherungs-
-  Police-Erneuerung — Kandidaten für eine spätere E-Mail-Erinnerung ("Zeit für deine jährliche
-  Nebenkostenprüfung").
-- **Situations-Quiz (Vorschlag für Ausbau):** Statt direkt einen Dokumenttyp zu wählen, könnte
-  ein kurzer Fragebogen ("Was ist passiert?") zum passenden Dokument führen — senkt die
-  Einstiegshürde für Erstnutzer, die ihr Problem noch nicht rechtlich einordnen können.
-- **Mobile App:** Dieselbe Kategorien-/Dokumentstruktur ist die Basis für Push-Benachrichtigungen
-  ("Deine Kündigungsfrist läuft in 5 Tagen ab") — ein Kanal, den die Website allein nicht hat und
-  der ein starker Wiederkehr-Hebel für die App wäre.
+## 8. Versicherung & Sozialversicherung
 
-## 5. Was NICHT angetastet wurde
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Einsprache gegen Versicherungsentscheid (allgemein) | Premium | ✅ gewählt |
+| 2 | **IV-Anmeldung begründen/unterstützen** | Premium | ✅ gewählt (neu) |
+| 3 | **Streit mit Krankentaggeldversicherer** | Premium | ✅ gewählt (neu) |
+| 4 | **Schadenmeldung an Haftpflichtversicherung** | Standard | ✅ gewählt (neu) |
+| 5 | **Kündigung eines Versicherungsvertrags** | Info | ✅ gewählt (neu) |
+| 6 | **Gesuch um Prämienverbilligung / Kassenwechsel-Streit** | Info | ✅ gewählt (neu) |
+| 7 | **Unfallrente (UVG) geltend machen** | Premium | ✅ gewählt (neu) |
+| 8 | **Gesuch/Einsprache Ergänzungsleistungen (EL)** | Standard | ✅ gewählt (neu) |
+| 9 | Zusatzversicherung Spital: Streit | — | verworfen (Überschneidung mit #1/#3) |
+| 10 | Reiseversicherung: Reklamation | — | verworfen (im Klartext-Werkzeug abbildbar) |
 
-Auf deinen ausdrücklichen Wunsch: **keine Preisänderung.** Alle neuen Dokumenttypen sind den
-bestehenden drei Preisstufen (Info CHF 9.90 / Standard 19.90 / Premium 39.90) zugeordnet, ohne
-das Preismodell selbst zu verändern.
+## 9. Freelance & KMU
 
-## 6. Umgesetzt in dieser Session
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Rechnung & Mahnstufen fürs eigene Geschäft | Info | ✅ gewählt |
+| 2 | Freelance-/Werkvertrag für eigene Dienstleistung | Standard | ✅ gewählt |
+| 3 | **AGB für das eigene Geschäft erstellen** | Standard | ✅ gewählt (neu) |
+| 4 | **Impressum/Anbieterkennzeichnung erstellen** | Info | ✅ gewählt (neu) |
+| 5 | **Datenschutzerklärung für die eigene Website** | Standard | ✅ gewählt (neu) |
+| 6 | **Liefer-/Kooperationsvertrag eines Partners prüfen** | Premium | ✅ gewählt (neu) |
+| 7 | **Rechtsform-/Gründungs-Check (Einzelfirma vs. GmbH)** | Standard | ✅ gewählt (neu) |
+| 8 | **Inkasso-Eskalation vor Betreibung** | Info | ✅ gewählt (neu) |
+| 9 | Arbeitsvertrag für erste Angestellte | — | verworfen (Überschneidung mit Werkvertrag) |
+| 10 | Markenanmeldung begleiten | — | verworfen (IGE-Spezialverfahren, zu eng) |
 
-- `netlify/functions/lib/prompts.js` — alle 33 Dokumenttypen mit vollständiger Instruktion,
-  Kategorie-Metadaten
-- `netlify/functions/lib/core.js` — TIER-Struktur auf Schlüssel-basiertes Objekt umgestellt
-  (robuster als Index-Zählung bei 33 Einträgen), Kategorie-Liste ergänzt
-- `generate-document.js` — an die neue TIER-Struktur angepasst
-- `app/mein-anwalt-aurum.html` — Dokumentenpalette vollständig integriert: Kategorie-Tabs in der
-  Übersicht, Optgroups im Composer, Vorschau-Gerüste für alle 33 Typen, aktualisierte Cross-Sell-
-  Zuordnung
+## 10. Allgemeine Werkzeuge (frei formulierbar, themenübergreifend)
 
-## 7. Für dich am Morgen — offene Entscheidungen
+| # | Dokument | Stufe | Status |
+|---|---|---|---|
+| 1 | Rechtsgutachten / Fallanalyse (frei) | Premium | ✅ gewählt |
+| 2 | Vertrag frei entwerfen | Premium | ✅ gewählt |
+| 3 | Vertrag frei prüfen (Redlining) | Premium | ✅ gewählt |
+| 4 | Rechtsrecherche (frei) | Standard | ✅ gewählt |
+| 5 | Schreiben frei verfassen | Standard | ✅ gewählt |
+| 6 | Klartext-Erklärung für Laien | Info | ✅ gewählt |
+| 7 | Fristen-Check (allgemein) | Standard | ✅ gewählt |
+| 8 | Dokument/Urteil zusammenfassen | Standard | ✅ gewählt |
+| 9 | Argumente pro & contra | — | verworfen (Überschneidung mit Rechtsgutachten) |
+| 10 | Kosten & Vorgehen einschätzen | — | verworfen (in Rechtsgutachten integrierbar) |
 
-- [ ] Palette durchsehen: passen die 23 neuen Dokumente zu deiner Zielgruppe, fehlt etwas Wichtiges?
-- [ ] Kategorie-Reihenfolge/-Namen okay, oder umbenennen?
-- [ ] Preisfrage (weiterhin offen, wie besprochen — bei Gelegenheit)
-- [ ] Soll ich als Nächstes das Situations-Quiz oder die Backend-Frontend-Verkabelung angehen?
+---
+
+## Warum das den Wiederkehr-Anreiz stärkt
+
+Jede Kategorie deckt jetzt einen ganzen **Lebenszyklus eines Problems** ab statt nur einen
+Einzelfall — z. B. bei Miete: Einzug (Untermiete-Gesuch) → laufendes Mietverhältnis (Mängel,
+Nebenkosten, Mieterhöhung) → Auszug (Kaution) → Streitfall (Kündigung anfechten). Ein Kunde mit
+einem Mietproblem hat damit einen konkreten Grund, für ein **zweites, drittes Anliegen** in
+derselben Lebenslage zurückzukommen — das ist der Kern des Cross-Sell-Mechanismus (siehe
+`strategie/agenten-review-gesamtbericht.md`, Abschnitt 1, "Post-Download-Cross-Sell").
+
+## Beispiel-PDFs
+
+Für einen repräsentativen Satz an Dokumenten wird je ein **Beispiel-PDF mit fiktiven,
+anonymisierten Daten** erstellt, um Qualität und Aufbau zu zeigen (siehe `beispiele/`-Ordner).
+Angesichts von 80 Dokumenttypen ist das priorisiert nach den jeweils wichtigsten Dokumenten je
+Kategorie; weitere Beispiele folgen laufend.
