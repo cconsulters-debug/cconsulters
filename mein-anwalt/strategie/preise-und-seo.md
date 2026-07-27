@@ -26,18 +26,30 @@ Zwischen **Gratis-ChatGPT** (kein Vertrauen, kein CH-Bezug) und **Anwalt (CHF 15
 Verkaufsargument = **Ergebnis + Vertrauen**, nicht tiefster Preis. Ankerwerbung:
 «Beim Anwalt ab CHF 150 — hier ab CHF 9.90.»
 
-## 3. Neue Preisstaffel (im Prototyp gesetzt)
+## 3. Preisstaffel (finaler Stand nach Agenten-Review, im Prototyp gesetzt)
+
+> **Verlauf:** Ursprünglich 9.90/19.90/39.90 vorgeschlagen → auf Wunsch des Betreibers auf
+> 3.30/6.60/13.30 gesenkt (Einstiegshürde) → nach unabhängigem Preise-Team-Review (siehe
+> `agenten-review-gesamtbericht.md`) **zurück auf 9.90/19.90/39.90 angehoben**, weil "sehr günstig"
+> bei Rechtsdienstleistungen als unseriös wirkt und sonst 3–4× Marge ungenutzt bleibt.
 
 | Stufe | Beispiele | Preis | Anker |
 |---|---|---|---|
-| Info | Klartext-Erklärung, Fristen-Check | **CHF 3.30** | Konkurrenz CHF 50 |
-| Standard | Schreiben, Recherche, Zusammenfassung | **CHF 6.60** | Anwalt-Schreiben CHF 90 |
-| Premium | Vertrag, Redlining, Gutachten, Prozess | **CHF 13.30** | Anwalt-Vertrag CHF 590 |
+| Info | Klartext-Erklärung, Fristen-Check | **CHF 9.90** | Konkurrenz CHF 50 |
+| Standard | Schreiben, Recherche, Zusammenfassung | **CHF 19.90** | Anwalt-Schreiben CHF 90 |
+| Premium | Vertrag, Redlining, Gutachten, Prozess | **CHF 39.90** | Anwalt-Vertrag CHF 590 |
 
-Ergänzt: **1. Dokument gratis** (Köder), **Treue-Bonus** (jedes 10. gratis),
-**Guthaben-Pakete** (5 / 15+1.50 / 30+4), **Flatrate CHF 16.90/Monat**,
-**eigene Dokumente beifügbar** (Upload). Bewusst tiefpreisig gewählt, um die Einstiegshürde
-gering zu halten — der Wert kommt aus Menge, Wiederkehr, Abo und Upsells.
+Ergänzt mit den vom Preise-Team empfohlenen Schutzmechanismen:
+- **1. Dokument gratis** (Info-Stufe, Akquiseköder)
+- **Treue-Rabatt:** ab dem 5. bezahlten Dokument dauerhaft **10 % Rabatt** (ersetzt "jedes 10. gratis" — begrenzt die Kosten des Bonus planbar)
+- **Referral:** +CHF 3 beidseitig, **max. 3×/Monat** (verhindert Code-Farming)
+- **Guthaben-Pakete:** CHF 20 (+2) / 50 (+7) / 100 (+18)
+- **Flatrate:** CHF 24.90/Monat, **Fair-Use-Cap 15 Dokumente/Monat** — danach regulärer Preis bis
+  zur nächsten Periode (schliesst das vom Team identifizierte Verlustszenario bei Vielnutzern)
+- **Eigene Dokumente beifügbar** (Upload)
+
+Pro/KMU-Flatrate (CHF 69–89/Monat, Cap 50 Dok., Premium zählt doppelt) ist als Erweiterung für
+den Backend-Ausbau vorgemerkt, im Prototyp noch nicht umgesetzt.
 
 ## 4. Drei Profitabilitäts-Hebel
 

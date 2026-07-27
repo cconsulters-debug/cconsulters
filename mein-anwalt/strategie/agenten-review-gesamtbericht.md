@@ -15,9 +15,12 @@ günstig" nicht vertrauensbildend, sondern unseriös; die Marge pro Dokument ist
 zwar hoch, der **absolute Betrag** deckt aber keine Fixkosten; bei gleichem Traffic bringt eine
 3–4-fache Preiserhöhung die 3–4-fache Marge, ohne dass die Konversion im selben Verhältnis sinkt.
 
-**Das widerspricht der ausdrücklichen Entscheidung des Betreibers**, die Einstiegshürde tief zu
-halten. → **Nicht automatisch umgesetzt.** Siehe Abschnitt 2 für die Details, Entscheidung liegt
-beim Betreiber.
+**Das widersprach der vorherigen Entscheidung des Betreibers**, die Einstiegshürde tief zu
+halten. → Dem Betreiber vorgelegt und **am 27.07.2026 entschieden: Team-Empfehlung wird
+übernommen.** Preise sind auf CHF 9.90/19.90/39.90 zurückgesetzt; zusätzlich wurden die vom
+Team empfohlenen Schutzmechanismen umgesetzt (Fair-Use-Cap 15 Dok./Monat für die Flatrate,
+Treue-**Rabatt** statt Treue-**Gratis** ab dem 5. Dokument, Referral auf +CHF 3 / max. 3× Monat
+begrenzt). Details siehe `preise-und-seo.md` Abschnitt 3.
 
 **Zusätzlich identifiziert:** Ein echtes Sicherheitsloch im Flatrate-Modell — es gibt (noch im
 Demo-Code) **kein Nutzungslimit**. Ein Vielnutzer mit 200 Premium-Dokumenten/Monat kostet bei
