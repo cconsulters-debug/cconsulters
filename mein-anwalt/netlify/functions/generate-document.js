@@ -62,8 +62,7 @@ exports.handler = async (event) => {
     let body;
     try { body = JSON.parse(event.body || "{}"); } catch { throw httpError(400, "Ungültiger Request-Body."); }
     const { docKey, kanton, partei, ziel, sachverhalt, uploadText } = body;
-    const docIndex = Object.keys(DOC_TYPES).indexOf(docKey);
-    if (docIndex === -1) throw httpError(400, "Unbekannter Dokumenttyp.");
+    if (!DOC_TYPES[docKey] || !TIER[docKey]) throw httpError(400, "Unbekannter Dokumenttyp.");
     if (!kanton || !sachverhalt) throw httpError(400, "Kanton und Sachverhalt sind Pflichtfelder.");
     const cleanUpload = typeof uploadText === "string" ? uploadText.slice(0, MAX_UPLOAD_CHARS) : "";
 
@@ -82,7 +81,7 @@ exports.handler = async (event) => {
         throw httpError(429, "Zu viele Anfragen in kurzer Zeit. Bitte später erneut versuchen.");
       }
 
-      const tier = TIER[docIndex];
+      const tier = TIER[docKey];
       let price = tier.price;
       let freeReason = null;
 

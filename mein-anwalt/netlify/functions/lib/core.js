@@ -59,19 +59,59 @@ function handleError(e) {
 }
 
 /* ---------- Preise & Fair-Use — Single Source of Truth (Server) ---------- */
-// Reihenfolge/Indizes müssen mit DOCS/TIER im Frontend (mein-anwalt-aurum.html) übereinstimmen.
-const TIER = [
-  { doc: "rechtsgutachten", stufe: "Premium", price: 39.90 },
-  { doc: "vertrag-entwerfen", stufe: "Premium", price: 39.90 },
-  { doc: "vertrag-pruefen", stufe: "Premium", price: 39.90 },
-  { doc: "rechtsrecherche", stufe: "Standard", price: 19.90 },
-  { doc: "schreiben", stufe: "Standard", price: 19.90 },
-  { doc: "klartext", stufe: "Info", price: 9.90 },
-  { doc: "fristen-check", stufe: "Standard", price: 19.90 },
-  { doc: "argumente", stufe: "Premium", price: 39.90 },
-  { doc: "zusammenfassung", stufe: "Standard", price: 19.90 },
-  { doc: "kosten-vorgehen", stufe: "Info", price: 9.90 }
-];
+// Schlüsselbasiert (statt Index-Zählung), muss mit den Schlüsseln in
+// lib/prompts.js DOC_TYPES sowie mit DOCS/TIER im Frontend
+// (mein-anwalt-aurum.html) übereinstimmen. Preisstufen: Info 9.90 /
+// Standard 19.90 / Premium 39.90 (bewusst nicht verändert, siehe
+// dokumentenpalette-strategie.md Abschnitt 5).
+const STUFE_PRICE = { Info: 9.90, Standard: 19.90, Premium: 39.90 };
+const TIER = {
+  // Miete & Wohnen
+  "miete-maengelruege": { stufe: "Info" },
+  "miete-mietzinsherabsetzung": { stufe: "Standard" },
+  "miete-kuendigung-anfechten": { stufe: "Premium" },
+  "miete-nebenkosten-beanstanden": { stufe: "Standard" },
+  "miete-kaution-rueckfordern": { stufe: "Standard" },
+  // Arbeit & Anstellung
+  "arbeit-kuendigung-anfechten": { stufe: "Premium" },
+  "arbeit-fristlose-kuendigung": { stufe: "Premium" },
+  "arbeit-zeugnis-korrektur": { stufe: "Standard" },
+  "arbeit-lohnforderung": { stufe: "Standard" },
+  "arbeit-kuendigungsfrist-check": { stufe: "Info" },
+  // Kauf & Konsum
+  "konsum-maengelruege-kauf": { stufe: "Info" },
+  "konsum-widerruf-haustuergeschaeft": { stufe: "Info" },
+  "konsum-reklamation-online-kauf": { stufe: "Standard" },
+  // Geld & Betreibung
+  "schulden-mahnung-fristsetzung": { stufe: "Info" },
+  "schulden-rechtsvorschlag": { stufe: "Standard" },
+  "schulden-ratenzahlung": { stufe: "Standard" },
+  // Nachbarschaft & Eigentum
+  "nachbarschaft-immissionen": { stufe: "Info" },
+  // Verkehr & Bussen
+  "verkehr-einsprache-ordnungsbusse": { stufe: "Info" },
+  "verkehr-fuehrerausweis-entzug": { stufe: "Premium" },
+  // Datenschutz & Digitales
+  "datenschutz-auskunftsbegehren": { stufe: "Info" },
+  // Versicherung & Sozialversicherung
+  "versicherung-einsprache": { stufe: "Premium" },
+  // Freelance & KMU
+  "kmu-rechnung-mahnung": { stufe: "Info" },
+  "kmu-freelance-werkvertrag": { stufe: "Standard" },
+  // Allgemeine Werkzeuge
+  "rechtsgutachten": { stufe: "Premium" },
+  "vertrag-entwerfen": { stufe: "Premium" },
+  "vertrag-pruefen": { stufe: "Premium" },
+  "rechtsrecherche": { stufe: "Standard" },
+  "schreiben": { stufe: "Standard" },
+  "klartext": { stufe: "Info" },
+  "fristen-check": { stufe: "Standard" },
+  "argumente": { stufe: "Premium" },
+  "zusammenfassung": { stufe: "Standard" },
+  "kosten-vorgehen": { stufe: "Info" }
+};
+// price direkt anhängen, damit TIER[key].price wie bisher funktioniert
+Object.keys(TIER).forEach((k) => { TIER[k].price = STUFE_PRICE[TIER[k].stufe]; });
 const ABO_MONTHLY_PRICE = 24.90;
 const ABO_FAIR_USE_CAP = 15; // Dokumente pro Kalendermonat, danach regulärer Preis
 const REFERRAL_BONUS_CHF = 3;

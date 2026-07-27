@@ -120,6 +120,7 @@
   td.ab{font-weight:800;font-family:var(--serif)}
   td.sr{font-family:var(--mono);font-weight:700;color:var(--gold-2);white-space:nowrap}
   .catblock{display:none}.catblock.on{display:block}
+  .pgpanel{display:none}.pgpanel.on{display:grid}
   footer{border-top:1px solid var(--line-2);padding:44px 0 64px;color:var(--ink-2);font-size:.88rem}
   footer h3{font-family:var(--serif);font-size:1.1rem;color:var(--ink);margin-bottom:11px}
   footer a{color:var(--gold);text-decoration:none}footer a:hover{text-decoration:underline}
@@ -200,7 +201,7 @@
   <div class="trustband">
     <div class="t"><div class="n">26</div><div class="l">Kantone berücksichtigt</div></div>
     <div class="t"><div class="n">~40</div><div class="l">Gesetze mit SR-Nummer</div></div>
-    <div class="t"><div class="n">10</div><div class="l">Dokumenttypen</div></div>
+    <div class="t"><div class="n">33</div><div class="l">Dokumenttypen</div></div>
     <div class="t"><div class="n serif" style="font-style:italic">Fedlex</div><div class="l">&amp; BGer verifizierbar</div></div>
   </div>
   <div class="disc"><span class="b">§</span>
@@ -341,10 +342,12 @@
 
 <section class="sec" id="prompts"><div class="wrap">
   <div class="sechead"><span class="snum">IV.</span>
-    <div><h2 class="h">Dokumenttypen</h2>
-      <p class="sub">Zehn Dokumente für typische Anliegen im Schweizer Recht. Auswählen, im
-        Assistenten ausfüllen, herunterladen. <span style="color:var(--ink-3)">Die Fach-Vorlagen dahinter sind geschützt.</span></p></div></div>
-  <div class="pgrid" id="pgrid"></div>
+    <div><h2 class="h">Dokumentenpalette</h2>
+      <p class="sub">33 Dokumente für die häufigsten Rechtsanliegen im Alltag und im
+        Kleingewerbe — nach Lebensbereich sortiert. Auswählen, im Assistenten ausfüllen,
+        herunterladen. <span style="color:var(--ink-3)">Die Fach-Vorlagen dahinter sind geschützt.</span></p></div></div>
+  <div class="tabs" id="pgTabs"></div>
+  <div id="pgPanels"></div>
 </div></section>
 
 <section class="sec" id="quellen"><div class="wrap">
@@ -404,20 +407,58 @@
 
 <script>
 /* Dokumenttypen — nur Titel + Kurzbeschrieb sichtbar. Die eigentlichen Fach-Prompts
-   liegen NICHT im Browser (echter Schutz erst in der Backend-Version). */
-const DOCS=[
- {t:"Rechtsgutachten / Fallanalyse",b:"Strukturierte Einschätzung mit Rechtsfragen, Grundlagen und Empfehlung."},
- {t:"Vertrag entwerfen",b:"Vertragsentwurf nach Schweizer OR inkl. Prüf-Checkliste."},
- {t:"Vertrag prüfen (Redlining)",b:"Risiko-Übersicht, kritische Klauseln, Verbesserungen."},
- {t:"Rechtsrecherche",b:"Einschlägige Grundlagen, Rechtsprechung, Suchbegriffe."},
- {t:"Schreiben an Gegenpartei / Behörde",b:"Sachliches Schreiben mit Rechtsgrundlage und Frist."},
- {t:"Klartext-Erklärung für Laien",b:"Deine Rechte, Pflichten und nächsten Schritte einfach erklärt."},
- {t:"Fristen- & Zuständigkeits-Check",b:"Fristen, Rechtsweg und Warnung bei Versäumnis."},
- {t:"Argumente pro & contra",b:"Prozess-Einschätzung mit Beweislage und Chancen."},
- {t:"Dokument / Urteil zusammenfassen",b:"Kernaussagen, Dispositiv und nächste Schritte."},
- {t:"Kosten & Vorgehen einschätzen",b:"Optionen, Kostenfaktoren und To-do-Liste."}
+   liegen NICHT im Browser (echter Schutz erst in der Backend-Version, siehe
+   netlify/functions/lib/prompts.js — dort mit identischen Schlüsseln geführt). */
+const DOCCATS=[
+ {key:"miete",label:"Miete & Wohnen"},
+ {key:"arbeit",label:"Arbeit & Anstellung"},
+ {key:"konsum",label:"Kauf & Konsum"},
+ {key:"schulden",label:"Geld & Betreibung"},
+ {key:"nachbarschaft",label:"Nachbarschaft & Eigentum"},
+ {key:"verkehr",label:"Verkehr & Bussen"},
+ {key:"datenschutz",label:"Datenschutz & Digitales"},
+ {key:"versicherung",label:"Versicherung & Sozialvers."},
+ {key:"kmu",label:"Freelance & KMU"},
+ {key:"werkzeuge",label:"Allgemeine Werkzeuge"}
 ];
-const TIER=[["Premium",39.90],["Premium",39.90],["Premium",39.90],["Standard",19.90],["Standard",19.90],["Info",9.90],["Standard",19.90],["Premium",39.90],["Standard",19.90],["Info",9.90]];
+const STUFE_PRICE={Info:9.90,Standard:19.90,Premium:39.90};
+const DOCS={
+ "miete-maengelruege":{cat:"miete",tier:"Info",t:"Mängelrüge an die Vermieterschaft",b:"Mangel melden, Frist setzen, Rechte bei Nichtbehebung sichern."},
+ "miete-mietzinsherabsetzung":{cat:"miete",tier:"Standard",t:"Mietzinsherabsetzung verlangen",b:"Anpassung bei gesunkenem Referenzzinssatz oder anderen Gründen."},
+ "miete-kuendigung-anfechten":{cat:"miete",tier:"Premium",t:"Kündigung durch Vermieter anfechten",b:"Anfechtung bei der Schlichtungsbehörde — 30-Tage-Frist."},
+ "miete-nebenkosten-beanstanden":{cat:"miete",tier:"Standard",t:"Nebenkostenabrechnung beanstanden",b:"Belegeinsicht verlangen, Fehler rügen."},
+ "miete-kaution-rueckfordern":{cat:"miete",tier:"Standard",t:"Kaution zurückfordern",b:"Rückzahlung nach Auszug, unberechtigte Abzüge bestreiten."},
+ "arbeit-kuendigung-anfechten":{cat:"arbeit",tier:"Premium",t:"Kündigung anfechten",b:"Prüfung auf Missbräuchlichkeit und Fristen."},
+ "arbeit-fristlose-kuendigung":{cat:"arbeit",tier:"Premium",t:"Fristlose Kündigung einschätzen",b:"War die fristlose Kündigung rechtmässig?"},
+ "arbeit-zeugnis-korrektur":{cat:"arbeit",tier:"Standard",t:"Arbeitszeugnis-Korrektur verlangen",b:"Wohlwollend, wahr, vollständig einfordern."},
+ "arbeit-lohnforderung":{cat:"arbeit",tier:"Standard",t:"Lohnforderung stellen",b:"Ausstehenden Lohn, Überstunden oder 13. Monatslohn einfordern."},
+ "arbeit-kuendigungsfrist-check":{cat:"arbeit",tier:"Info",t:"Kündigungsfrist & Sperrfrist berechnen",b:"Inkl. Krankheits-/Unfall-Sperrfristen."},
+ "konsum-maengelruege-kauf":{cat:"konsum",tier:"Info",t:"Mängelrüge / Garantie geltend machen",b:"Sachmangel bei einem Kauf rügen."},
+ "konsum-widerruf-haustuergeschaeft":{cat:"konsum",tier:"Info",t:"Widerruf Haustürgeschäft",b:"Vertrag nach Vertreterbesuch/Kaffeefahrt widerrufen."},
+ "konsum-reklamation-online-kauf":{cat:"konsum",tier:"Standard",t:"Reklamation Online-Kauf / Lieferverzug",b:"Fehlende, verspätete oder falsche Lieferung reklamieren."},
+ "schulden-mahnung-fristsetzung":{cat:"schulden",tier:"Info",t:"Mahnung mit Fristsetzung",b:"Offene Forderung einfordern, bevor die Betreibung folgt."},
+ "schulden-rechtsvorschlag":{cat:"schulden",tier:"Standard",t:"Rechtsvorschlag gegen Betreibung",b:"Zahlungsbefehl bestreiten — nur 10 Tage Zeit."},
+ "schulden-ratenzahlung":{cat:"schulden",tier:"Standard",t:"Ratenzahlungsvereinbarung entwerfen",b:"Forderung in überschaubaren Raten begleichen."},
+ "nachbarschaft-immissionen":{cat:"nachbarschaft",tier:"Info",t:"Beschwerde wegen Immissionen",b:"Lärm, Geruch oder andere Einwirkungen beanstanden."},
+ "verkehr-einsprache-ordnungsbusse":{cat:"verkehr",tier:"Info",t:"Einsprache gegen Ordnungsbusse",b:"Busse oder Verzeigung im Strassenverkehr bestreiten."},
+ "verkehr-fuehrerausweis-entzug":{cat:"verkehr",tier:"Premium",t:"Führerausweisentzug einschätzen",b:"Warn-/Sicherungsentzug einschätzen, Rekurs vorbereiten."},
+ "datenschutz-auskunftsbegehren":{cat:"datenschutz",tier:"Info",t:"Auskunftsbegehren nach Datenschutzgesetz",b:"Auskunft über eigene gespeicherte Daten verlangen."},
+ "versicherung-einsprache":{cat:"versicherung",tier:"Premium",t:"Einsprache gegen Versicherungsentscheid",b:"Ablehnende Verfügung von Kranken-/Unfall-/IV-Versicherung anfechten."},
+ "kmu-rechnung-mahnung":{cat:"kmu",tier:"Info",t:"Rechnung & Mahnung fürs eigene Gewerbe",b:"Professionelle Rechnung + Mahnstufen für dein Geschäft."},
+ "kmu-freelance-werkvertrag":{cat:"kmu",tier:"Standard",t:"Freelance-/Werkvertrag für eigene Dienstleistung",b:"Sauberer Auftragsvertrag für deine Dienstleistung."},
+ "rechtsgutachten":{cat:"werkzeuge",tier:"Premium",t:"Rechtsgutachten / Fallanalyse",b:"Strukturierte Einschätzung mit Rechtsfragen, Grundlagen und Empfehlung."},
+ "vertrag-entwerfen":{cat:"werkzeuge",tier:"Premium",t:"Vertrag frei entwerfen",b:"Individueller Vertragsentwurf nach Schweizer OR."},
+ "vertrag-pruefen":{cat:"werkzeuge",tier:"Premium",t:"Vertrag frei prüfen (Redlining)",b:"Risiko-Übersicht, kritische Klauseln, Verbesserungen."},
+ "rechtsrecherche":{cat:"werkzeuge",tier:"Standard",t:"Rechtsrecherche",b:"Einschlägige Grundlagen, Rechtsprechung, Suchbegriffe."},
+ "schreiben":{cat:"werkzeuge",tier:"Standard",t:"Schreiben frei verfassen",b:"Individuelles Schreiben an Gegenpartei/Behörde."},
+ "klartext":{cat:"werkzeuge",tier:"Info",t:"Klartext-Erklärung für Laien",b:"Deine Rechte, Pflichten und nächsten Schritte einfach erklärt."},
+ "fristen-check":{cat:"werkzeuge",tier:"Standard",t:"Fristen-Check (allgemein)",b:"Fristen, Rechtsweg und Warnung bei Versäumnis."},
+ "argumente":{cat:"werkzeuge",tier:"Premium",t:"Argumente pro & contra",b:"Prozess-Einschätzung mit Beweislage und Chancen."},
+ "zusammenfassung":{cat:"werkzeuge",tier:"Standard",t:"Dokument / Urteil zusammenfassen",b:"Kernaussagen, Dispositiv und nächste Schritte."},
+ "kosten-vorgehen":{cat:"werkzeuge",tier:"Info",t:"Kosten & Vorgehen einschätzen",b:"Optionen, Kostenfaktoren und To-do-Liste."}
+};
+Object.keys(DOCS).forEach(k=>{DOCS[k].price=STUFE_PRICE[DOCS[k].tier]});
+const DOC_KEYS=Object.keys(DOCS);
 const ABO_CAP=15; // Fair-Use-Cap Flatrate: Dokumente/Monat, danach regulärer Preis
 const KANTONE=["","(Bund / national)","Aargau","Appenzell Ausserrhoden","Appenzell Innerrhoden","Basel-Landschaft","Basel-Stadt","Bern","Freiburg","Genf","Glarus","Graubünden","Jura","Luzern","Neuenburg","Nidwalden","Obwalden","Schaffhausen","Schwyz","Solothurn","St. Gallen","Tessin","Thurgau","Uri","Waadt","Wallis","Zug","Zürich"];
 const PORTALS=[
@@ -447,48 +488,84 @@ function inp(){return {
   Z:(g("ziel").value.trim()||"[Ziel]"),
   S:(g("sv").value.trim()||"[Sachverhalt/Details]")
 };}
-const SKEL=[
- m=>`RECHTLICHE KURZEINSCHÄTZUNG (Entwurf)\n\n1. Sachverhalt\n${m.S}\n\n2. Partei / Kanton\n${m.P} · Kanton ${m.K}\n\n3. Rechtsfrage(n)\n- [Zu prüfende Rechtsfrage]\n\n4. Massgebende Grundlagen (auf fedlex.admin.ch verifizieren)\n- [Artikel · Gesetz · SR-Nr.]\n\n5. Würdigung / Subsumtion\n[Voraussetzungen · Rechtsfolgen · Beweislast · Fristen]\n\n6. Ergebnis & Empfehlung\nZiel: ${m.Z}\n[Priorisierte nächste Schritte · Zuständigkeit · Risiken]`,
- m=>`VERTRAG (Entwurf nach Schweizer OR)\n\nParteien\n- Partei A: ${m.P}\n- Partei B: [Gegenpartei]\n- Gerichtsstand / Kanton: ${m.K}\n\nZweck\n${m.Z}\n\nEckpunkte\n${m.S}\n\n§1 Vertragsgegenstand\n[…]\n§2 Leistung & Vergütung\n[…]\n§3 Dauer & Kündigung\n[…]\n§4 Haftung / Gewährleistung\n[…]\n§5 Schlussbestimmungen (anwendbares Recht · Gerichtsstand)\n[…]\n\nCheckliste vor Unterschrift\n- Formvorschrift geprüft (Schriftform / öffentliche Beurkundung)?\n- Zwingendes Recht beachtet?\n- Klare, eindeutige Definitionen?`,
- m=>`VERTRAGSPRÜFUNG (Entwurf) — Sicht: ${m.P}\nKanton: ${m.K}\n\nGeprüfter Vertrag / Kontext\n${m.S}\n\nRisiko-Übersicht\n| # | Klausel | Risiko | Empfehlung | Priorität |\n| 1 | [...] | [...] | [...] | hoch |\n| 2 | [...] | [...] | [...] | mittel |\n\nFehlende übliche Klauseln\n- Gerichtsstand / anwendbares Recht\n- Haftung / Datenschutz\n\nFazit\n[Empfehlung — Ziel: ${m.Z}]`,
- m=>`RECHTSRECHERCHE (Entwurf)\nFrage: ${m.Z}\nKontext: ${m.S}\nKanton: ${m.K}\n\nEinschlägige Grundlagen (verifizieren)\n- [Artikel · Gesetz · SR-Nr.]\n\nRechtsprechung\n- [BGE / Urteil — Fundstelle zu verifizieren]\n\nKernaussage\n[...]\n\nWeiterrecherchieren\n- fedlex.admin.ch: [Suchbegriffe]\n- entscheidsuche.ch: [Suchbegriffe]`,
- m=>`[Ort], [Datum]\n\nAbsender: ${m.P}\nEmpfänger: [Gegenpartei / Behörde]\nKanton: ${m.K}\n\nBetreff: ${m.Z}\n\nSehr geehrte Damen und Herren\n\nSachverhalt:\n${m.S}\n\nRechtliche Grundlage: [Artikel · Gesetz]\n\nIch fordere Sie auf, [Forderung] bis [Frist: TT.MM.JJJJ] zu erfüllen. Nach unbenutztem Fristablauf behalte ich mir weitere rechtliche Schritte vor.\n\nFreundliche Grüsse\n${m.P}`,
- m=>`KLARTEXT-ERKLÄRUNG (Entwurf)\nSituation: ${m.P}, Kanton ${m.K}\nThema: ${m.S}\n\nWas das für dich bedeutet\n[Einfach erklärt]\n\nDeine Rechte\n- [...]\n\nDeine Pflichten\n- [...]\n\nNächste sinnvolle Schritte\n1. [...]\n2. [...]`,
- m=>`FRISTEN- & ZUSTÄNDIGKEITS-CHECK (Entwurf)\nFall: ${m.S}\nRolle: ${m.P} · Kanton: ${m.K}\n\nLaufende / drohende Fristen\n| Frist | Beginn | Dauer | Grundlage |\n| [Anfechtung/Beschwerde/Verjährung] | [Datum] | [...] | [Art. · Gesetz] |\n\nZuständigkeit / Rechtsweg\n- [Schlichtungsbehörde / Gericht / Amt]\n\n⚠ Achtung: Fristversäumnis bedeutet Rechtsverlust.`,
- m=>`PROZESS-EINSCHÄTZUNG (Entwurf) — Partei: ${m.P}\nSachverhalt: ${m.S}\nZiel: ${m.Z} · Kanton: ${m.K}\n\nArgumente FÜR meine Position\n- [... mit Rechtsgrundlage]\n\nArgumente der Gegenseite\n- [...]\n\nBeweislage\n- Beweislast: [...]\n- Beweismittel: [...]\n\nChancen & Risiken\n[...]\n\nAlternativen\n- Schlichtung / Vergleich / Mediation`,
- m=>`ZUSAMMENFASSUNG (Entwurf) — Rolle: ${m.P} · Kanton: ${m.K}\n\nWorum es geht\n${m.S}\n\nKernaussagen\n- [...]\n\nBei Urteil: Sachverhalt / Rechtsfrage / Dispositiv / Begründung\n[...]\n\nFolgen & offene Punkte für mich\n[...]\n\nNächste Schritte\n[...]`,
- m=>`KOSTEN- & VORGEHENS-EINSCHÄTZUNG (Entwurf)\nAnliegen: ${m.Z}\nDetails: ${m.S}\nRolle: ${m.P} · Kanton: ${m.K} · Streitwert: [Betrag]\n\nVorgehensoptionen\n- Aussergerichtlich: [Vor-/Nachteile]\n- Schlichtung: [...]\n- Klage: [...]\n\nKostenfaktoren\n- Gerichts-/Anwaltskosten · Prozessrisiko · Rechtsschutz · unentgeltliche Rechtspflege\n\nTo-do (14 Tage)\n1. [...]\n2. [...]\n3. [...]\n\nHinweis: Tarife sind kantonal geregelt.`
-];
-function selTask(){return parseInt(g("task").value)||0;}
+const SKEL={
+ "miete-maengelruege":m=>`MÄNGELRÜGE AN DIE VERMIETERSCHAFT (Entwurf)\n\nMieter/in: ${m.P} · Kanton: ${m.K}\n\nSehr geehrte Damen und Herren\n\nIch mache Sie auf folgenden Mangel aufmerksam:\n${m.S}\n\nIch fordere Sie auf, den Mangel bis [Datum] zu beheben. Andernfalls behalte ich mir Mietzinsherabsetzung, Hinterlegung des Mietzinses oder weitere Schritte vor.\n\n[Typischerweise einschlägig: Mängelrechte im OR — zu verifizieren]\n\nFreundliche Grüsse\n${m.P}`,
+ "miete-mietzinsherabsetzung":m=>`GESUCH UM MIETZINSHERABSETZUNG (Entwurf)\nMieter/in: ${m.P} · Kanton: ${m.K}\n\nBisheriger Mietzins: [CHF ...]\nBegründung: ${m.S}\n\nGestützt auf die Entwicklung des Referenzzinssatzes verlange ich eine Herabsetzung auf CHF [...] ab [Datum].\n\n[Amtliches Formular in vielen Kantonen Pflicht — zu prüfen]\n\nZiel: ${m.Z}`,
+ "miete-kuendigung-anfechten":m=>`⚠ FRIST: Anfechtung meist 30 Tage ab Erhalt der Kündigung!\n\nANFECHTUNG DER KÜNDIGUNG (Entwurf)\nMieter/in: ${m.P} · Kanton: ${m.K}\n\nSachverhalt: ${m.S}\n\nAnfechtungsgründe:\n- [Treu-und-Glauben-Verstoss / Sperrfrist / Formmangel — zu prüfen]\n\nGesuch an die Schlichtungsbehörde [Ort gemäss Kanton]...`,
+ "miete-nebenkosten-beanstanden":m=>`BEANSTANDUNG NEBENKOSTENABRECHNUNG (Entwurf)\nMieter/in: ${m.P} · Kanton: ${m.K}\n\nBeanstandete Positionen: ${m.S}\n\nIch verlange vollständige Belegeinsicht sowie Korrektur binnen [Frist].\n\nZiel: ${m.Z}`,
+ "miete-kaution-rueckfordern":m=>`RÜCKFORDERUNG DER MIETKAUTION (Entwurf)\nMieter/in: ${m.P} · Kanton: ${m.K}\n\nAuszug/Zustand: ${m.S}\n\nIch bestreite folgende Abzüge und verlange Auszahlung binnen [Frist] auf [IBAN].\n\nZiel: ${m.Z}`,
+ "arbeit-kuendigung-anfechten":m=>`⚠ Einspruch meist noch während der Kündigungsfrist nötig!\n\nEINSPRUCH GEGEN KÜNDIGUNG (Entwurf)\nPartei: ${m.P} · Kanton: ${m.K}\n\nSachverhalt: ${m.S}\n\nPrüfung Missbräuchlichkeit: [zu prüfen]\n\nZiel: ${m.Z}`,
+ "arbeit-fristlose-kuendigung":m=>`EINSCHÄTZUNG FRISTLOSE KÜNDIGUNG (Entwurf)\nPartei: ${m.P} · Kanton: ${m.K}\n\nGrund/Vorgeschichte: ${m.S}\n\nPrüfung "wichtiger Grund": [zu prüfen]\n\nZiel: ${m.Z}`,
+ "arbeit-zeugnis-korrektur":m=>`KORREKTUR ARBEITSZEUGNIS (Entwurf)\nPartei: ${m.P} · Kanton: ${m.K}\n\nBeanstandete Formulierung: ${m.S}\n\nKorrekturvorschlag: [...]\n\nGrundsätze: wohlwollend, wahr, vollständig.\nZiel: ${m.Z}`,
+ "arbeit-lohnforderung":m=>`LOHNFORDERUNG (Entwurf)\nPartei: ${m.P} · Kanton: ${m.K}\n\nAusstehender Betrag/Grund: ${m.S}\n\nForderungsaufstellung: [...]\nZahlungsfrist: [Datum]\nZiel: ${m.Z}`,
+ "arbeit-kuendigungsfrist-check":m=>`FRISTEN-BERECHNUNG (Entwurf)\nPartei: ${m.P} · Kanton: ${m.K}\n\nAngaben: ${m.S}\n\nOrdentliche Kündigungsfrist: [...]\nSperrfrist (falls Krankheit/Unfall/Schwangerschaft): [...]\nBerechnetes Enddatum: [...]`,
+ "konsum-maengelruege-kauf":m=>`MÄNGELRÜGE KAUF (Entwurf)\nKäufer/in: ${m.P} · Kanton: ${m.K}\n\nMangel/Kaufgegenstand: ${m.S}\n\nVerlangte Rechtsfolge: [Nachbesserung/Ersatz/Minderung]\nZiel: ${m.Z}`,
+ "konsum-widerruf-haustuergeschaeft":m=>`WIDERRUF HAUSTÜRGESCHÄFT (Entwurf)\nKunde/in: ${m.P} · Kanton: ${m.K}\n\nVertrag/Umstände: ${m.S}\n\nHiermit widerrufe ich den am [Datum] abgeschlossenen Vertrag fristgerecht.\nZiel: ${m.Z}`,
+ "konsum-reklamation-online-kauf":m=>`REKLAMATION ONLINE-KAUF (Entwurf)\nKäufer/in: ${m.P} · Kanton: ${m.K}\n\nBestellung/Problem: ${m.S}\n\nNachfrist bis [Datum], andernfalls Rückerstattung.\nZiel: ${m.Z}`,
+ "schulden-mahnung-fristsetzung":m=>`MAHNUNG MIT FRISTSETZUNG (Entwurf)\nGläubiger/in: ${m.P} · Kanton: ${m.K}\n\nForderung: ${m.S}\n\nZahlungsfrist: [Datum] — andernfalls Betreibung.\nZiel: ${m.Z}`,
+ "schulden-rechtsvorschlag":m=>`⚠ FRIST: 10 Tage ab Zustellung des Zahlungsbefehls!\n\nRECHTSVORSCHLAG (Entwurf)\nSchuldner/in: ${m.P} · Kanton: ${m.K}\n\nGrund der Bestreitung: ${m.S}\n\n"Ich erhebe Rechtsvorschlag gegen den Zahlungsbefehl Nr. [...]"\n(muss nicht begründet werden — beim Betreibungsamt einreichen)`,
+ "schulden-ratenzahlung":m=>`RATENZAHLUNGSVEREINBARUNG (Entwurf)\nPartei: ${m.P} · Kanton: ${m.K}\n\nForderung/Ratenwunsch: ${m.S}\n\nRatenplan: [...]\nVerfallklausel bei Zahlungsverzug: [...]`,
+ "nachbarschaft-immissionen":m=>`BESCHWERDE ÜBERMÄSSIGE IMMISSIONEN (Entwurf)\nBetroffene Partei: ${m.P} · Kanton: ${m.K}\n\nArt/Häufigkeit: ${m.S}\n\nBitte um Abhilfe binnen [Frist], sonst Schlichtung.\nZiel: ${m.Z}`,
+ "verkehr-einsprache-ordnungsbusse":m=>`⚠ Kurze Einsprachefrist ab Zustellung!\n\nEINSPRACHE ORDNUNGSBUSSE (Entwurf)\nBetroffene Partei: ${m.P} · Kanton: ${m.K}\n\nVorwurf/Begründung: ${m.S}\n\nEinwände: [...]\nZiel: ${m.Z}`,
+ "verkehr-fuehrerausweis-entzug":m=>`EINSCHÄTZUNG FÜHRERAUSWEISENTZUG (Entwurf)\nBetroffene Partei: ${m.P} · Kanton: ${m.K}\n\nVorfall/Verfügung: ${m.S}\n\nEinordnung Warn-/Sicherungsentzug: [zu prüfen]\nRekursfrist: [...]`,
+ "datenschutz-auskunftsbegehren":m=>`AUSKUNFTSBEGEHREN (revDSG) (Entwurf)\nAnfragende Person: ${m.P} · Kanton: ${m.K}\n\nVerantwortliche Stelle/Anlass: ${m.S}\n\nVerlangte Auskunft: welche Daten, Herkunft, Zweck, Empfänger, Dauer.\nFrist: [...]`,
+ "versicherung-einsprache":m=>`⚠ Einsprachefrist meist 30 Tage (Sozialvers.) — Police prüfen bei Privatversicherung!\n\nEINSPRACHE VERSICHERUNGSENTSCHEID (Entwurf)\nVersicherte Person: ${m.P} · Kanton: ${m.K}\n\nVerfügung/Ablehnungsgrund: ${m.S}\n\nEinwände: [...]`,
+ "kmu-rechnung-mahnung":m=>`RECHNUNG & MAHNSTUFEN (Entwurf)\nGeschäft: ${m.P} · Kanton: ${m.K}\n\nLeistung/Betrag/Kunde: ${m.S}\n\n1) Rechnung [...] 2) Erinnerung [...] 3) Mahnung mit Frist [...]`,
+ "kmu-freelance-werkvertrag":m=>`AUFTRAGS-/WERKVERTRAG (Entwurf)\nAuftragnehmer/in: ${m.P} · Kanton: ${m.K}\n\nLeistung/Eckpunkte: ${m.S}\n\n§1 Leistung §2 Vergütung §3 Abnahme/Mängelrechte §4 Kündigung §5 Geheimhaltung\nZiel: ${m.Z}`,
+ "rechtsgutachten":m=>`RECHTLICHE KURZEINSCHÄTZUNG (Entwurf)\n\n1. Sachverhalt\n${m.S}\n\n2. Partei / Kanton\n${m.P} · Kanton ${m.K}\n\n3. Rechtsfrage(n)\n- [Zu prüfende Rechtsfrage]\n\n4. Massgebende Grundlagen (auf fedlex.admin.ch verifizieren)\n- [Artikel · Gesetz · SR-Nr.]\n\n5. Würdigung / Subsumtion\n[Voraussetzungen · Rechtsfolgen · Beweislast · Fristen]\n\n6. Ergebnis & Empfehlung\nZiel: ${m.Z}\n[Priorisierte nächste Schritte · Zuständigkeit · Risiken]`,
+ "vertrag-entwerfen":m=>`VERTRAG (Entwurf nach Schweizer OR)\n\nParteien\n- Partei A: ${m.P}\n- Partei B: [Gegenpartei]\n- Gerichtsstand / Kanton: ${m.K}\n\nZweck\n${m.Z}\n\nEckpunkte\n${m.S}\n\n§1 Vertragsgegenstand\n[…]\n§2 Leistung & Vergütung\n[…]\n§3 Dauer & Kündigung\n[…]\n§4 Haftung / Gewährleistung\n[…]\n§5 Schlussbestimmungen (anwendbares Recht · Gerichtsstand)\n[…]\n\nCheckliste vor Unterschrift\n- Formvorschrift geprüft (Schriftform / öffentliche Beurkundung)?\n- Zwingendes Recht beachtet?\n- Klare, eindeutige Definitionen?`,
+ "vertrag-pruefen":m=>`VERTRAGSPRÜFUNG (Entwurf) — Sicht: ${m.P}\nKanton: ${m.K}\n\nGeprüfter Vertrag / Kontext\n${m.S}\n\nRisiko-Übersicht\n| # | Klausel | Risiko | Empfehlung | Priorität |\n| 1 | [...] | [...] | [...] | hoch |\n| 2 | [...] | [...] | [...] | mittel |\n\nFehlende übliche Klauseln\n- Gerichtsstand / anwendbares Recht\n- Haftung / Datenschutz\n\nFazit\n[Empfehlung — Ziel: ${m.Z}]`,
+ "rechtsrecherche":m=>`RECHTSRECHERCHE (Entwurf)\nFrage: ${m.Z}\nKontext: ${m.S}\nKanton: ${m.K}\n\nEinschlägige Grundlagen (verifizieren)\n- [Artikel · Gesetz · SR-Nr.]\n\nRechtsprechung\n- [BGE / Urteil — Fundstelle zu verifizieren]\n\nKernaussage\n[...]\n\nWeiterrecherchieren\n- fedlex.admin.ch: [Suchbegriffe]\n- entscheidsuche.ch: [Suchbegriffe]`,
+ "schreiben":m=>`[Ort], [Datum]\n\nAbsender: ${m.P}\nEmpfänger: [Gegenpartei / Behörde]\nKanton: ${m.K}\n\nBetreff: ${m.Z}\n\nSehr geehrte Damen und Herren\n\nSachverhalt:\n${m.S}\n\nRechtliche Grundlage: [Artikel · Gesetz]\n\nIch fordere Sie auf, [Forderung] bis [Frist: TT.MM.JJJJ] zu erfüllen. Nach unbenutztem Fristablauf behalte ich mir weitere rechtliche Schritte vor.\n\nFreundliche Grüsse\n${m.P}`,
+ "klartext":m=>`KLARTEXT-ERKLÄRUNG (Entwurf)\nSituation: ${m.P}, Kanton ${m.K}\nThema: ${m.S}\n\nWas das für dich bedeutet\n[Einfach erklärt]\n\nDeine Rechte\n- [...]\n\nDeine Pflichten\n- [...]\n\nNächste sinnvolle Schritte\n1. [...]\n2. [...]`,
+ "fristen-check":m=>`FRISTEN- & ZUSTÄNDIGKEITS-CHECK (Entwurf)\nFall: ${m.S}\nRolle: ${m.P} · Kanton: ${m.K}\n\nLaufende / drohende Fristen\n| Frist | Beginn | Dauer | Grundlage |\n| [Anfechtung/Beschwerde/Verjährung] | [Datum] | [...] | [Art. · Gesetz] |\n\nZuständigkeit / Rechtsweg\n- [Schlichtungsbehörde / Gericht / Amt]\n\n⚠ Achtung: Fristversäumnis bedeutet Rechtsverlust.`,
+ "argumente":m=>`PROZESS-EINSCHÄTZUNG (Entwurf) — Partei: ${m.P}\nSachverhalt: ${m.S}\nZiel: ${m.Z} · Kanton: ${m.K}\n\nArgumente FÜR meine Position\n- [... mit Rechtsgrundlage]\n\nArgumente der Gegenseite\n- [...]\n\nBeweislage\n- Beweislast: [...]\n- Beweismittel: [...]\n\nChancen & Risiken\n[...]\n\nAlternativen\n- Schlichtung / Vergleich / Mediation`,
+ "zusammenfassung":m=>`ZUSAMMENFASSUNG (Entwurf) — Rolle: ${m.P} · Kanton: ${m.K}\n\nWorum es geht\n${m.S}\n\nKernaussagen\n- [...]\n\nBei Urteil: Sachverhalt / Rechtsfrage / Dispositiv / Begründung\n[...]\n\nFolgen & offene Punkte für mich\n[...]\n\nNächste Schritte\n[...]`,
+ "kosten-vorgehen":m=>`KOSTEN- & VORGEHENS-EINSCHÄTZUNG (Entwurf)\nAnliegen: ${m.Z}\nDetails: ${m.S}\nRolle: ${m.P} · Kanton: ${m.K} · Streitwert: [Betrag]\n\nVorgehensoptionen\n- Aussergerichtlich: [Vor-/Nachteile]\n- Schlichtung: [...]\n- Klage: [...]\n\nKostenfaktoren\n- Gerichts-/Anwaltskosten · Prozessrisiko · Rechtsschutz · unentgeltliche Rechtspflege\n\nTo-do (14 Tage)\n1. [...]\n2. [...]\n3. [...]\n\nHinweis: Tarife sind kantonal geregelt.`
+};
+function selTask(){return g("task").value||DOC_KEYS[0];}
 let uploaded={name:"",text:""};
-function fullDoc(i){
+function fullDoc(key){
   const m=inp();const now=new Date();
   let attach="";
   if(uploaded.text){attach="\n\n"+"-".repeat(52)+"\nBEIGEFÜGTES DOKUMENT DES KUNDEN — "+uploaded.name
     +"\n"+"-".repeat(52)+"\n"+uploaded.text.slice(0,4000)+(uploaded.text.length>4000?"\n…[gekürzt]":"");}
   return "MEIN RECHTSHELFER & ASSISTENT\n"+"=".repeat(52)
-    +"\nDokumenttyp: "+DOCS[i].t+" ("+TIER[i][0]+")\nKanton: "+m.K+"   Erstellt: "+now.toLocaleString("de-CH")
+    +"\nDokumenttyp: "+DOCS[key].t+" ("+DOCS[key].tier+")\nKanton: "+m.K+"   Erstellt: "+now.toLocaleString("de-CH")
     +(uploaded.name?"\nBeigefügt: "+uploaded.name:"")
-    +"\n"+"=".repeat(52)+"\n\n"+SKEL[i](m)+attach
+    +"\n"+"=".repeat(52)+"\n\n"+SKEL[key](m)+attach
     +"\n\n"+"-".repeat(52)+"\nAllgemeine rechtliche Information, keine verbindliche Beratung. Entwurf zur eigenen Weiterbearbeitung; zentrale Fundstellen auf fedlex.admin.ch / bger.ch prüfen. Bei Fristen/Strafsachen zugelassene Anwältin/Anwalt beiziehen.\n";
 }
 /* Vorschau: nur die ersten Zeilen, Rest gesperrt */
 function build(){
-  const i=selTask();const lines=fullDoc(i).split("\n");
+  const key=selTask();const lines=fullDoc(key).split("\n");
   const shown=lines.slice(0,9).join("\n");const hidden=Math.max(0,lines.length-9);
   g("compOut").textContent=shown+(hidden>0?("\n\n… + "+hidden+" weitere Zeilen (gesperrt)"):"");
 }
 
-/* Dropdowns & Karten */
+/* Dropdowns (mit Kategorie-Optgroups) & Karten (mit Kategorie-Tabs) */
 const taskSel=g("task"),kSel=g("kanton");
-DOCS.forEach((p,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${i+1}. ${p.t}`;taskSel.appendChild(o)});
+DOCCATS.forEach(cat=>{
+  const og=document.createElement("optgroup");og.label=cat.label;
+  DOC_KEYS.filter(k=>DOCS[k].cat===cat.key).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=DOCS[k].t;og.appendChild(o)});
+  taskSel.appendChild(og);
+});
 KANTONE.forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=k||"— wählen —";kSel.appendChild(o)});
-const pg=g("pgrid");
-DOCS.forEach((p,i)=>{const c=document.createElement("div");c.className="card pcard";
-  c.innerHTML=`<div class="top"><span class="no">${String(i+1).padStart(2,"0")}</span><div><h3>${p.t}</h3><div class="bl">${p.b}</div></div></div>
-    <div class="pfoot"><span class="ptier">${TIER[i][0]} · ${fmt(TIER[i][1])}</span><button class="gbtn small" data-pick="${i}">Auswählen</button></div>`;
-  pg.appendChild(c);});
-pg.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{taskSel.value=b.dataset.pick;build();updateKachel();
+
+const pgTabs=g("pgTabs"),pgPanels=g("pgPanels");
+DOCCATS.forEach((cat,ci)=>{
+  const t=document.createElement("button");t.className="tab";t.textContent=cat.label;t.setAttribute("aria-selected",ci===0);
+  t.onclick=()=>{$$("#pgTabs .tab").forEach(x=>x.setAttribute("aria-selected","false"));t.setAttribute("aria-selected","true");
+    $$(".pgpanel").forEach(p=>p.classList.remove("on"));g("pgpanel-"+cat.key).classList.add("on")};
+  pgTabs.appendChild(t);
+  const panel=document.createElement("div");panel.className="pgrid pgpanel"+(ci===0?" on":"");panel.id="pgpanel-"+cat.key;
+  DOC_KEYS.filter(k=>DOCS[k].cat===cat.key).forEach(k=>{const p=DOCS[k];const c=document.createElement("div");c.className="card pcard";
+    c.innerHTML=`<div class="top"><span class="no">${p.tier[0]}</span><div><h3>${p.t}</h3><div class="bl">${p.b}</div></div></div>
+      <div class="pfoot"><span class="ptier">${p.tier} · ${fmt(p.price)}</span><button class="gbtn small" data-pick="${k}">Auswählen</button></div>`;
+    panel.appendChild(c);});
+  pgPanels.appendChild(panel);
+});
+pgPanels.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>{taskSel.value=b.dataset.pick;build();updateKachel();
   document.getElementById("composer").scrollIntoView({behavior:"smooth"});});
 [taskSel,kSel,g("partei"),g("ziel"),g("sv")].forEach(el=>el.addEventListener("input",()=>{build();updateKachel();}));
 
@@ -528,23 +605,23 @@ let acct=(function(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.pars
 function saveAcct(){try{localStorage.setItem(LS_KEY,JSON.stringify(acct))}catch(e){window._acct=acct}}
 function genKnr(){const y=new Date().getFullYear();let s="";for(let i=0;i<6;i++)s+="ABCDEFGHJKLMNPRSTUVWXYZ23456789"[Math.floor(Math.random()*31)];return "MR-"+y+"-"+s}
 function loyaltyDiscount(){return !!acct && (acct.paid||0)>=4;} // ab dem 5. bezahlten Dokument: 10% Rabatt statt "jedes 10. gratis"
-function priceInfo(){ if(!acct)return {price:TIER[selTask()][1],free:null};
+function priceInfo(){ if(!acct)return {price:DOCS[selTask()].price,free:null};
   if((acct.freeDocs||0)>0)return {price:0,free:"test"};
   if(acct.abo){
     if((acct.aboUsed||0)<ABO_CAP)return {price:0,free:"abo"};
-    return {price:TIER[selTask()][1],free:"abocap"}; // Fair-Use-Cap erreicht — regulärer Preis bis zur nächsten Periode
+    return {price:DOCS[selTask()].price,free:"abocap"}; // Fair-Use-Cap erreicht — regulärer Preis bis zur nächsten Periode
   }
-  const base=TIER[selTask()][1];
+  const base=DOCS[selTask()].price;
   if(loyaltyDiscount())return {price:Math.round(base*0.9*20)/20,free:"loyalty10"};
   return {price:base,free:null}; }
 function currentPrice(){return priceInfo().price;}
 function updateKachel(){
-  const t=TIER[selTask()];const pi=priceInfo();
+  const t=DOCS[selTask()];const pi=priceInfo();
   if(pi.free==="abo"){g("kachelPrice").textContent="Im Abo";g("kachelTier").textContent="· Flatrate ("+(acct.aboUsed||0)+"/"+ABO_CAP+" diesen Monat)";}
-  else if(pi.free==="abocap"){g("kachelPrice").textContent=fmt(t[1]);g("kachelTier").textContent="· Fair-Use-Limit erreicht ("+ABO_CAP+"/Monat)";}
+  else if(pi.free==="abocap"){g("kachelPrice").textContent=fmt(t.price);g("kachelTier").textContent="· Fair-Use-Limit erreicht ("+ABO_CAP+"/Monat)";}
   else if(pi.free==="test"){g("kachelPrice").textContent="GRATIS";g("kachelTier").textContent="· Gratis-Testdokument";}
-  else if(pi.free==="loyalty10"){g("kachelPrice").textContent=fmt(pi.price);g("kachelTier").textContent="· "+t[0]+" · 10% Treue-Rabatt";}
-  else{g("kachelPrice").textContent=fmt(t[1]);g("kachelTier").textContent="· "+t[0];}
+  else if(pi.free==="loyalty10"){g("kachelPrice").textContent=fmt(pi.price);g("kachelTier").textContent="· "+t.tier+" · 10% Treue-Rabatt";}
+  else{g("kachelPrice").textContent=fmt(t.price);g("kachelTier").textContent="· "+t.tier;}
   const lc=g("lockCta");if(lc)lc.textContent=(acct?"Zum Download →":"Freischalten — 1. Dokument gratis →");
   const btn=g("kachelBtn");
   if(!acct){btn.disabled=false;btn.textContent="In 10 Sekunden startklar →";btn.onclick=()=>document.getElementById("shop").scrollIntoView({behavior:"smooth"});return;}
@@ -597,21 +674,40 @@ async function deliver(doc,fname){
   if(!saved)alert("Download in dieser Vorschau nicht möglich. In der echten App wird das Dokument als PDF/Word geliefert.");
   return saved;
 }
-const NEXT_STEP={0:6,1:2,2:6,3:0,4:6,5:1,6:9,7:0,8:6,9:1}; // sinnvoller nächster Dokumenttyp je Typ
+const NEXT_STEP={ // sinnvoller nächster Dokumenttyp je Typ (Cross-Sell-Kette, Wiederkehr-Logik)
+  "miete-maengelruege":"miete-mietzinsherabsetzung","miete-mietzinsherabsetzung":"miete-nebenkosten-beanstanden",
+  "miete-kuendigung-anfechten":"miete-kaution-rueckfordern","miete-nebenkosten-beanstanden":"miete-kaution-rueckfordern",
+  "miete-kaution-rueckfordern":"schulden-mahnung-fristsetzung",
+  "arbeit-kuendigung-anfechten":"arbeit-zeugnis-korrektur","arbeit-fristlose-kuendigung":"arbeit-lohnforderung",
+  "arbeit-zeugnis-korrektur":"arbeit-lohnforderung","arbeit-lohnforderung":"schulden-mahnung-fristsetzung",
+  "arbeit-kuendigungsfrist-check":"arbeit-kuendigung-anfechten",
+  "konsum-maengelruege-kauf":"konsum-reklamation-online-kauf","konsum-widerruf-haustuergeschaeft":"konsum-maengelruege-kauf",
+  "konsum-reklamation-online-kauf":"schulden-mahnung-fristsetzung",
+  "schulden-mahnung-fristsetzung":"schulden-ratenzahlung","schulden-rechtsvorschlag":"rechtsgutachten",
+  "schulden-ratenzahlung":"schulden-mahnung-fristsetzung",
+  "nachbarschaft-immissionen":"rechtsgutachten",
+  "verkehr-einsprache-ordnungsbusse":"fristen-check","verkehr-fuehrerausweis-entzug":"rechtsgutachten",
+  "datenschutz-auskunftsbegehren":"klartext",
+  "versicherung-einsprache":"fristen-check",
+  "kmu-rechnung-mahnung":"schulden-mahnung-fristsetzung","kmu-freelance-werkvertrag":"kmu-rechnung-mahnung",
+  "rechtsgutachten":"argumente","vertrag-entwerfen":"vertrag-pruefen","vertrag-pruefen":"rechtsgutachten",
+  "rechtsrecherche":"rechtsgutachten","schreiben":"fristen-check","klartext":"kosten-vorgehen",
+  "fristen-check":"rechtsgutachten","argumente":"kosten-vorgehen","zusammenfassung":"klartext","kosten-vorgehen":"argumente"
+};
 async function kachelAction(){
   if(!acct)return;
   const pi=priceInfo();
   if(pi.price>0&&acct.bal<pi.price){alert("Guthaben zu tief. Bitte lade Guthaben auf.");return;}
-  const i=selTask();const taskName=DOCS[i].t;const now=new Date();
-  const doc=fullDoc(i);
+  const key=selTask();const taskName=DOCS[key].t;const now=new Date();
+  const doc=fullDoc(key);
   const fname="Rechtsdokument_"+taskName.replace(/[^0-9A-Za-zÄÖÜäöü]+/g,"-").replace(/^-|-$/g,"")+"_"+acct.knr+".md";
   const ok=await deliver(doc,fname);
   if(ok){ if(pi.price>0)acct.bal=+(acct.bal-pi.price).toFixed(2); if(pi.free==="test")acct.freeDocs=(acct.freeDocs||1)-1;
     if(pi.free==="abo")acct.aboUsed=(acct.aboUsed||0)+1;
     if(!acct.abo||pi.free==="abocap")acct.paid=(acct.paid||0)+1;
     acct.hist.push({t:taskName,d:now.toLocaleDateString("de-CH"),price:pi.price,doc:doc,fname:fname});saveAcct();renderAcct();
-    const nxt=NEXT_STEP[i];
-    setTimeout(()=>alert("Dokument erstellt und im Archiv gespeichert.\n\nHäufig sinnvoll als Nächstes: „"+DOCS[nxt].t+"“ — deine Kundennummer "+acct.knr+" bleibt gleich."),150);
+    const nxt=NEXT_STEP[key];
+    if(nxt)setTimeout(()=>alert("Dokument erstellt und im Archiv gespeichert.\n\nHäufig sinnvoll als Nächstes: „"+DOCS[nxt].t+"“ — deine Kundennummer "+acct.knr+" bleibt gleich."),150);
   }
 }
 
