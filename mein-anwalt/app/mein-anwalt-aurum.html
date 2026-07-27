@@ -181,13 +181,13 @@
     <div><b class="serif">Mein Rechtshelfer</b><small>&amp; Assistent · Schweizer Recht</small></div></div>
   <nav class="links">
     <a href="#system">So funktioniert's</a><a href="#composer">Dokument erstellen</a>
-    <a href="#shop">Guthaben &amp; Konto</a><a href="#prompts">Dokumenttypen</a><a href="#quellen">Rechtsquellen</a>
+    <a href="#shop">Guthaben &amp; Konto</a><a href="#prompts">Dokumenttypen</a><a href="#quellen">Rechtsquellen</a><a href="#faq">FAQ</a>
   </nav>
 </div></header>
 
 <section class="hero"><div class="wrap">
   <div class="kicker">KI-Dokumente · Schweizer Recht</div>
-  <h1 class="title serif">Ihr digitaler Rechtsberater —<br><em>fundiert. souverän. Schweizerisch.</em></h1>
+  <h1 class="title serif">Ihr Rechtshelfer für den ersten Schritt —<br><em>fundiert. souverän. Schweizerisch.</em></h1>
   <p class="lede">Beschreibe dein Anliegen — «Mein Rechtshelfer» erstellt dir in Minuten das
     passende, auf Schweizer Recht zugeschnittene Dokument und klärt deine Rechtsfragen. Du kannst
     <b>eigene Dokumente beifügen</b>, das erste Dokument ist <b>gratis</b>, danach <b>ab CHF 3.30</b>
@@ -242,13 +242,14 @@
           <div id="drop" class="drop">📎 Datei hierher ziehen oder <span class="u">auswählen</span> — .txt, .md
             <input type="file" id="file" accept=".txt,.md,text/plain,text/markdown" hidden></div>
           <div id="fileChip" class="chip2" style="display:none"></div>
+          <div class="hint" style="margin-top:6px"><span style="color:var(--gold)">🔒</span> Deine Datei wird nur für dieses Dokument verwendet und nicht dauerhaft gespeichert.</div>
         </div>
         <div class="hint"><span style="color:var(--gold);font-weight:800">↳</span> Deine Angaben und ein beigefügtes Dokument fliessen ins Ergebnis ein. Der vollständige Text wird erst beim bezahlten Download erzeugt.</div>
       </div>
       <div class="out"><div class="oh"><span class="kicker">Vorschau</span><span class="lockpill">🔒 Vollständig nach Bezahlung</span></div>
         <div class="prewrap"><pre id="compOut"></pre>
           <div class="lockover"><div class="lk"><div class="lktxt">🔒 Vollständiges Dokument nach Bezahlung</div>
-            <a class="btn primary" href="#shop" style="font-size:.85rem;padding:9px 16px">Zum Download →</a></div></div>
+            <a class="btn primary" href="#shop" style="font-size:.85rem;padding:9px 16px" id="lockCta">Freischalten — ab CHF 3.30 →</a></div></div>
         </div>
       </div>
     </div>
@@ -270,7 +271,7 @@
       <div id="acctNew">
         <div class="kicker" style="margin-bottom:8px">Neu hier?</div>
         <p class="note" style="margin:0 0 14px">Konto erstellen — du erhältst eine Kundennummer (= dein Einladungscode) und dein <b>erstes Dokument gratis</b> zum Testen.</p>
-        <button class="gbtn solid" id="createAcct">Kostenlos Konto erstellen</button>
+        <button class="gbtn solid" id="createAcct">Jetzt starten — 1. Dokument gratis</button>
         <div style="margin-top:20px;border-top:1px solid var(--line-2);padding-top:16px">
           <div class="kicker" style="margin-bottom:8px">Schon Kunde?</div>
           <div class="row">
@@ -312,7 +313,8 @@
           <li>Bezahlte Dokumente bleiben im Archiv — gratis erneut ladbar</li>
           <li>Jedes neue Dokument wird neu verrechnet</li>
         </ul>
-        <button class="gbtn solid" id="kachelBtn" disabled style="font-size:.95rem;padding:14px 20px">Zuerst Konto erstellen</button>
+        <button class="gbtn solid" id="kachelBtn" disabled style="font-size:.95rem;padding:14px 20px">In 10 Sekunden startklar →</button>
+        <p class="note" style="color:var(--gold-2)">Kein Abo-Zwang. Keine versteckten Kosten. Guthaben verfällt nicht.</p>
         <p class="note" id="kachelNote">Testmodus: kein echtes Geld — der Download ist echt. Live via Netlify&nbsp;+&nbsp;Firebase&nbsp;+&nbsp;Stripe/TWINT.</p>
       </div>
       <div>
@@ -350,6 +352,26 @@
       <p class="sub">Womit dein KI-Rechtshelfer jede Aussage belegt — und du sie nachprüfst.</p></div></div>
   <div class="portals" id="portals"></div>
   <div class="tabs" id="cattabs"></div><div id="cats"></div>
+</div></section>
+
+<section class="sec" id="faq"><div class="wrap">
+  <div class="sechead"><span class="snum">VI.</span>
+    <div><h2 class="h">Häufige Fragen</h2></div></div>
+  <div class="pgrid">
+    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px">Ist das ein Anwalt?</h3>
+      <p class="note" style="color:var(--ink-2)">Nein. «Mein Rechtshelfer &amp; Assistent» ist ein KI-Werkzeug für allgemeine rechtliche
+        Information — keine Anwaltskanzlei, keine verbindliche Beratung, kein Mandatsverhältnis. Bei Fristen
+        oder Strafsachen empfehlen wir eine zugelassene Anwältin/einen Anwalt.</p></div>
+    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px">Was, wenn das Dokument nicht passt?</h3>
+      <p class="note" style="color:var(--ink-2)">Du siehst vor der Bezahlung eine Vorschau mit deinen eigenen Angaben. Passt der Ansatz
+        nicht, wähle einen anderen Dokumenttyp oder ergänze den Sachverhalt — erst danach fällt die Gebühr an.</p></div>
+    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px">Was passiert mit meinen Daten und Uploads?</h3>
+      <p class="note" style="color:var(--ink-2)">Deine Angaben und ein beigefügtes Dokument werden nur zur Erstellung deines Dokuments
+        verwendet, nicht dauerhaft gespeichert. Details in der Datenschutzerklärung.</p></div>
+    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px">Verfällt mein Guthaben?</h3>
+      <p class="note" style="color:var(--ink-2)">Nein. Aufgeladenes Guthaben bleibt auf deinem Konto, bis du es einsetzt — ohne
+        Ablaufdatum und ohne Abo-Zwang.</p></div>
+  </div>
 </div></section>
 
 <footer><div class="wrap foot-grid">
@@ -516,8 +538,10 @@ function updateKachel(){
   else if(pi.free==="test"){g("kachelPrice").textContent="GRATIS";g("kachelTier").textContent="· Gratis-Testdokument";}
   else if(pi.free==="loyalty"){g("kachelPrice").textContent="GRATIS";g("kachelTier").textContent="· Treue-Bonus ("+t[0]+")";}
   else{g("kachelPrice").textContent=fmt(t[1]);g("kachelTier").textContent="· "+t[0];}
+  const lc=g("lockCta");if(lc)lc.textContent=(acct?"Zum Download →":"Freischalten — 1. Dokument gratis →");
   const btn=g("kachelBtn");
-  if(!acct){btn.disabled=true;btn.textContent="Zuerst Konto erstellen";return;}
+  if(!acct){btn.disabled=false;btn.textContent="In 10 Sekunden startklar →";btn.onclick=()=>document.getElementById("shop").scrollIntoView({behavior:"smooth"});return;}
+  btn.onclick=kachelAction;
   if(pi.price>0&&acct.bal<pi.price){btn.disabled=true;btn.textContent="Guthaben zu tief — bitte aufladen";}
   else{btn.disabled=false;btn.textContent=pi.price>0?("Dokument erstellen & herunterladen · "+fmt(pi.price)):"Dokument erstellen & herunterladen · gratis";}
 }
@@ -566,7 +590,8 @@ async function deliver(doc,fname){
   if(!saved)alert("Download in dieser Vorschau nicht möglich. In der echten App wird das Dokument als PDF/Word geliefert.");
   return saved;
 }
-g("kachelBtn").onclick=async()=>{
+const NEXT_STEP={0:6,1:2,2:6,3:0,4:6,5:1,6:9,7:0,8:6,9:1}; // sinnvoller nächster Dokumenttyp je Typ
+async function kachelAction(){
   if(!acct)return;
   const pi=priceInfo();
   if(pi.price>0&&acct.bal<pi.price){alert("Guthaben zu tief. Bitte lade Guthaben auf.");return;}
@@ -576,8 +601,11 @@ g("kachelBtn").onclick=async()=>{
   const ok=await deliver(doc,fname);
   if(ok){ if(pi.price>0)acct.bal=+(acct.bal-pi.price).toFixed(2); if(pi.free==="test")acct.freeDocs=(acct.freeDocs||1)-1;
     if(!acct.abo)acct.paid=(acct.paid||0)+1;
-    acct.hist.push({t:taskName,d:now.toLocaleDateString("de-CH"),price:pi.price,doc:doc,fname:fname});saveAcct();renderAcct();}
-};
+    acct.hist.push({t:taskName,d:now.toLocaleDateString("de-CH"),price:pi.price,doc:doc,fname:fname});saveAcct();renderAcct();
+    const nxt=NEXT_STEP[i];
+    setTimeout(()=>alert("Dokument erstellt und im Archiv gespeichert.\n\nHäufig sinnvoll als Nächstes: „"+DOCS[nxt].t+"“ — deine Kundennummer "+acct.knr+" bleibt gleich."),150);
+  }
+}
 
 build();renderAcct();
 </script>
