@@ -1,31 +1,25 @@
-# Beispiel-PDFs — Qualitätsnachweis der Dokumentenpalette
+# Beispiel-PDFs — vollständiger Qualitätsnachweis der Dokumentenpalette
 
-10 Flaggschiff-Dokumente (eines je Themenkategorie + ein allgemeines Werkzeug), erstellt mit
-**fiktiven Personen und Daten**, um Qualität, Aufbau und Tiefe der 80-teiligen Dokumentenpalette
-zu zeigen (siehe `../dokumentenpalette-strategie.md`).
-
-| Datei | Kategorie | Dokument |
-|---|---|---|
-| `01-miete-kuendigung-anfechten.pdf` | Miete & Wohnen | Kündigung durch Vermieter anfechten |
-| `02-arbeit-kuendigung-anfechten.pdf` | Arbeit & Anstellung | Kündigung anfechten (Missbräuchlichkeit) |
-| `03-konsum-inkasso-bestreiten.pdf` | Kauf & Konsum | Unberechtigte Inkassoforderung bestreiten |
-| `04-schulden-rechtsvorschlag.pdf` | Geld & Betreibung | Rechtsvorschlag gegen Betreibung |
-| `05-nachbarschaft-immissionen.pdf` | Nachbarschaft & Eigentum | Beschwerde wegen Immissionen |
-| `06-verkehr-einsprache-ordnungsbusse.pdf` | Verkehr & Bussen | Einsprache gegen Ordnungsbusse |
-| `07-datenschutz-auskunftsbegehren.pdf` | Datenschutz & Digitales | Auskunftsbegehren nach Datenschutzgesetz |
-| `08-versicherung-einsprache.pdf` | Versicherung & Sozialversicherung | Einsprache gegen Versicherungsentscheid |
-| `09-kmu-rechnung-mahnung.pdf` | Freelance & KMU | Rechnung & Mahnung fürs eigene Gewerbe |
-| `10-werkzeuge-rechtsgutachten.pdf` | Allgemeine Werkzeuge | Rechtsgutachten / Fallanalyse |
+**Alle 80 Dokumenttypen** haben jetzt ein eigenes Beispiel-PDF mit **fiktiven Personen und
+Daten**, das Qualität und Aufbau zeigt (siehe `../dokumentenpalette-strategie.md` für die
+Kuration). Dateien 01-80, nummeriert in der Reihenfolge der Kategorien: Miete & Wohnen (01,
+11-17), Arbeit & Anstellung (02, 18-24), Kauf & Konsum (03, 25-31), Geld & Betreibung (04,
+32-38), Nachbarschaft & Eigentum (05, 39-45), Verkehr & Bussen (06, 46-52), Datenschutz &
+Digitales (07, 53-59), Versicherung & Sozialversicherung (08, 60-66), Freelance & KMU (09,
+67-73), Allgemeine Werkzeuge (10, 74-80).
 
 **Format je Dokument:** Markenkopf, Titel/Preisstufe, Fallangaben, kurze Einordnung, Sachverhalt,
-Rechtsfrage(n), typischerweise einschlägige Normen (als Prüfhinweis gekennzeichnet), Würdigung,
-konkreter Schreiben-/Gesuchsentwurf, nächste Schritte, Fristenwarnung wo relevant, Haftungs-Fusszeile.
+je nach Komplexität 3–6 Abschnitte (Rechtsfrage, typischerweise einschlägige Normen als
+Prüfhinweis gekennzeichnet, Würdigung), konkreter Schreiben-/Gesuchsentwurf, nächste Schritte,
+Fristenwarnung wo relevant, Haftungs-Fusszeile. Premium-Dokumente (z. B. Kündigungsanfechtungen,
+Rechtsgutachten) erhalten die volle Gutachten-Struktur; Info-Dokumente (einfache Schreiben)
+bleiben bewusst kompakter — Tiefe proportional zum Preis und zur Komplexität des Anliegens.
 
 **Erzeugt mit:** `../scripts/generate_examples.py` (Python + reportlab). Zum Neu-Generieren:
 ```bash
 cd mein-anwalt && python3 scripts/generate_examples.py
 ```
 
-**Nächster Schritt:** Für die restlichen 70 Dokumenttypen fehlen noch eigene Beispiel-PDFs — auf
-Wunsch als weitere Charge nachziehbar, priorisiert nach den in
-`dokumentenpalette-strategie.md` als "gewählt" markierten Dokumenten.
+**Qualitätssicherung:** Alle 80 Nummern (01–80) sind vorhanden, keine Duplikate, jede Datei
+entspricht genau einem Schlüssel aus `../netlify/functions/lib/prompts.js` (DOC_TYPES) bzw.
+`../app/mein-anwalt-aurum.html` (DOCS).
