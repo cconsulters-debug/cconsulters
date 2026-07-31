@@ -4,9 +4,9 @@
 <!--@head-->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Kontakt &amp; Anfrage – Überführung, B2B, Offerte | Abschleppdienst Winti, Winterthur</title>
-  <meta name="description" content="Anfrage für Fahrzeugüberführung, B2B-Partnerschaft oder Offerte senden. Für Notfälle: 24h-Hotline – wir sind sofort unterwegs im Kanton Zürich.">
-  <link rel="canonical" href="https://www.dqv.ch/kontakt.html">
+  <title>Impressum | Abschleppdienst Winti GmbH, Winterthur</title>
+  <meta name="description" content="Impressum der Abschleppdienst Winti GmbH, Winterthur – Firmendaten, Handelsregister-Nummer und Kontaktangaben.">
+  <link rel="canonical" href="https://www.dqv.ch/impressum.html">
   <meta name="theme-color" content="#0b0e12">
   <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
   <link rel="apple-touch-icon" href="/assets/img/favicon.svg">
@@ -14,9 +14,9 @@
   <!-- Social-Preview: entscheidend, weil Anfragen per WhatsApp geteilt werden -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Abschleppdienst Winti">
-  <meta property="og:title" content="Kontakt &amp; Anfrage – Überführung, B2B, Offerte | Abschleppdienst Winti, Winterthur">
-  <meta property="og:description" content="Anfrage für Fahrzeugüberführung, B2B-Partnerschaft oder Offerte senden. Für Notfälle: 24h-Hotline – wir sind sofort unterwegs im Kanton Zürich.">
-  <meta property="og:url" content="https://www.dqv.ch/kontakt.html">
+  <meta property="og:title" content="Impressum | Abschleppdienst Winti GmbH, Winterthur">
+  <meta property="og:description" content="Impressum der Abschleppdienst Winti GmbH, Winterthur – Firmendaten, Handelsregister-Nummer und Kontaktangaben.">
+  <meta property="og:url" content="https://www.dqv.ch/impressum.html">
   <meta property="og:locale" content="de_CH">
   <meta property="og:image" content="https://www.dqv.ch/assets/img/og-cover.png">
   <meta property="og:image:width" content="1200">
@@ -35,8 +35,6 @@
   <script src="/assets/js/config.js"></script>
   <script src="/assets/js/main.js" defer></script>
 <!--/@head-->
-
-  <script type="module" src="/assets/js/lead-form.js"></script>
 </head>
 <body>
 
@@ -72,101 +70,50 @@
   <main id="main">
     <section class="section-tight hero">
       <div class="container hero-compact">
-        <span class="kicker">Kontakt &amp; Anfrage</span>
-        <h1 class="h1-sub">Zeit für Details? <span class="accent">Dann hierhin.</span></h1>
-        <p class="lead"><strong>Notfall?</strong> Nicht dieses Formular – rufen Sie an: <a class="link-amber" data-href="tel" href="tel:+41795096630"><span data-cfg="phoneDisplay">079 509 66 30</span></a>. Dieses Formular ist für planbare Anliegen: Überführungen, Offerten, B2B-Partnerschaften.</p>
+        <span class="kicker">Rechtliches</span>
+        <h1 class="h1-sub">Impressum</h1>
+        <p class="lead">Angaben zum Betreiber dieser Website nach Art. 3 Abs. 1 lit. s UWG.</p>
       </div>
     </section>
 
     <section class="section">
-      <div class="container grid-2 align-start">
-        <div class="panel">
-          <div class="panel-title">
-            <h2>Anfrage senden</h2>
-            <span class="mini-badge">Antwort innert weniger Stunden</span>
-          </div>
-          <form id="contact-form" novalidate>
-            <div class="field">
-              <label for="cf-kategorie">Ihr Anliegen</label>
-              <select class="input" id="cf-kategorie" name="kategorie" required>
-                <option value="">Bitte wählen …</option>
-                <option value="transport">Fahrzeugüberführung / Transport</option>
-                <option value="b2b">B2B: Garage / Flotte / Versicherung / Verwaltung</option>
-                <option value="falschparker">Falschparker (nicht akut / Rahmenvertrag)</option>
-                <option value="sonstiges">Sonstiges / Offerte</option>
-              </select>
-            </div>
-            <div class="input-row">
-              <div class="field flex-1">
-                <label for="cf-name">Name</label>
-                <input class="input" id="cf-name" name="name" type="text" autocomplete="name">
-              </div>
-              <div class="field flex-1">
-                <label for="cf-firma">Firma (optional)</label>
-                <input class="input" id="cf-firma" name="firma" type="text" autocomplete="organization">
-              </div>
-            </div>
-            <div class="input-row">
-              <div class="field flex-1">
-                <label for="cf-telefon">Telefon</label>
-                <input class="input" id="cf-telefon" name="telefon" type="tel" inputmode="tel" autocomplete="tel" required>
-              </div>
-              <div class="field flex-1">
-                <label for="cf-email">E-Mail</label>
-                <input class="input" id="cf-email" name="email" type="email" autocomplete="email">
-              </div>
-            </div>
-            <div class="field">
-              <label for="cf-standort">Standort / Abholadresse</label>
-              <div class="input-row">
-                <input class="input" id="cf-standort" name="standort" type="text" placeholder="Strasse, PLZ Ort">
-                <button type="button" class="btn btn-ghost geo-btn" id="cf-geo" aria-label="Standort automatisch erkennen">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="icon-20"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke-linecap="round"/><circle cx="12" cy="12" r="8"/></svg>
-                </button>
-              </div>
-              <p class="geo-hint" id="cf-geo-hint" aria-live="polite"></p>
-            </div>
-            <div class="field">
-              <label for="cf-termin">Wunschtermin (optional)</label>
-              <input class="input" id="cf-termin" name="wunschtermin" type="date">
-            </div>
-            <div class="field">
-              <label for="cf-nachricht">Ihre Nachricht</label>
-              <textarea class="input" id="cf-nachricht" name="nachricht" placeholder="Fahrzeug, Ziel, Besonderheiten …"></textarea>
-            </div>
-            <input type="text" name="firma_hp" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true">
-            <p class="form-error" id="cf-error" role="alert"></p>
-            <button type="submit" class="btn btn-primary btn-lg btn-block" id="cf-submit">Anfrage senden</button>
-            <p class="form-legal">Mit dem Absenden stimmen Sie zu, dass wir Ihre Angaben zur Bearbeitung Ihrer Anfrage verwenden – siehe <a href="/datenschutz.html">Datenschutzerklärung</a>.</p>
-          </form>
-          <div class="confirm-card" id="cf-confirm" hidden>
-            <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
-            <h2>Anfrage erhalten!</h2>
-            <p class="text-dim">Wir melden uns so rasch wie möglich – in der Regel innert weniger Stunden.</p>
-            <span class="ticket-no" id="cf-ticket">ZH-0000</span>
-          </div>
-        </div>
+      <div class="container container-narrow prose">
+        <h2>Verantwortlich für den Inhalt</h2>
+        <address class="nap">
+          <strong data-cfg="legalName">Abschleppdienst Winti GmbH</strong><br>
+          <span data-cfg="addressStreet">Schlachthofstrasse 6</span><br>
+          <span data-cfg="addressCity">8406 Winterthur</span><br>
+          Schweiz
+        </address>
 
-        <div>
-          <div class="card mb-18">
-            <h2>Direktkontakt</h2>
-            <address class="nap">
-              <strong data-cfg="legalName">Abschleppdienst Winti GmbH</strong><br>
-              <span data-cfg="addressStreet">Schlachthofstrasse 6</span>, <span data-cfg="addressCity">8406 Winterthur</span><br><br>
-              24h-Hotline: <a class="link-amber" data-href="tel" href="tel:+41795096630"><span data-cfg="phoneDisplay">079 509 66 30</span></a><br>
-              WhatsApp: <a class="link-amber" data-href="wa" href="https://wa.me/41795096630" target="_blank" rel="noopener">Chat starten</a><br>
-              E-Mail: <a class="link-amber" data-href="mail" href="mailto:cconsulters@gmail.com"><span data-cfg="email">cconsulters@gmail.com</span></a>
-            </address>
-          </div>
-          <div class="card mb-18">
-            <h2>Für B2B-Partner</h2>
-            <p class="mb-0">Garagen, Flottenbetreiber, Versicherungen und Liegenschaftsverwaltungen erhalten Rahmenkonditionen, priorisierte Disposition und Sammelrechnung. Wählen Sie im Formular «B2B» – wir melden uns mit einem konkreten Vorschlag.</p>
-          </div>
-          <div class="card">
-            <h2>Erreichbarkeit</h2>
-            <p class="mb-0"><strong class="accent">Einsätze: 24 Stunden, 365 Tage.</strong><br>Büro und Administration: <span data-cfg="officeHours">Mo–Fr 08:00–17:00</span>.</p>
-          </div>
-        </div>
+        <dl class="data-list">
+          <dt>Telefon</dt>
+          <dd><a class="link-amber" data-href="tel" href="tel:+41795096630"><span data-cfg="phoneDisplay">079 509 66 30</span></a></dd>
+          <dt>E-Mail</dt>
+          <dd><a class="link-amber" data-href="mail" href="mailto:cconsulters@gmail.com"><span data-cfg="email">cconsulters@gmail.com</span></a></dd>
+          <dt>Rechtsform</dt>
+          <dd>Gesellschaft mit beschränkter Haftung (GmbH)</dd>
+          <dt>Handelsregister</dt>
+          <dd>Eingetragen im Handelsregister des Kantons Zürich</dd>
+          <dt>UID / MWST-Nummer</dt>
+          <dd data-cfg="uid">CHE-239.815.669</dd>
+          <dt>Bürozeiten</dt>
+          <dd><span data-cfg="officeHours">Mo–Fr 08:00–17:00</span> (Einsätze rund um die Uhr)</dd>
+        </dl>
+
+        <h2>Haftung für Inhalte</h2>
+        <p>Die Inhalte dieser Website wurden mit Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und Aktualität wird keine Gewähr übernommen. Angaben zu Anfahrtszeiten und Preisen sind Richtwerte; verbindlich ist ausschliesslich die Bestätigung durch unsere Einsatzzentrale beziehungsweise die schriftliche Offerte.</p>
+
+        <h2>Haftung für Links</h2>
+        <p>Diese Website enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Für die Inhalte verlinkter Seiten ist stets der jeweilige Anbieter verantwortlich.</p>
+
+        <h2>Urheberrecht</h2>
+        <p>Texte, Bilder und Grafiken auf dieser Website sind urheberrechtlich geschützt. Eine Vervielfältigung oder Verwendung ausserhalb der gesetzlich erlaubten Fälle bedarf der vorherigen schriftlichen Zustimmung der <span data-cfg="legalName">Abschleppdienst Winti GmbH</span>.</p>
+
+        <h2>Datenschutz</h2>
+        <p>Wie wir mit Personendaten umgehen, steht in der <a href="/datenschutz.html">Datenschutzerklärung</a>.</p>
+
+        <p class="editor-note">Redaktionsnotiz vor dem Livegang: Handelsregister-Nummer (CH-xxx…) und die zeichnungsberechtigte Person ergänzen sowie die Angaben mit dem aktuellen Zefix-Auszug abgleichen.</p>
       </div>
     </section>
   </main>
@@ -324,16 +271,5 @@
 }
   </script>
 <!--/@ld-->
-
-  <script>
-    // ?typ=b2b vorwählen (Deep-Link von Leistungen/Preise)
-    (function () {
-      var typ = new URLSearchParams(location.search).get("typ");
-      var sel = document.getElementById("cf-kategorie");
-      if (sel && typ && sel.querySelector('option[value="' + CSS.escape(typ) + '"]')) {
-        sel.value = typ;
-      }
-    })();
-  </script>
 </body>
 </html>

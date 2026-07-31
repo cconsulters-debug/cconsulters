@@ -2,6 +2,11 @@
  * ZENTRALE KONFIGURATION – die EINZIGE Stelle, an der Firmenname,
  * Telefon, WhatsApp & Firebase-Zugangsdaten gepflegt werden.
  * Alle Seiten (inkl. Admin-Dashboard) lesen aus window.SITE_CONFIG.
+ *
+ * Auch der Build (scripts/build.mjs) liest diese Datei: Header,
+ * Footer, Canonicals, JSON-LD und sitemap.xml werden daraus
+ * gerendert. Nummer hier ändern = überall geändert, auch in den
+ * statischen Fallback-Links, die ohne JavaScript funktionieren.
  * ============================================================== */
 window.SITE_CONFIG = {
   // --- Firma ---------------------------------------------------
@@ -10,6 +15,13 @@ window.SITE_CONFIG = {
   companyName: "Abschleppdienst Winti",
   legalName: "Abschleppdienst Winti GmbH",  // für Impressum/Schema.org
   uid: "CHE-239.815.669",                   // UID/MWST (Schema.org vatID)
+  foundedYear: 2017,
+
+  // --- Domain ---------------------------------------------------
+  // Basis für Canonicals, og:url, sitemap.xml und robots.txt.
+  // ⚠️ TESTPHASE: läuft aktuell auf der Test-Domain.
+  siteUrl: "https://www.dqv.ch",
+  // siteUrl: "https://www.abschleppdienstwinti.ch",  // PRODUKTION
 
   // --- Kontakt -------------------------------------------------
   // ⚠️ TESTPHASE: Anrufe gehen auf die Testnummer.
@@ -36,13 +48,16 @@ window.SITE_CONFIG = {
   // Schlachthofstrasse 6, Winterthur – direkt am A1-Anschluss
   baseLocation: { lat: 47.4936, lng: 8.7115 },
 
+  // Bürozeiten für Impressum/Kontakt (Einsätze laufen 24/7)
+  officeHours: "Mo–Fr 08:00–17:00",
+
   // Durchschnittliche Einsatz-Kennzahlen (Fallback, wenn /api/stats
-  // noch keine Live-Daten liefert – klar als Richtwerte kommuniziert)
+  // noch keine Live-Daten liefert – klar als Richtwerte kommuniziert).
+  // Nur Werte eintragen, die auch belegbar sind: Sie erscheinen als
+  // Aussage auf der Website.
   fallbackStats: {
     avgReactionMinutes: 8,
-    avgArrivalMinutes: 25,
-    casesHandled: 4800,
-    rating: 4.9
+    avgArrivalMinutes: 25
   },
 
   // --- Firebase (Web-App-Konfiguration, KEIN Geheimnis) ----------

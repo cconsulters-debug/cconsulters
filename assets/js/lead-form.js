@@ -119,6 +119,44 @@ function initGeoButton(btn, input, hint, state) {
   });
 }
 
+/* ---------- Foto verkleinern --------------------------------------
+ * Handy-Fotos sind 3–12 MB. Am Strassenrand hängt der Upload sonst
+ * minutenlang am Mobilfunknetz – oder scheitert. Wir rechnen das Bild
+ * vorher auf max. 1600 px herunter (meist < 500 KB).
+ * Schlägt etwas fehl, wird die Originaldatei verwendet.
+ * ------------------------------------------------------------------ */
+const MAX_EDGE = 1600;
+const JPEG_QUALITY = 0.82;
+
+async function downscaleImage(file) {
+  if (!file || !file.type.startsWith("image/")) return file;
+  if (file.size < 600 * 1024) return file;           // schon klein genug
+  if (typeof createImageBitmap !== "function") return file;
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1) return file;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close?.();
+
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY)
+    );
+    if (!blob || blob.size >= file.size) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], name, { type: "image/jpeg" });
+  } catch (e) {
+    console.warn("Foto konnte nicht verkleinert werden – Original wird gesendet:", e);
+    return file;
+  }
+}
+
 /* ---------- Lead absenden ----------------------------------------- */
 function makeTicket() {
   // Kurze, gut vorlesbare Ticket-Nummer: ZH- + Zeitbasis36 + Zufall
@@ -153,9 +191,10 @@ async function submitLead(lead, photoFile) {
       // 2) Foto-Upload (optional) → URL am Lead nachtragen
       if (photoFile) {
         try {
+          const upload = await downscaleImage(photoFile);
           const storage = fb.st.getStorage(fb.app);
-          const path = `leads/${leadId}/${Date.now()}-${photoFile.name.replace(/[^\w.\-]/g, "_")}`;
-          const snap = await fb.st.uploadBytes(fb.st.ref(storage, path), photoFile);
+          const path = `leads/${leadId}/${Date.now()}-${upload.name.replace(/[^\w.\-]/g, "_")}`;
+          const snap = await fb.st.uploadBytes(fb.st.ref(storage, path), upload);
           const url = await fb.st.getDownloadURL(snap.ref);
           await fb.fs.updateDoc(ref, { foto_url: url });
           lead.foto_url = url;

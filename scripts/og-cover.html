@@ -1,0 +1,64 @@
+<!-- ==================================================================
+     QUELLE FÜR assets/img/og-cover.png (Social-Preview, 1200x630).
+
+     Neu rendern, sobald sich Telefonnummer, Claim oder Logo ändern:
+
+       npx playwright screenshot --viewport-size=1200,630 \
+         scripts/og-cover.html assets/img/og-cover.png
+
+     Alternativ mit einem lokalen Chrome:
+       chrome --headless --window-size=1200,630 \
+         --screenshot=assets/img/og-cover.png scripts/og-cover.html
+     ================================================================== -->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@800&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1200px;height:630px}
+body{
+  background:
+    radial-gradient(900px 460px at 88% -12%, rgba(255,179,0,.20), transparent 62%),
+    radial-gradient(700px 380px at -8% 112%, rgba(255,59,48,.14), transparent 62%),
+    #07090c;
+  color:#f2f5f9;font-family:"Inter","Liberation Sans",sans-serif;position:relative;overflow:hidden;
+}
+.grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(78% 78% at 50% 40%,#000 30%,transparent 100%);}
+.wrap{position:relative;padding:54px 78px 50px;height:100%;display:flex;flex-direction:column}
+.brand{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.brand svg{width:62px;height:62px}
+.brand span{font-family:"Barlow Condensed","Liberation Sans",sans-serif;font-weight:800;font-size:36px;text-transform:uppercase;letter-spacing:.03em}
+.brand .a{color:#ffb300}
+.badge{display:inline-flex;align-items:center;gap:11px;background:rgba(255,59,48,.14);border:2px solid rgba(255,59,48,.45);
+  color:#ff8078;border-radius:999px;padding:9px 22px;font-family:"Barlow Condensed","Liberation Sans",sans-serif;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;font-size:21px;margin-bottom:20px;align-self:flex-start}
+h1{font-family:"Barlow Condensed","Liberation Sans",sans-serif;font-weight:800;text-transform:uppercase;
+  font-size:80px;line-height:.98;letter-spacing:.005em;margin-bottom:20px}
+h1 .a{color:#ffb300}
+p{font-size:27px;color:#b3bcc8;line-height:1.44}
+.foot{margin-top:auto;padding-top:26px;display:flex;align-items:center;gap:16px}
+.phone{display:inline-flex;align-items:center;gap:14px;background:linear-gradient(180deg,#ffb300,#ff9500);color:#1a1200;
+  border-radius:999px;padding:18px 34px;font-weight:700;font-size:31px}
+.phone svg{width:29px;height:29px}
+.meta{margin-left:auto;text-align:right;color:#8d97a5;font-size:21px;line-height:1.5}
+</style></head><body>
+<div class="grid"></div>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" fill="none"><path d="M3 27h22V15h6l6 7v5h-2" stroke="#ffb300" stroke-width="2.6" stroke-linejoin="round"/><circle cx="11" cy="29" r="3.4" stroke="#f2f5f9" stroke-width="2.4"/><circle cx="29" cy="29" r="3.4" stroke="#f2f5f9" stroke-width="2.4"/><path d="M8 15l9-6v6" stroke="#ffb300" stroke-width="2.6" stroke-linejoin="round"/><path d="M20 6l2 3M24 4l2 3" stroke="#ff3b30" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <span>Abschleppdienst Winti<span class="a">&nbsp;24H</span></span>
+  </div>
+  <div class="badge">● 24/7 Notfall-Einsatz</div>
+  <h1>Abschleppdienst<br><span class="a">Kanton Zürich</span></h1>
+  <p>Pannenhilfe, Unfallbergung und Transport –<br>rund um die Uhr ab Winterthur.</p>
+  <div class="foot">
+    <div class="phone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 2Z"/></svg>
+      079 509 66 30
+    </div>
+    <div class="meta">Alle 10 Bezirke im Kanton Zürich<br>Ø Anfahrt 25 Minuten</div>
+  </div>
+</div>
+</body></html>

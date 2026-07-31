@@ -1,17 +1,40 @@
 <!DOCTYPE html>
 <html lang="de-CH">
 <head>
+<!--@head-->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Abschleppdienst Winterthur &amp; Kanton Zürich – 24h Soforthilfe | Abschleppdienst Winti</title>
-  <meta name="description" content="Abschleppdienst Winti GmbH – 24h Pannenhilfe &amp; Abschleppdienst ab Winterthur im ganzen Kanton Zürich. Unfallbergung, Starthilfe, Falschparker, Transport. ☎ 044 312 55 50">
-  <link rel="canonical" href="/">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Abschleppdienst Winterthur &amp; Kanton Zürich – 24h Soforthilfe">
-  <meta property="og:description" content="Panne oder Unfall? Die Abschleppdienst Winti GmbH ist 24/7 im ganzen Kanton Zürich unterwegs – ab Winterthur in Minuten bei Ihnen.">
-  <meta property="og:locale" content="de_CH">
+  <title>Abschleppdienst Winterthur &amp; Kanton Zürich – 24h Soforthilfe</title>
+  <meta name="description" content="Abschleppdienst Winti GmbH – 24h Pannenhilfe &amp; Abschleppdienst ab Winterthur im ganzen Kanton Zürich. Unfallbergung, Starthilfe, Falschparker, Transport. ☎ 079 509 66 30">
+  <link rel="canonical" href="https://www.dqv.ch/">
   <meta name="theme-color" content="#0b0e12">
   <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/img/favicon.svg">
+
+  <!-- Social-Preview: entscheidend, weil Anfragen per WhatsApp geteilt werden -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Abschleppdienst Winti">
+  <meta property="og:title" content="Abschleppdienst Winterthur &amp; Kanton Zürich – 24h Soforthilfe">
+  <meta property="og:description" content="Abschleppdienst Winti GmbH – 24h Pannenhilfe &amp; Abschleppdienst ab Winterthur im ganzen Kanton Zürich. Unfallbergung, Starthilfe, Falschparker, Transport. ☎ 079 509 66 30">
+  <meta property="og:url" content="https://www.dqv.ch/">
+  <meta property="og:locale" content="de_CH">
+  <meta property="og:image" content="https://www.dqv.ch/assets/img/og-cover.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Abschleppdienst Winti – 24h Abschleppdienst und Pannenhilfe im Kanton Zürich">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Fonts nicht render-blockierend: erst als print laden, dann aktivieren -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap"></noscript>
+
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <script src="/assets/js/config.js"></script>
+  <script src="/assets/js/main.js" defer></script>
+<!--/@head-->
 
   <!-- Critical CSS inline: Above-the-fold rendert ohne Blocking -->
   <style>
@@ -19,21 +42,16 @@
     body{margin:0;background:var(--ink-900);color:var(--text);font-family:"Inter",system-ui,sans-serif}
     .site-header{position:sticky;top:0;z-index:90;background:rgba(11,14,18,.86);border-bottom:1px solid rgba(255,255,255,.08)}
     .header-inner{display:flex;align-items:center;gap:24px;height:72px;max-width:1180px;margin:0 auto;padding:0 20px}
-    h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;text-transform:uppercase;line-height:1.04;font-size:clamp(2.6rem,7.5vw,5rem);margin:0 0 .5em}
+    h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;text-transform:uppercase;line-height:1.04;font-size:clamp(2.2rem,6.6vw,4.4rem);margin:0 0 .5em;overflow-wrap:break-word;hyphens:auto}
   </style>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/main.css">
-
-  <script src="/assets/js/config.js"></script>
-  <script src="/assets/js/main.js" defer></script>
   <script type="module" src="/assets/js/lead-form.js"></script>
+  <script src="/assets/js/servicegebiet.js" defer></script>
 </head>
 <body>
 
-  <!-- ============ HEADER ============ -->
+<!--@header-->
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
   <header class="site-header">
     <div class="container header-inner">
       <a class="logo" href="/" aria-label="Startseite">
@@ -41,7 +59,7 @@
         <span><span data-cfg="companyName">Abschleppdienst Winti</span><span class="logo-24">&nbsp;24H</span></span>
       </a>
       <button class="nav-toggle" aria-expanded="false" aria-controls="mainnav" aria-label="Menü öffnen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
       <nav class="main-nav" id="mainnav" aria-label="Hauptnavigation">
         <a href="/leistungen.html">Leistungen</a>
@@ -51,29 +69,30 @@
         <a href="/kontakt.html">Kontakt</a>
       </nav>
       <div class="header-cta">
-        <a class="btn btn-ghost btn-sm" data-href="wa" href="#" rel="noopener">WhatsApp</a>
-        <a class="btn btn-primary btn-sm pulse" data-href="tel" href="#">
+        <a class="btn btn-ghost btn-sm" data-href="wa" href="https://wa.me/41795096630?text=Hallo%20Abschleppdienst%20Winti%2C%20ich%20brauche%20Hilfe.%20Mein%20Standort%3A%20" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="btn btn-primary btn-sm pulse" data-href="tel" href="tel:+41795096630" aria-label="Notfall-Hotline anrufen: 079 509 66 30">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 2Z"/></svg>
-          <span data-cfg="phoneDisplay">044 312 55 50</span>
+          <span data-cfg="phoneDisplay">079 509 66 30</span>
         </a>
       </div>
     </div>
   </header>
+<!--/@header-->
 
-  <main>
+  <main id="main">
     <!-- ============ HERO + NOTFALL-FLOW ============ -->
     <section class="hero">
       <div class="container hero-grid">
         <div>
           <span class="badge-247"><span aria-hidden="true">●</span> 24/7 Notfall-Einsatz · Kanton Zürich</span>
-          <h1>Panne? Unfall?<br><span class="accent">Wir sind unterwegs.</span></h1>
-          <p class="hero-sub">Abschleppdienst &amp; Pannenhilfe im ganzen Kanton Zürich – durchschnittlich in <strong class="num" data-stat="arrival">25</strong>&nbsp;Minuten bei Ihnen. Ein Anruf genügt, den Rest übernehmen wir.</p>
+          <h1>Abschleppdienst Winterthur<br><span class="accent">&amp; Kanton Zürich – 24h.</span></h1>
+          <p class="hero-sub">Panne, Unfall oder Falschparker? Wir sind rund um die Uhr unterwegs – durchschnittlich in <strong class="num" data-stat="arrival">25</strong>&nbsp;Minuten bei Ihnen. Ein Anruf genügt, den Rest übernehmen wir.</p>
           <div class="hero-ctas">
-            <a class="btn btn-primary btn-lg pulse" data-href="tel" href="#">
+            <a class="btn btn-primary btn-lg pulse" data-href="tel" href="tel:+41795096630">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 2Z"/></svg>
               Jetzt anrufen
             </a>
-            <a class="btn btn-wa btn-lg" data-href="wa" href="#" rel="noopener">
+            <a class="btn btn-wa btn-lg" data-href="wa" href="https://wa.me/41795096630" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.2-.7l.4-.5c.1-.2.2-.3.3-.5v-.5L9.8 7.6c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5 0-.7.3-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.8 4.4 3.9 2.6 1.1 2.6.8 3.1.7.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.5-.3Z"/></svg>
               WhatsApp
             </a>
@@ -81,16 +100,16 @@
           <p class="hero-note"><span class="dot" aria-hidden="true"></span> Einsatzzentrale besetzt – Ø Reaktionszeit diese Woche: <strong class="num" data-stat="reaction">8</strong>&nbsp;Min.</p>
         </div>
 
-        <!-- Schnellanfrage: max. 4 Felder, für gestresste Nutzer am Strassenrand -->
+        <!-- Schnellanfrage: wenige Felder, für gestresste Nutzer am Strassenrand -->
         <div class="panel" id="schnellanfrage">
           <div class="panel-title">
-            <h3>Schnellanfrage</h3>
+            <h2>Schnellanfrage</h2>
             <span class="mini-badge">Rückruf in Minuten</span>
           </div>
           <form id="quick-form" novalidate>
-            <div class="field">
-              <label id="cat-label">Was ist passiert?</label>
-              <div class="cat-grid" role="group" aria-labelledby="cat-label">
+            <fieldset class="field fieldset-reset">
+              <legend class="field-legend">Was ist passiert?</legend>
+              <div class="cat-grid">
                 <button type="button" class="cat-btn" data-cat="unfall" aria-pressed="false">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 17h2m14 0h2M5 17l1.5-5h11L19 17M7 12l1-3.5h8L17 12"/><circle cx="8" cy="17" r="1.8"/><circle cx="16" cy="17" r="1.8"/><path d="M12 2v3M8 3l1 2.5M16 3l-1 2.5" stroke-linecap="round"/></svg>
                   Unfall
@@ -108,20 +127,20 @@
                   Transport
                 </button>
               </div>
-            </div>
+            </fieldset>
             <div class="field">
               <label for="qf-standort">Wo stehen Sie?</label>
               <div class="input-row">
                 <input class="input" id="qf-standort" name="standort" type="text" placeholder="Strasse, Ort – oder Standort erkennen" autocomplete="street-address">
-                <button type="button" class="btn btn-ghost geo-btn" id="qf-geo" title="Standort automatisch erkennen">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="width:20px;height:20px"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke-linecap="round"/><circle cx="12" cy="12" r="8"/></svg>
+                <button type="button" class="btn btn-ghost geo-btn" id="qf-geo" aria-label="Standort automatisch erkennen">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" class="icon-20"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke-linecap="round"/><circle cx="12" cy="12" r="8"/></svg>
                 </button>
               </div>
               <p class="geo-hint" id="qf-geo-hint" aria-live="polite"></p>
             </div>
             <div class="field">
               <label for="qf-telefon">Ihre Telefonnummer</label>
-              <input class="input" id="qf-telefon" name="telefon" type="tel" placeholder="079 123 45 67" autocomplete="tel" required>
+              <input class="input" id="qf-telefon" name="telefon" type="tel" inputmode="tel" placeholder="079 123 45 67" autocomplete="tel" required>
             </div>
             <div class="field">
               <label class="file-drop" for="qf-foto">
@@ -131,19 +150,20 @@
               </label>
             </div>
             <!-- Honeypot gegen Spam-Bots -->
-            <input type="text" name="firma_hp" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+            <input type="text" name="firma_hp" tabindex="-1" autocomplete="off" class="hp-field" aria-hidden="true">
             <p class="form-error" id="qf-error" role="alert"></p>
-            <button type="submit" class="btn btn-primary btn-lg" id="qf-submit" style="width:100%">Hilfe anfordern</button>
-            <p class="geo-hint" style="text-align:center;margin-top:10px">In Lebensgefahr zuerst <strong>112 / 117</strong> anrufen.</p>
+            <button type="submit" class="btn btn-primary btn-lg btn-block" id="qf-submit">Hilfe anfordern</button>
+            <p class="form-legal">Mit dem Absenden stimmen Sie zu, dass wir Ihre Angaben zur Bearbeitung des Einsatzes verwenden – siehe <a href="/datenschutz.html">Datenschutzerklärung</a>.</p>
+            <p class="form-legal emphasis">In Lebensgefahr zuerst <strong>144</strong> (Sanität) oder <strong>117</strong> (Polizei) anrufen.</p>
           </form>
           <!-- Sofort-Bestätigung (wird per JS eingeblendet) -->
           <div class="confirm-card" id="qf-confirm" hidden>
-            <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-            <h3>Anfrage erhalten!</h3>
+            <div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+            <h2>Anfrage erhalten!</h2>
             <p class="text-dim">Wir melden uns in ca. <strong class="num" id="qf-eta">10</strong> Minuten bei Ihnen.</p>
             <span class="ticket-no" id="qf-ticket">ZH-0000</span>
-            <p class="text-dim" style="font-size:.88rem">Notieren Sie die Ticket-Nummer – oder rufen Sie uns direkt an, wenn es eilt.</p>
-            <a class="btn btn-primary" data-href="tel" href="#">Direkt anrufen</a>
+            <p class="text-dim small">Notieren Sie die Ticket-Nummer – oder rufen Sie uns direkt an, wenn es eilt.</p>
+            <a class="btn btn-primary" data-href="tel" href="tel:+41795096630">Direkt anrufen</a>
           </div>
         </div>
       </div>
@@ -153,12 +173,11 @@
     <section class="section-tight">
       <div class="container">
         <div class="stats-strip">
-          <div class="stat-card reveal"><span class="num" data-count="24">24</span><span class="stat-label">Stunden / 7 Tage erreichbar</span></div>
-          <div class="stat-card reveal reveal-d1"><span class="num"><span data-count="25" data-stat="arrival">25</span>&nbsp;Min</span><span class="stat-label">Ø Anfahrtszeit im Kanton ZH</span></div>
-          <div class="stat-card reveal reveal-d2"><span class="num"><span data-count="4800" data-stat="cases">4800</span>+</span><span class="stat-label">Einsätze erfolgreich gefahren*</span></div>
-          <div class="stat-card reveal reveal-d3"><span class="num">4.9★</span><span class="stat-label">Kundenbewertung (Platzhalter)*</span></div>
+          <div class="stat-card reveal"><span class="num">24/7</span><span class="stat-label">erreichbar, auch an Feiertagen</span></div>
+          <div class="stat-card reveal reveal-d1"><span class="num"><span data-stat="arrival">25</span>&nbsp;<small>Min</small></span><span class="stat-label">Ø Anfahrtszeit im Kanton ZH</span></div>
+          <div class="stat-card reveal reveal-d2"><span class="num">seit&nbsp;2017</span><span class="stat-label">eigener Betrieb in Winterthur</span></div>
+          <div class="stat-card reveal reveal-d3"><span class="num">10</span><span class="stat-label">Bezirke im Kanton abgedeckt</span></div>
         </div>
-        <p class="placeholder-note" style="margin-top:12px">* Beispieldaten – vor Livegang durch echte Zahlen/Bewertungslinks ersetzen.</p>
       </div>
     </section>
 
@@ -167,40 +186,40 @@
       <div class="container">
         <span class="kicker">Leistungen</span>
         <h2>Ein Anruf. Jedes Problem gelöst.</h2>
-        <p class="lead" style="margin-bottom:40px">Vom Kleinwagen bis zum Lieferwagen, vom Parkschaden bis zur Autobahn-Bergung – unsere Flotte ist für alles ausgerüstet.</p>
+        <p class="lead mb-40">Vom Kleinwagen bis zum Lieferwagen, vom Parkschaden bis zur Autobahn-Bergung – unsere Flotte ist für alles ausgerüstet.</p>
         <div class="card-grid">
           <article class="card reveal">
-            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17h2m14 0h2M5 17l1.5-5h11L19 17M7 12l1-3.5h8L17 12"/><circle cx="8" cy="17" r="1.8"/><circle cx="16" cy="17" r="1.8"/><path d="M12 2v3M8 3l1 2.5M16 3l-1 2.5" stroke-linecap="round"/></svg></div>
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 17h2m14 0h2M5 17l1.5-5h11L19 17M7 12l1-3.5h8L17 12"/><circle cx="8" cy="17" r="1.8"/><circle cx="16" cy="17" r="1.8"/><path d="M12 2v3M8 3l1 2.5M16 3l-1 2.5" stroke-linecap="round"/></svg></div>
             <h3>Unfallbergung</h3>
             <p>Absicherung der Unfallstelle, schonende Bergung, Transport zur Werkstatt Ihrer Wahl – inkl. direkter Abwicklung mit Ihrer Versicherung.</p>
             <a class="card-link" href="/leistungen.html#unfall">Mehr erfahren →</a>
           </article>
           <article class="card reveal reveal-d1">
-            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6Z" stroke-linejoin="round"/></svg></div>
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6Z" stroke-linejoin="round"/></svg></div>
             <h3>Pannenhilfe vor Ort</h3>
             <p>Starthilfe, Reifenwechsel, Treibstoff, Batterie: Vieles lösen wir direkt am Strassenrand – ohne dass Ihr Auto aufgeladen werden muss.</p>
             <a class="card-link" href="/leistungen.html#panne">Mehr erfahren →</a>
           </article>
           <article class="card reveal reveal-d2">
-            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9 16V8h4a2.5 2.5 0 0 1 0 5H9M5.5 5.5l13 13" stroke-linecap="round"/></svg></div>
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 16V8h4a2.5 2.5 0 0 1 0 5H9M5.5 5.5l13 13" stroke-linecap="round"/></svg></div>
             <h3>Falschparker-Umsetzung</h3>
             <p>Blockierte Einfahrt oder Privatparkplatz? Wir setzen rechtssicher um – schnell, dokumentiert und für Liegenschaftsverwaltungen im Abo.</p>
             <a class="card-link" href="/leistungen.html#falschparker">Mehr erfahren →</a>
           </article>
           <article class="card reveal">
-            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 17h13V8h4l3 4v5h-2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/><path d="M5 8l5-3.5V8" stroke-linejoin="round"/></svg></div>
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 17h13V8h4l3 4v5h-2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17.5" cy="17.5" r="1.8"/><path d="M5 8l5-3.5V8" stroke-linejoin="round"/></svg></div>
             <h3>Fahrzeugüberführung</h3>
             <p>Werkstatttermin, Occasionskauf, Umzug: Wir überführen Fahrzeuge terminsicher im ganzen Kanton – und auf Wunsch schweizweit.</p>
             <a class="card-link" href="/leistungen.html#transport">Mehr erfahren →</a>
           </article>
           <article class="card reveal reveal-d1">
-            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke-linejoin="round"/></svg></div>
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z" stroke-linejoin="round"/></svg></div>
             <h3>Starthilfe &amp; Reifen</h3>
             <p>Leerer Akku im Parkhaus, Reifenplatzer auf der A1: Unsere Einsatzwagen führen Booster, Ersatzrad-Equipment und Werkzeug immer mit.</p>
             <a class="card-link" href="/leistungen.html#starthilfe">Mehr erfahren →</a>
           </article>
           <article class="card reveal reveal-d2">
-            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V8l7-5 7 5v13M3 21h18M14 21v-6h4v6" stroke-linejoin="round"/><path d="M7 10h3M7 14h3" stroke-linecap="round"/></svg></div>
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 21V8l7-5 7 5v13M3 21h18M14 21v-6h4v6" stroke-linejoin="round"/><path d="M7 10h3M7 14h3" stroke-linecap="round"/></svg></div>
             <h3>B2B: Garagen &amp; Flotten</h3>
             <p>Feste Konditionen, priorisierte Dispo und Sammelrechnung für Garagen, Flottenbetreiber, Versicherungen und Verwaltungen.</p>
             <a class="card-link" href="/leistungen.html#b2b">Mehr erfahren →</a>
@@ -216,13 +235,16 @@
           <span class="kicker">Servicegebiet</span>
           <h2>Der ganze Kanton Zürich. Ein Netz.</h2>
           <p class="lead">Von Winterthur bis Affoltern, von Bülach bis Meilen: Unsere Fahrzeuge sind dezentral stationiert, damit die Anfahrt kurz bleibt – auch nachts um drei.</p>
-          <div class="stats-strip" style="grid-template-columns:repeat(2,1fr)">
+          <div class="stats-strip stats-2">
             <div class="stat-card"><span class="num">10</span><span class="stat-label">Bezirke abgedeckt</span></div>
-            <div class="stat-card"><span class="num">15–25&nbsp;<small style="font-size:1rem">Min</small></span><span class="stat-label">typische Anfahrtszeit</span></div>
+            <div class="stat-card"><span class="num">15–25&nbsp;<small>Min</small></span><span class="stat-label">typische Anfahrtszeit</span></div>
           </div>
-          <p style="margin-top:24px"><a class="btn btn-ghost" href="/servicegebiet.html">Alle Bezirke &amp; Anfahrtszeiten →</a></p>
+          <p class="mt-24"><a class="btn btn-ghost" href="/servicegebiet.html">Alle Bezirke &amp; Anfahrtszeiten →</a></p>
         </div>
-        <div class="map-wrap reveal reveal-d1" id="home-map" aria-label="Karte des Servicegebiets Kanton Zürich"></div>
+        <!-- Karte lädt Leaflet erst, wenn sie in Sichtweite kommt -->
+        <div class="map-wrap reveal reveal-d1" id="home-map" data-map-lazy aria-label="Karte des Servicegebiets Kanton Zürich">
+          <noscript><p class="map-fallback">Wir decken alle 10 Bezirke des Kantons Zürich ab – die Liste mit Anfahrtszeiten finden Sie auf der <a href="/servicegebiet.html">Servicegebiet-Seite</a>.</p></noscript>
+        </div>
       </div>
     </section>
 
@@ -231,7 +253,7 @@
       <div class="container">
         <span class="kicker">So läuft's</span>
         <h2>In 3 Schritten wieder mobil</h2>
-        <div class="steps" style="margin-top:36px">
+        <div class="steps mt-36">
           <div class="step reveal">
             <h3>Melden</h3>
             <p class="text-dim mb-0">Anrufen, WhatsApp schreiben oder Schnellanfrage senden. Standort teilen – fertig. Wir brauchen keine langen Formulare.</p>
@@ -248,28 +270,28 @@
       </div>
     </section>
 
-    <!-- ============ TESTIMONIALS ============ -->
+    <!-- ============ WARUM WIR ============ -->
     <section class="section">
       <div class="container">
-        <span class="kicker">Kundenstimmen</span>
+        <span class="kicker">Warum wir</span>
         <h2>Wenn's drauf ankommt, zählt Verlass.</h2>
-        <p class="placeholder-note">Platzhalter-Testimonials – durch echte Google-Bewertungen ersetzen.</p>
-        <div class="quote-grid" style="margin-top:28px">
-          <blockquote class="quote reveal">
-            <span class="stars" aria-label="5 von 5 Sternen">★★★★★</span>
-            <p>«Sonntagabend auf der A1 liegengeblieben. Nach 20 Minuten war der Abschleppwagen da, der Fahrer super ruhig und professionell. Genau so muss das.»</p>
-            <footer>M. Keller · Winterthur</footer>
-          </blockquote>
-          <blockquote class="quote reveal reveal-d1">
-            <span class="stars" aria-label="5 von 5 Sternen">★★★★★</span>
-            <p>«Batterie tot im Parkhaus, Flug in zwei Stunden. Starthilfe kam in 15 Minuten – ich habe den Flieger erwischt. Danke!»</p>
-            <footer>S. Brunner · Kloten</footer>
-          </blockquote>
-          <blockquote class="quote reveal reveal-d2">
-            <span class="stars" aria-label="5 von 5 Sternen">★★★★★</span>
-            <p>«Als Garage brauchen wir einen Partner, der zuverlässig überführt. Seit zwei Jahren kein einziger verpasster Termin.»</p>
-            <footer>Garage Muster AG · Uster (B2B)</footer>
-          </blockquote>
+        <p class="lead mb-40">Keine Vermittlungsplattform, keine Warteschlaufe: Sie sprechen direkt mit der Zentrale, die auch das Fahrzeug schickt.</p>
+        <div class="card-grid">
+          <article class="card reveal">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2" stroke-linecap="round"/></svg></div>
+            <h3>Eigene Zentrale, eigene Fahrzeuge</h3>
+            <p>Wir disponieren selbst und fahren selbst. Kein Weiterreichen an Subunternehmer, keine unklaren Zuständigkeiten mitten in der Nacht.</p>
+          </article>
+          <article class="card reveal reveal-d1">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l7.5 3v6c0 4.4-3 7.6-7.5 9-4.5-1.4-7.5-4.6-7.5-9V6L12 3Z" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <h3>Versichert &amp; dokumentiert</h3>
+            <p>Jedes beförderte Fahrzeug ist während des Transports versichert. Auf Wunsch erhalten Sie Fotodokumentation und Übergabeprotokoll.</p>
+          </article>
+          <article class="card reveal reveal-d2">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20V10m8 10V4m8 16v-7" stroke-linecap="round"/></svg></div>
+            <h3>Preise vorher bekannt</h3>
+            <p>Basispreis plus Kilometerpauschale, ein einziger Zuschlag für Nacht und Wochenende – nachlesbar auf der <a href="/preise.html">Preisseite</a>, nicht erst auf der Rechnung.</p>
+          </article>
         </div>
       </div>
     </section>
@@ -284,11 +306,11 @@
           <a class="btn btn-primary" href="/preise.html">Preise ansehen &amp; berechnen</a>
         </div>
         <div class="panel reveal reveal-d1">
-          <div class="stats-strip" style="grid-template-columns:1fr 1fr">
-            <div class="stat-card"><span class="num">ab&nbsp;150.–</span><span class="stat-label">Pannenhilfe vor Ort (CHF)*</span></div>
-            <div class="stat-card"><span class="num">ab&nbsp;250.–</span><span class="stat-label">Abschleppen inkl. 10 km (CHF)*</span></div>
+          <div class="stats-strip stats-2">
+            <div class="stat-card"><span class="num">ab&nbsp;150.–</span><span class="stat-label">Pannenhilfe vor Ort (CHF)</span></div>
+            <div class="stat-card"><span class="num">ab&nbsp;250.–</span><span class="stat-label">Abschleppen inkl. 10 km (CHF)</span></div>
           </div>
-          <p class="placeholder-note" style="margin-top:12px">* Beispielpreise (Platzhalter) – in /preise.html zentral anpassbar.</p>
+          <p class="text-dim footnote mb-0">Richtpreise inkl. MWST. Der verbindliche Preis wird vor dem Einsatz telefonisch bestätigt.</p>
         </div>
       </div>
     </section>
@@ -297,29 +319,29 @@
     <section class="section cta-band">
       <div class="container">
         <h2>Jetzt Hilfe im Kanton Zürich anfordern</h2>
-        <p class="lead" style="margin:0 auto 26px">24 Stunden, 7 Tage – ein Anruf und wir sind unterwegs.</p>
-        <a class="btn btn-primary btn-lg pulse" data-href="tel" href="#">📞 <span data-cfg="phoneDisplay">044 312 55 50</span></a>
-        <a class="btn btn-wa btn-lg" data-href="wa" href="#" rel="noopener">WhatsApp schreiben</a>
+        <p class="lead center-lead">24 Stunden, 7 Tage – ein Anruf und wir sind unterwegs.</p>
+        <a class="btn btn-primary btn-lg pulse" data-href="tel" href="tel:+41795096630">📞 <span data-cfg="phoneDisplay">079 509 66 30</span></a>
+        <a class="btn btn-wa btn-lg" data-href="wa" href="https://wa.me/41795096630" target="_blank" rel="noopener">WhatsApp schreiben</a>
       </div>
     </section>
   </main>
 
-  <!-- ============ FOOTER (NAP für lokales SEO) ============ -->
+<!--@footer-->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
         <div>
-          <h4 data-cfg="companyName">Abschleppdienst Winti</h4>
+          <h2 class="footer-h" data-cfg="companyName">Abschleppdienst Winti</h2>
           <address class="nap">
             <span data-cfg="legalName">Abschleppdienst Winti GmbH</span><br>
             <span data-cfg="addressStreet">Schlachthofstrasse 6</span><br>
             <span data-cfg="addressCity">8406 Winterthur</span><br>
-            Tel: <a data-href="tel" href="#"><span data-cfg="phoneDisplay">044 312 55 50</span></a><br>
-            E-Mail: <a data-href="mail" href="#"><span data-cfg="email">info@abschleppdienstwinti.ch</span></a>
+            Tel: <a data-href="tel" href="tel:+41795096630"><span data-cfg="phoneDisplay">079 509 66 30</span></a><br>
+            E-Mail: <a data-href="mail" href="mailto:cconsulters@gmail.com"><span data-cfg="email">cconsulters@gmail.com</span></a>
           </address>
         </div>
         <div>
-          <h4>Leistungen</h4>
+          <h2 class="footer-h">Leistungen</h2>
           <ul>
             <li><a href="/leistungen.html#unfall">Unfallbergung</a></li>
             <li><a href="/leistungen.html#panne">Pannenhilfe 24h</a></li>
@@ -329,7 +351,7 @@
           </ul>
         </div>
         <div>
-          <h4>Servicegebiet</h4>
+          <h2 class="footer-h">Servicegebiet</h2>
           <ul>
             <li><a href="/gebiete/zuerich.html">Abschleppdienst Zürich</a></li>
             <li><a href="/gebiete/winterthur.html">Abschleppdienst Winterthur</a></li>
@@ -339,34 +361,123 @@
           </ul>
         </div>
         <div>
-          <h4>Unternehmen</h4>
+          <h2 class="footer-h">Unternehmen</h2>
           <ul>
             <li><a href="/ueber-uns.html">Über uns</a></li>
             <li><a href="/preise.html">Preise</a></li>
             <li><a href="/kontakt.html">Kontakt &amp; B2B</a></li>
-            <li><a href="/admin/">Admin-Login</a></li>
+            <li><a href="/impressum.html">Impressum</a></li>
+            <li><a href="/datenschutz.html">Datenschutz</a></li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span id="year">2026</span> <span data-cfg="legalName">Abschleppdienst Winti GmbH</span> · Alle Rechte vorbehalten</span>
+        <span>© <span id="year">2026</span> <span data-cfg="legalName">Abschleppdienst Winti GmbH</span> · <span data-cfg="uid">CHE-239.815.669</span></span>
         <span>24/7 Abschleppdienst · Pannenhilfe · Kanton Zürich</span>
       </div>
     </div>
   </footer>
 
-  <!-- ============ STICKY NOTFALL-BAR (mobil) ============ -->
   <div class="emergency-bar" role="region" aria-label="Notfall-Kontakt">
-    <a class="btn btn-primary pulse" data-href="tel" href="#">
+    <a class="btn btn-primary pulse" data-href="tel" href="tel:+41795096630">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 2Z"/></svg>
       Jetzt anrufen
     </a>
-    <a class="btn btn-wa" data-href="wa" href="#" rel="noopener">WhatsApp</a>
+    <a class="btn btn-wa" data-href="wa" href="https://wa.me/41795096630?text=Hallo%20Abschleppdienst%20Winti%2C%20ich%20brauche%20Hilfe.%20Mein%20Standort%3A%20" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.2-.7l.4-.5c.1-.2.2-.3.3-.5v-.5L9.8 7.6c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5 0-.7.3-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.8 4.4 3.9 2.6 1.1 2.6.8 3.1.7.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.5-.3Z"/></svg> WhatsApp</a>
   </div>
+<!--/@footer-->
 
-  <!-- Leaflet nur für die kleine Karte (lazy, non-blocking) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
-  <script src="/assets/js/servicegebiet.js" defer></script>
+<!--@ld-->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": [
+    "LocalBusiness",
+    "EmergencyService",
+    "AutomotiveBusiness"
+  ],
+  "@id": "https://www.dqv.ch/#organization",
+  "name": "Abschleppdienst Winti",
+  "legalName": "Abschleppdienst Winti GmbH",
+  "telephone": "+41795096630",
+  "email": "cconsulters@gmail.com",
+  "url": "https://www.dqv.ch/",
+  "image": "https://www.dqv.ch/assets/img/og-cover.png",
+  "foundingDate": "2017",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Schlachthofstrasse 6",
+    "postalCode": "8406",
+    "addressLocality": "Winterthur",
+    "addressRegion": "ZH",
+    "addressCountry": "CH"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 47.4936,
+    "longitude": 8.7115
+  },
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "opens": "00:00",
+    "closes": "23:59"
+  },
+  "areaServed": [
+    {
+      "@type": "AdministrativeArea",
+      "name": "Zürich, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Winterthur, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Uster, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Meilen, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Horgen, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Dietikon, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Bülach, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Affoltern, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Pfäffikon, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Dielsdorf, Kanton Zürich"
+    }
+  ],
+  "priceRange": "CHF",
+  "vatID": "CHE-239.815.669",
+  "slogan": "24h Abschleppdienst & Pannenhilfe im Kanton Zürich"
+}
+  </script>
+<!--/@ld-->
 </body>
 </html>

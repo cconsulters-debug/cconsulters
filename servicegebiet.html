@@ -1,25 +1,47 @@
 <!DOCTYPE html>
 <html lang="de-CH">
 <head>
+<!--@head-->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Servicegebiet Kanton Zürich – Alle Bezirke &amp; Anfahrtszeiten | Abschleppdienst Winti</title>
   <meta name="description" content="Abschleppdienst in allen 10 Bezirken des Kantons Zürich: Zürich, Winterthur, Uster, Meilen, Horgen, Dietikon, Bülach, Affoltern, Pfäffikon, Dielsdorf – mit Anfahrtszeiten.">
-  <link rel="canonical" href="/servicegebiet.html">
+  <link rel="canonical" href="https://www.dqv.ch/servicegebiet.html">
   <meta name="theme-color" content="#0b0e12">
   <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/img/favicon.svg">
+
+  <!-- Social-Preview: entscheidend, weil Anfragen per WhatsApp geteilt werden -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Abschleppdienst Winti">
+  <meta property="og:title" content="Servicegebiet Kanton Zürich – Alle Bezirke &amp; Anfahrtszeiten | Abschleppdienst Winti">
+  <meta property="og:description" content="Abschleppdienst in allen 10 Bezirken des Kantons Zürich: Zürich, Winterthur, Uster, Meilen, Horgen, Dietikon, Bülach, Affoltern, Pfäffikon, Dielsdorf – mit Anfahrtszeiten.">
+  <meta property="og:url" content="https://www.dqv.ch/servicegebiet.html">
+  <meta property="og:locale" content="de_CH">
+  <meta property="og:image" content="https://www.dqv.ch/assets/img/og-cover.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Abschleppdienst Winti – 24h Abschleppdienst und Pannenhilfe im Kanton Zürich">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Fonts nicht render-blockierend: erst als print laden, dann aktivieren -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&amp;family=Inter:wght@400;600;700&amp;display=swap"></noscript>
+
   <link rel="stylesheet" href="/assets/css/main.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="/assets/js/config.js"></script>
   <script src="/assets/js/main.js" defer></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+<!--/@head-->
+
   <script src="/assets/js/servicegebiet.js" defer></script>
 </head>
 <body>
 
+<!--@header-->
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
   <header class="site-header">
     <div class="container header-inner">
       <a class="logo" href="/" aria-label="Startseite">
@@ -27,7 +49,7 @@
         <span><span data-cfg="companyName">Abschleppdienst Winti</span><span class="logo-24">&nbsp;24H</span></span>
       </a>
       <button class="nav-toggle" aria-expanded="false" aria-controls="mainnav" aria-label="Menü öffnen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
       <nav class="main-nav" id="mainnav" aria-label="Hauptnavigation">
         <a href="/leistungen.html">Leistungen</a>
@@ -37,25 +59,31 @@
         <a href="/kontakt.html">Kontakt</a>
       </nav>
       <div class="header-cta">
-        <a class="btn btn-ghost btn-sm" data-href="wa" href="#" rel="noopener">WhatsApp</a>
-        <a class="btn btn-primary btn-sm pulse" data-href="tel" href="#"><span data-cfg="phoneDisplay">044 312 55 50</span></a>
+        <a class="btn btn-ghost btn-sm" data-href="wa" href="https://wa.me/41795096630?text=Hallo%20Abschleppdienst%20Winti%2C%20ich%20brauche%20Hilfe.%20Mein%20Standort%3A%20" target="_blank" rel="noopener">WhatsApp</a>
+        <a class="btn btn-primary btn-sm pulse" data-href="tel" href="tel:+41795096630" aria-label="Notfall-Hotline anrufen: 079 509 66 30">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 2Z"/></svg>
+          <span data-cfg="phoneDisplay">079 509 66 30</span>
+        </a>
       </div>
     </div>
   </header>
+<!--/@header-->
 
-  <main>
+  <main id="main">
     <section class="section-tight hero">
-      <div class="container" style="padding-top:40px;padding-bottom:40px">
+      <div class="container hero-compact">
         <span class="kicker">Servicegebiet</span>
-        <h1 style="font-size:clamp(2.2rem,5.5vw,3.8rem)">Alle 10 Bezirke.<br><span style="color:var(--amber)">Ein Anruf.</span></h1>
+        <h1 class="h1-sub">Alle 10 Bezirke.<br><span class="accent">Ein Anruf.</span></h1>
         <p class="lead">Unsere Einsatzfahrzeuge sind dezentral im Kanton stationiert. Die Karte zeigt die typische Anfahrtszeit pro Bezirk – tagsüber wie nachts.</p>
       </div>
     </section>
 
     <section class="section-tight">
       <div class="container">
-        <div class="map-wrap" id="service-map" aria-label="Interaktive Karte des Servicegebiets Kanton Zürich"></div>
-        <p class="text-dim" style="font-size:.85rem;margin-top:10px">Anfahrtszeiten sind Richtwerte bei normalem Verkehr. Bei Notfällen priorisiert die Zentrale automatisch das nächste freie Fahrzeug.</p>
+        <div class="map-wrap" id="service-map" data-map-lazy aria-label="Interaktive Karte des Servicegebiets Kanton Zürich">
+          <noscript><p class="map-fallback">Die interaktive Karte benötigt JavaScript. Alle Bezirke mit Anfahrtszeiten finden Sie in der Liste weiter unten.</p></noscript>
+        </div>
+        <p class="text-dim footnote">Anfahrtszeiten sind Richtwerte bei normalem Verkehr. Bei Notfällen priorisiert die Zentrale automatisch das nächste freie Fahrzeug.</p>
       </div>
     </section>
 
@@ -63,9 +91,93 @@
       <div class="container">
         <span class="kicker">Bezirke im Detail</span>
         <h2>Ihr Bezirk. Unsere Anfahrt.</h2>
-        <div class="district-grid" style="margin-top:30px" id="district-list">
-          <!-- Wird aus /assets/data/districts.json gerendert (siehe Skript unten) -->
-          <noscript><p>Bitte JavaScript aktivieren, um die Bezirksübersicht zu sehen. Wir decken alle 10 Bezirke des Kantons Zürich ab.</p></noscript>
+        <!--
+          Die Liste wird beim Build aus assets/data/districts.json
+          gerendert (scripts/build.mjs) – nicht von Hand bearbeiten.
+        -->
+        <div class="district-grid mt-30" id="district-list">
+<!--@districts-->
+          <article class="district-card">
+            <span class="eta">~25 Min</span>
+            <h3>Stadt Zürich</h3>
+            <p>Mitten im dichtesten Verkehr der Schweiz zählt jede Minute. Über die A1 sind wir schnell in der Stadt – Hardbrücke, Bellevue, Milchbuck oder Einfahrt Letten: Wir kennen jede Abkürzung und jede Tiefgaragen-Einfahrt.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Kreis 1–12, Altstetten, Oerlikon, Wiedikon, Seefeld, Affoltern, Schwamendingen</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Liegengebliebener Elektro-SUV im Milchbucktunnel, geborgen und in 40 Minuten zur Vertragsgarage in Oerlikon überführt.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/zuerich.html">Abschleppdienst Zürich →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~10 Min</span>
+            <h3>Bezirk Winterthur</h3>
+            <p>Winterthur ist unser Zuhause: Die Einsatzzentrale liegt an der Schlachthofstrasse, direkt am A1-Anschluss. Ob zwischen Töss und Ohringen oder in der Altstadt-Begegnungszone – niemand ist schneller vor Ort als wir.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Winterthur, Elgg, Pfungen, Seuzach, Turbenthal, Wiesendangen</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Auffahrunfall auf der A1 bei Winterthur-Wülflingen, zwei Fahrzeuge gesichert und abtransportiert, Fahrbahn nach 35 Minuten wieder frei.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/winterthur.html">Abschleppdienst Winterthur →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~25 Min</span>
+            <h3>Bezirk Uster</h3>
+            <p>Das Glatttal ist Pendlerland – und die A53 kennt keinen Feierabend. Von Dübendorf bis Mönchaltorf sind wir im Bezirk Uster meist unter 20 Minuten vor Ort, auch bei Feierabendverkehr.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Uster, Dübendorf, Volketswil, Wangen-Brüttisellen, Greifensee, Egg</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Reifenplatzer auf der A53 bei Volketswil, Radwechsel direkt auf dem Pannenstreifen – Kundin konnte nach 25 Minuten weiterfahren.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/uster.html">Abschleppdienst Uster →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~30 Min</span>
+            <h3>Bezirk Meilen</h3>
+            <p>Die Goldküste hat enge Seestrassen, steile Privatzufahrten und viele Liebhaberfahrzeuge. Wir bergen mit Seilwinde und Softstraps – lackschonend, auch bei Tiefgaragen mit 1,9 m Durchfahrtshöhe.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Meilen, Küsnacht, Zollikon, Stäfa, Männedorf, Herrliberg</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Oldtimer mit Getriebeschaden in Küsnacht, schonende Verladung per Seilwinde und Überführung zur Spezialwerkstatt nach Zürich.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/meilen.html">Abschleppdienst Meilen →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~35 Min</span>
+            <h3>Bezirk Horgen</h3>
+            <p>A3-Korridor, Sihltal und linkes Seeufer: Im Bezirk Horgen sind wir für Panne und Unfall gleichermassen ausgerüstet – inklusive Bergungen an Steilstrecken Richtung Albispass.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Horgen, Thalwil, Adliswil, Wädenswil, Richterswil, Langnau am Albis</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Marderschaden in Thalwil, Fahrzeug startete nicht mehr – Transport zur Wunschgarage nach Adliswil noch am selben Morgen.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/horgen.html">Abschleppdienst Horgen →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~35 Min</span>
+            <h3>Bezirk Dietikon</h3>
+            <p>Das Limmattal wächst – und mit ihm der Verkehr auf A1 und Mutschellenstrasse. Für Gewerbe und Flotten in Schlieren und Dietikon fahren wir auch Sammeltransporte mehrerer Fahrzeuge.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Dietikon, Schlieren, Urdorf, Birmensdorf, Oberengstringen, Weiningen</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Lieferwagen einer Spenglerei mit Kupplungsschaden in Schlieren, Ersatzfahrzeug-Logistik mit der Flottenverantwortlichen direkt koordiniert.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/dietikon.html">Abschleppdienst Dietikon →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~25 Min</span>
+            <h3>Bezirk Bülach</h3>
+            <p>Flughafenregion und Unterland: Wir übernehmen Falschparker-Umsetzungen für Liegenschaftsverwaltungen in Opfikon und Wallisellen ebenso wie Pannenhilfe auf der A51 Richtung Flughafen.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Bülach, Kloten, Opfikon, Wallisellen, Embrach, Rafz</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Leerer Akku im Parkhaus Kloten kurz vor Abflug – Starthilfe in 18 Minuten, Kunde hat seinen Flug erreicht.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/buelach.html">Abschleppdienst Bülach →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~40 Min</span>
+            <h3>Bezirk Affoltern</h3>
+            <p>Das Knonauer Amt liegt zwischen A4 und Albis – wer hier liegen bleibt, wartet bei anderen Diensten oft am längsten. Wir decken das Säuliamt fest ab, inklusive Nachteinsätzen auf der A4.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Affoltern am Albis, Bonstetten, Hedingen, Obfelden, Mettmenstetten, Knonau</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Wildunfall bei Mettmenstetten um 23:40 Uhr, Fahrzeug gesichert, Abtransport und Heimfahrt für die Insassen organisiert.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/affoltern.html">Abschleppdienst Affoltern →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~20 Min</span>
+            <h3>Bezirk Pfäffikon</h3>
+            <p>Vom Kempttal bis ins Tösstal: Der Bezirk Pfäffikon hat viele Landstrassen ohne Pannenstreifen. Unsere Fahrer sichern die Einsatzstelle grossräumig ab, bevor geborgen wird – Sicherheit zuerst.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Pfäffikon ZH, Illnau-Effretikon, Fehraltorf, Bauma, Russikon, Wila</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Traktor-Kollision auf der Landstrasse bei Fehraltorf, PW nicht mehr fahrbereit – Bergung und Transport zur Karosserie-Werkstatt in Effretikon.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/pfaeffikon.html">Abschleppdienst Pfäffikon →</a></p>
+          </article>
+          <article class="district-card">
+            <span class="eta">~30 Min</span>
+            <h3>Bezirk Dielsdorf</h3>
+            <p>Furttal und Wehntal, dazu die Gewerbezonen von Regensdorf und Rümlang: Hier fahren wir viele B2B-Einsätze – defekte Firmenfahrzeuge holen wir direkt ab Rampe und bringen Ersatz-Logistik mit.</p>
+            <p class="gemeinden"><strong>U.&nbsp;a.:</strong> Dielsdorf, Regensdorf, Niederhasli, Rümlang, Buchs, Otelfingen</p>
+            <div class="fall">Referenz-Einsatz (Platzhalter): Flottenfahrzeug mit Elektronikdefekt in Regensdorf, Abholung ab Firmenparkplatz und Überführung zur Markenvertretung – ohne dass ein Mitarbeiter warten musste.</div>
+            <p class="mt-14"><a class="card-link" href="/gebiete/dielsdorf.html">Abschleppdienst Dielsdorf →</a></p>
+          </article>
+<!--/@districts-->
         </div>
       </div>
     </section>
@@ -73,83 +185,165 @@
     <section class="section cta-band">
       <div class="container">
         <h2>In Ihrem Bezirk liegengeblieben?</h2>
-        <p class="lead" style="margin:0 auto 26px">Wir sind schon fast unterwegs – rufen Sie an.</p>
-        <a class="btn btn-primary btn-lg pulse" data-href="tel" href="#">📞 <span data-cfg="phoneDisplay">044 312 55 50</span></a>
-        <a class="btn btn-wa btn-lg" data-href="wa" href="#" rel="noopener">WhatsApp</a>
+        <p class="lead center-lead">Wir sind schon fast unterwegs – rufen Sie an.</p>
+        <a class="btn btn-primary btn-lg pulse" data-href="tel" href="tel:+41795096630">📞 <span data-cfg="phoneDisplay">079 509 66 30</span></a>
+        <a class="btn btn-wa btn-lg" data-href="wa" href="https://wa.me/41795096630" target="_blank" rel="noopener">WhatsApp</a>
       </div>
     </section>
   </main>
 
+<!--@footer-->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
         <div>
-          <h4 data-cfg="companyName">Abschleppdienst Winti</h4>
+          <h2 class="footer-h" data-cfg="companyName">Abschleppdienst Winti</h2>
           <address class="nap">
             <span data-cfg="legalName">Abschleppdienst Winti GmbH</span><br>
             <span data-cfg="addressStreet">Schlachthofstrasse 6</span><br>
             <span data-cfg="addressCity">8406 Winterthur</span><br>
-            Tel: <a data-href="tel" href="#"><span data-cfg="phoneDisplay">044 312 55 50</span></a><br>
-            E-Mail: <a data-href="mail" href="#"><span data-cfg="email">info@abschleppdienstwinti.ch</span></a>
+            Tel: <a data-href="tel" href="tel:+41795096630"><span data-cfg="phoneDisplay">079 509 66 30</span></a><br>
+            E-Mail: <a data-href="mail" href="mailto:cconsulters@gmail.com"><span data-cfg="email">cconsulters@gmail.com</span></a>
           </address>
         </div>
         <div>
-          <h4>Leistungen</h4>
+          <h2 class="footer-h">Leistungen</h2>
           <ul>
             <li><a href="/leistungen.html#unfall">Unfallbergung</a></li>
             <li><a href="/leistungen.html#panne">Pannenhilfe 24h</a></li>
             <li><a href="/leistungen.html#falschparker">Falschparker-Umsetzung</a></li>
             <li><a href="/leistungen.html#transport">Fahrzeugüberführung</a></li>
+            <li><a href="/leistungen.html#b2b">B2B &amp; Flotten</a></li>
           </ul>
         </div>
         <div>
-          <h4>Servicegebiet</h4>
-          <ul id="footer-districts">
+          <h2 class="footer-h">Servicegebiet</h2>
+          <ul>
             <li><a href="/gebiete/zuerich.html">Abschleppdienst Zürich</a></li>
             <li><a href="/gebiete/winterthur.html">Abschleppdienst Winterthur</a></li>
             <li><a href="/gebiete/uster.html">Abschleppdienst Uster</a></li>
             <li><a href="/gebiete/buelach.html">Abschleppdienst Bülach</a></li>
+            <li><a href="/servicegebiet.html">Alle Bezirke →</a></li>
           </ul>
         </div>
         <div>
-          <h4>Unternehmen</h4>
+          <h2 class="footer-h">Unternehmen</h2>
           <ul>
             <li><a href="/ueber-uns.html">Über uns</a></li>
             <li><a href="/preise.html">Preise</a></li>
             <li><a href="/kontakt.html">Kontakt &amp; B2B</a></li>
-            <li><a href="/admin/">Admin-Login</a></li>
+            <li><a href="/impressum.html">Impressum</a></li>
+            <li><a href="/datenschutz.html">Datenschutz</a></li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© <span id="year">2026</span> <span data-cfg="legalName">Abschleppdienst Winti GmbH</span></span>
+        <span>© <span id="year">2026</span> <span data-cfg="legalName">Abschleppdienst Winti GmbH</span> · <span data-cfg="uid">CHE-239.815.669</span></span>
         <span>24/7 Abschleppdienst · Pannenhilfe · Kanton Zürich</span>
       </div>
     </div>
   </footer>
 
   <div class="emergency-bar" role="region" aria-label="Notfall-Kontakt">
-    <a class="btn btn-primary pulse" data-href="tel" href="#">📞 Jetzt anrufen</a>
-    <a class="btn btn-wa" data-href="wa" href="#" rel="noopener">WhatsApp</a>
+    <a class="btn btn-primary pulse" data-href="tel" href="tel:+41795096630">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.4 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.6 2Z"/></svg>
+      Jetzt anrufen
+    </a>
+    <a class="btn btn-wa" data-href="wa" href="https://wa.me/41795096630?text=Hallo%20Abschleppdienst%20Winti%2C%20ich%20brauche%20Hilfe.%20Mein%20Standort%3A%20" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.6-6.1c-.3-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4 0-.5.2-.7l.4-.5c.1-.2.2-.3.3-.5v-.5L9.8 7.6c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5 0-.7.3-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.8 4.4 3.9 2.6 1.1 2.6.8 3.1.7.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2l-.5-.3Z"/></svg> WhatsApp</a>
   </div>
+<!--/@footer-->
 
-  <script>
-    // Bezirks-Karten aus der zentralen Datenquelle rendern
-    fetch("/assets/data/districts.json")
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        var wrap = document.getElementById("district-list");
-        wrap.innerHTML = data.districts.map(function (d) {
-          return '<article class="district-card">' +
-            '<span class="eta">~' + d.eta + ' Min</span>' +
-            '<h3>' + d.label + '</h3>' +
-            '<p>' + d.blurb + '</p>' +
-            '<p class="gemeinden"><strong>U. a.:</strong> ' + d.gemeinden + '</p>' +
-            '<div class="fall">' + d.fall + '</div>' +
-            '<p style="margin:14px 0 0"><a class="card-link" style="color:var(--amber);font-weight:700" href="/gebiete/' + d.slug + '.html">Abschleppdienst ' + d.name + ' →</a></p>' +
-            '</article>';
-        }).join("");
-      });
+<!--@ld-->
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": [
+    "LocalBusiness",
+    "EmergencyService",
+    "AutomotiveBusiness"
+  ],
+  "@id": "https://www.dqv.ch/#organization",
+  "name": "Abschleppdienst Winti",
+  "legalName": "Abschleppdienst Winti GmbH",
+  "telephone": "+41795096630",
+  "email": "cconsulters@gmail.com",
+  "url": "https://www.dqv.ch/",
+  "image": "https://www.dqv.ch/assets/img/og-cover.png",
+  "foundingDate": "2017",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Schlachthofstrasse 6",
+    "postalCode": "8406",
+    "addressLocality": "Winterthur",
+    "addressRegion": "ZH",
+    "addressCountry": "CH"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 47.4936,
+    "longitude": 8.7115
+  },
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "opens": "00:00",
+    "closes": "23:59"
+  },
+  "areaServed": [
+    {
+      "@type": "AdministrativeArea",
+      "name": "Zürich, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Winterthur, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Uster, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Meilen, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Horgen, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Dietikon, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Bülach, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Affoltern, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Pfäffikon, Kanton Zürich"
+    },
+    {
+      "@type": "AdministrativeArea",
+      "name": "Dielsdorf, Kanton Zürich"
+    }
+  ],
+  "priceRange": "CHF",
+  "vatID": "CHE-239.815.669",
+  "slogan": "24h Abschleppdienst & Pannenhilfe im Kanton Zürich"
+}
   </script>
+<!--/@ld-->
 </body>
 </html>
