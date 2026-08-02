@@ -28,14 +28,24 @@ Es entstehen: `index.html`, `impressum.html`, `datenschutz.html`, `agb.html`,
 
 Diese Punkte sind **rechtlich nötig**, nicht optional:
 
+Betreiberangaben und Domain stehen gesammelt in **`site.config.json`** und
+werden von dort in Impressum, Datenschutzerklärung und AGB eingesetzt —
+sie müssen nicht in den Rechtstexten selbst gepflegt werden. Fehlt eine
+Pflichtangabe, meldet der Build das und schreibt einen sichtbaren Marker
+in die Seite, damit nichts unbemerkt ohne Anbieterkennzeichnung online geht.
+
 | Wo | Was |
 |---|---|
-| `recht/impressum.md` | Name/Firma, Rechtsform, Adresse, E-Mail, ggf. UID/MWST. Art. 3 Abs. 1 lit. s UWG verlangt eine klare Anbieterkennzeichnung. |
-| `recht/datenschutzerklaerung.md` | Kontaktstelle, eingesetzte Dienste (Netlify, Firebase, Stripe, Anthropic), Serverstandorte. revDSG. |
-| `recht/agb.md` | Firmierung, Gerichtsstand, Preise gegenprüfen. |
-| `scripts/build_site.py` → `DOMAIN` | Echte Domain eintragen. Speist canonical, Open Graph und `sitemap.xml`. |
+| `site.config.json` → `betreiber` | Name, Rechtsform, Strasse, PLZ/Ort, Sitz, E-Mail; optional Telefon, UID, MWST. Art. 3 Abs. 1 lit. s UWG verlangt eine klare Anbieterkennzeichnung. |
+| `site.config.json` → `domain` | Echte Domain. Speist canonical, Open Graph und `sitemap.xml`. |
+| `recht/datenschutzerklaerung.md` | Eingesetzte Dienste (Netlify, Firebase, Stripe, Anthropic) und Serverstandorte gegenprüfen. revDSG. |
+| `recht/agb.md` | Leistungsumfang, Preise und Rückerstattungsregelung gegenprüfen. |
 
 Danach `python3 scripts/build_site.py` erneut ausführen.
+
+**Die Kontaktadresse muss wirklich erreichbar sein.** Ein Impressum mit einem
+Postfach, das keine Mails empfängt, erfüllt seinen Zweck nicht — die Adresse
+muss vor dem Livegang eingerichtet sein.
 
 > Die Texte sind sorgfältige Entwürfe, aber **kein Ersatz für eine anwaltliche
 > Prüfung**. Vor dem Livegang einmal prüfen lassen — siehe
@@ -43,17 +53,41 @@ Danach `python3 scripts/build_site.py` erneut ausführen.
 
 ## 3. Auf Netlify deployen
 
+> **Achtung — in diesem Repo liegen zwei Websites.** Im Wurzelverzeichnis
+> steht das Abschleppdienst-Projekt mit einer eigenen `netlify.toml`, und der
+> Standard-Branch des Repos (`claude/towing-service-website-b75gud`) gehört
+> ebenfalls dazu. Ohne die beiden folgenden Einstellungen deployt Netlify die
+> **falsche** Website.
+
 **Variante A — mit Git (empfohlen, deployt bei jedem Push automatisch):**
 
-1. Auf netlify.com → *Add new site* → *Import an existing project* → dieses Repo wählen.
-2. Netlify liest `netlify.toml`; Build-Command und Publish-Verzeichnis stimmen bereits.
-   Wichtig: **Base directory** auf `mein-anwalt` setzen.
-3. Deploy starten.
+1. Auf netlify.com → *Add new site* → *Import an existing project* →
+   GitHub verbinden → Repo `cconsulters-debug/cconsulters` wählen.
+2. Diese beiden Felder von Hand setzen:
 
-**Variante B — ohne Git (schnellster Test):**
+   | Feld | Wert |
+   |---|---|
+   | **Base directory** | `mein-anwalt` |
+   | **Branch to deploy** | `claude/swiss-lawyer-prompts-l8rtlo` |
+
+   Build-Command (`python3 scripts/build_site.py`) und Publish-Verzeichnis
+   (`site`) liest Netlify danach selbst aus `mein-anwalt/netlify.toml`.
+3. *Deploy site* — nach ein bis zwei Minuten läuft die Seite unter einer
+   Adresse wie `zufallsname.netlify.app`.
+
+Der Branch lässt sich später unter *Site configuration → Build & deploy →
+Branches and deploy contexts* ändern.
+
+**Variante B — ohne Git (schnellster Test, kein Konto nötig):**
 
 Lokal `python3 scripts/build_site.py` ausführen und den Ordner `site/`
-auf app.netlify.com/drop ziehen.
+auf app.netlify.com/drop ziehen. Damit entfallen beide Stolpersteine oben,
+aber es wird auch nichts automatisch aktualisiert.
+
+**Wenn der Build fehlschlägt:** In den Deploy-Logs nachsehen. Häufigste
+Ursache ist ein nicht gefundenes `python3`. Dann in Netlify unter
+*Site configuration → Environment variables* `PYTHON_VERSION` auf `3.11`
+setzen und neu deployen. Das Build-Skript läuft ab Python 3.8.
 
 ## 4. Domain verbinden
 
@@ -61,7 +95,7 @@ In Netlify unter *Domain management* die Domain hinzufügen und beim Registrar
 (z. B. Hostpoint, Infomaniak) die Nameserver bzw. den CNAME setzen. Das
 TLS-Zertifikat stellt Netlify automatisch aus.
 
-Nach dem Domainwechsel `DOMAIN` in `scripts/build_site.py` anpassen und neu bauen.
+Nach dem Domainwechsel `domain` in `site.config.json` anpassen und neu bauen.
 
 ## 5. Was jetzt schon live funktioniert — und was nicht
 
