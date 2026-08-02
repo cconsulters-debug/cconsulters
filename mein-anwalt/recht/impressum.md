@@ -1,19 +1,19 @@
 # Impressum / Anbieterkennzeichnung
 
-> **Entwurf — Platzhalter ausfüllen.** In der Schweiz verlangt Art. 3 Abs. 1 lit. s UWG bei
-> Websites im elektronischen Geschäftsverkehr eine klare Angabe von Identität und Kontakt.
+> In der Schweiz verlangt Art. 3 Abs. 1 lit. s UWG bei Websites im elektronischen
+> Geschäftsverkehr eine klare Angabe von Identität und Kontakt.
 
 ## Verantwortlich für dieses Angebot
 
-**[FIRMENNAME / VOR- UND NACHNAME]**
-[Rechtsform, z. B. Einzelfirma / GmbH]
-[Strasse und Hausnummer]
-[PLZ Ort], Schweiz
+**{{name}}**
+{{rechtsform}}
+{{strasse}}
+{{plz_ort}}, Schweiz
 
-**E-Mail:** [kontakt@deine-domain.ch]
-**Telefon:** [+41 …] *(optional)*
-[Handelsregister-Nr. / UID CHE-…, falls eingetragen]
-[MWST-Nr. CHE-… MWST, falls MWST-pflichtig]
+**E-Mail:** {{email}}
+{{telefon_zeile}}
+{{uid_zeile}}
+{{mwst_zeile}}
 
 ## Art des Angebots
 
@@ -34,4 +34,4 @@ Sämtliche Inhalte dieser Website sind urheberrechtlich geschützt. Jede Verwend
 des privaten Gebrauchs bedarf der vorherigen Zustimmung.
 
 ---
-*Stand: [DATUM]. Entwurf — vor Verwendung anwaltlich prüfen lassen.*
+*Stand: {{datum}}. Entwurf — vor Verwendung anwaltlich prüfen lassen.*

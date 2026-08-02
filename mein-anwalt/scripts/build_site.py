@@ -12,6 +12,7 @@ den rechtlich noetigen Links) und erzeugt die Rechtstexte aus recht/*.md.
 from __future__ import annotations
 
 import html
+import json
 import re
 import shutil
 from datetime import date
@@ -21,9 +22,50 @@ ROOT = Path(__file__).resolve().parent.parent
 APP = ROOT / "app" / "mein-anwalt-aurum.html"
 RECHT = ROOT / "recht"
 OUT = ROOT / "site"
+CONFIG = ROOT / "site.config.json"
 
-# Beim Domainwechsel nur diese Zeile anpassen — sie speist canonical, OG und Sitemap.
-DOMAIN = "https://mein-rechtshelfer.ch"
+# --------------------------------------------------------------------------
+# Betreiberangaben und Domain kommen aus site.config.json, damit sie nur an
+# einer Stelle gepflegt werden. Fehlende Pflichtangaben bleiben im Text als
+# unuebersehbarer Marker stehen und werden am Ende des Builds gemeldet —
+# eine Website ohne Impressum waere nach UWG Art. 3 Abs. 1 lit. s heikel.
+# --------------------------------------------------------------------------
+CFG = json.loads(CONFIG.read_text(encoding="utf-8"))
+BETRIEB = CFG.get("betreiber", {})
+DOMAIN = (CFG.get("domain") or "").rstrip("/")
+
+PFLICHT = ["name", "rechtsform", "strasse", "plz_ort", "sitz", "email"]
+_fehlend: list[str] = []
+
+
+def feld(key: str) -> str:
+    val = (BETRIEB.get(key) or "").strip()
+    if val:
+        return val
+    if key in PFLICHT and key not in _fehlend:
+        _fehlend.append(key)
+    return f"[BITTE AUSFÜLLEN: {key}]" if key in PFLICHT else ""
+
+
+def fill_tokens(text: str) -> str:
+    tel, uid, mwst = feld("telefon"), feld("uid"), feld("mwst")
+    werte = {
+        "name": feld("name"),
+        "rechtsform": feld("rechtsform"),
+        "strasse": feld("strasse"),
+        "plz_ort": feld("plz_ort"),
+        "sitz": feld("sitz"),
+        "email": feld("email"),
+        "datum": date.today().strftime("%d.%m.%Y"),
+        # Optionale Angaben: ganze Zeile entfaellt, wenn nichts hinterlegt ist.
+        "telefon_zeile": f"**Telefon:** {tel}" if tel else "",
+        "uid_zeile": f"Handelsregister-Nr. / UID: {uid}" if uid else "",
+        "mwst_zeile": f"MWST-Nr.: {mwst}" if mwst else "",
+    }
+    for k, v in werte.items():
+        text = text.replace("{{" + k + "}}", v)
+    # Durch leere Optionalzeilen entstandene Leerzeilen einsammeln.
+    return re.sub(r"\n{3,}", "\n\n", text)
 
 BRAND = "Mein Rechtshelfer & Assistent"
 DESCRIPTION = (
@@ -309,7 +351,7 @@ def build_index(fragment: str) -> str:
 
 
 def build_legal(md_name: str, out_name: str, label: str, style: str) -> None:
-    src = (RECHT / md_name).read_text(encoding="utf-8")
+    src = fill_tokens((RECHT / md_name).read_text(encoding="utf-8"))
     # Die erste H1 wird zur Seitenueberschrift im Template.
     m = re.match(r"^#\s+(.*)$", src.splitlines()[0])
     title = m.group(1).strip() if m else label
@@ -404,6 +446,18 @@ def main() -> None:
 
     built = sorted(p.name for p in OUT.iterdir())
     print("site/ gebaut:", ", ".join(built))
+
+    if _fehlend:
+        print()
+        print("!! NOCH NICHT LIVE-TAUGLICH — fehlende Pflichtangaben in site.config.json:")
+        for k in _fehlend:
+            print(f"   - betreiber.{k}")
+        print("   Ohne diese Angaben fehlt die Anbieterkennzeichnung (UWG Art. 3 Abs. 1 lit. s).")
+        print("   Die Seiten sind gebaut, tragen an den Stellen aber '[BITTE AUSFÜLLEN: …]'.")
+    if "mein-rechtshelfer.ch" in DOMAIN:
+        print()
+        print("!! Hinweis: 'domain' in site.config.json ist noch der Platzhalter.")
+        print("   canonical, Open Graph und sitemap.xml zeigen damit auf eine fremde Adresse.")
 
 
 if __name__ == "__main__":

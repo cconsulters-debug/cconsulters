@@ -6,7 +6,7 @@
 
 ## 1. Verantwortliche Stelle
 
-[FIRMENNAME / NAME], [Adresse], [E-Mail]. Für Fragen zum Datenschutz: [datenschutz@deine-domain.ch].
+{{name}}, {{strasse}}, {{plz_ort}}. Für Fragen zum Datenschutz: {{email}}.
 
 ## 2. Welche Daten wir bearbeiten
 
@@ -58,5 +58,5 @@ Wir treffen angemessene technische und organisatorische Massnahmen (Verschlüsse
 Wir können diese Erklärung anpassen. Massgebend ist die jeweils auf der Website veröffentlichte Fassung.
 
 ---
-*Stand: [DATUM]. Entwurf — vor Verwendung anwaltlich/datenschutzrechtlich prüfen lassen.
+*Stand: {{datum}}. Entwurf — vor Verwendung anwaltlich/datenschutzrechtlich prüfen lassen.
 Falls du EU-Nutzende bedienst, kann zusätzlich die DSGVO gelten.*

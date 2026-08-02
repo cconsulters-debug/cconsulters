@@ -6,7 +6,7 @@
 ## 1. Geltungsbereich und Anbieterin
 
 Diese Bedingungen regeln die Nutzung von «Mein Rechtshelfer & Assistent» (nachfolgend «Dienst»),
-angeboten von [FIRMENNAME/NAME], [Adresse] (nachfolgend «Anbieterin»). Mit der Nutzung akzeptierst
+angeboten von {{name}}, {{strasse}}, {{plz_ort}} (nachfolgend «Anbieterin»). Mit der Nutzung akzeptierst
 du diese Bedingungen.
 
 ## 2. Art des Dienstes — keine Rechtsberatung
@@ -57,7 +57,7 @@ Nutzungsrecht im Rahmen dieser Bedingungen.
 
 ## 9. Anwendbares Recht und Gerichtsstand
 
-Es gilt **Schweizer Recht**. Gerichtsstand ist, soweit zulässig, [ORT/SITZ DER ANBIETERIN].
+Es gilt **Schweizer Recht**. Gerichtsstand ist, soweit zulässig, {{sitz}}.
 Zwingende Konsumentengerichtsstände bleiben vorbehalten.
 
 ## 10. Änderungen
@@ -65,4 +65,4 @@ Zwingende Konsumentengerichtsstände bleiben vorbehalten.
 Die Anbieterin kann diese Bedingungen anpassen. Massgebend ist die bei Nutzung veröffentlichte Fassung.
 
 ---
-*Stand: [DATUM]. Entwurf — vor Verwendung anwaltlich prüfen lassen.*
+*Stand: {{datum}}. Entwurf — vor Verwendung anwaltlich prüfen lassen.*
