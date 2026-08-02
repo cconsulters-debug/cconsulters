@@ -12,5 +12,8 @@ node_modules/
 gebiete/*.html
 sitemap.xml
 
+# Mein Rechtshelfer: site/ entsteht aus app/ und recht/ via scripts/build_site.py
+mein-anwalt/site/
+
 # Betriebssystem
 .DS_Store

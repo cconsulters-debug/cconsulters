@@ -1,0 +1,514 @@
+<title>Mein Rechtshelfer &amp; Assistent — KI-Baukasten für Schweizer Recht</title>
+<style>
+  :root{
+    --bg:#F1F2F0; --surface:#FFFFFF; --surface-2:#E9EBE7; --surface-3:#FBFBFA;
+    --ink:#15181B; --ink-2:#565E64; --ink-3:#828A8F;
+    --line:#D6D9D4; --line-2:#E4E7E2;
+    --accent:#C8102E; --accent-ink:#A00C24; --accent-soft:#F7DCE1;
+    --ok:#0F7B57; --warn:#9A6400;
+    --mono:"SF Mono",SFMono-Regular,ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Helvetica Neue",Helvetica,Arial,system-ui,-apple-system,sans-serif;
+    --r:14px; --maxw:1120px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0F1214; --surface:#171B1E; --surface-2:#1E2427; --surface-3:#12161800;
+      --ink:#ECEEEA; --ink-2:#9BA3A8; --ink-3:#727A7F;
+      --line:#2A3033; --line-2:#232A2D;
+      --accent:#E93A4C; --accent-ink:#F4707D; --accent-soft:#2A171B;
+      --ok:#3FBF8F; --warn:#D6A44A;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F1214; --surface:#171B1E; --surface-2:#1E2427; --surface-3:#12161800;
+    --ink:#ECEEEA; --ink-2:#9BA3A8; --ink-3:#727A7F;
+    --line:#2A3033; --line-2:#232A2D;
+    --accent:#E93A4C; --accent-ink:#F4707D; --accent-soft:#2A171B; --ok:#3FBF8F; --warn:#D6A44A;
+  }
+  :root[data-theme="light"]{
+    --bg:#F1F2F0; --surface:#FFFFFF; --surface-2:#E9EBE7; --surface-3:#FBFBFA;
+    --ink:#15181B; --ink-2:#565E64; --ink-3:#828A8F;
+    --line:#D6D9D4; --line-2:#E4E7E2;
+    --accent:#C8102E; --accent-ink:#A00C24; --accent-soft:#F7DCE1; --ok:#0F7B57; --warn:#9A6400;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto} *{animation:none!important;transition:none!important}}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;letter-spacing:-0.006em}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-0.028em;font-weight:800;line-height:1.02}
+  .label{font-size:.7rem;text-transform:uppercase;letter-spacing:.16em;font-weight:700;color:var(--ink-2)}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* Swiss cross mark */
+  .cross{display:inline-grid;place-items:center;background:var(--accent);border-radius:5px;position:relative;flex:none}
+  .cross::before{content:"";position:absolute;background:#fff;width:56%;height:16%;border-radius:1px}
+  .cross::after{content:"";position:absolute;background:#fff;height:56%;width:16%;border-radius:1px}
+
+  /* top bar */
+  header.bar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 86%,transparent);
+    backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+  .bar .wrap{display:flex;align-items:center;gap:18px;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.03em}
+  .brand .cross{width:22px;height:22px}
+  nav.links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  nav.links a{font-size:.82rem;font-weight:600;color:var(--ink-2);text-decoration:none;padding:7px 11px;border-radius:8px}
+  nav.links a:hover{color:var(--ink);background:var(--surface-2)}
+  .tbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);width:36px;height:36px;
+    border-radius:9px;cursor:pointer;font-size:15px;display:grid;place-items:center}
+  .tbtn:hover{border-color:var(--accent)}
+
+  /* hero */
+  .hero{padding:64px 0 40px;position:relative;overflow:hidden}
+  .grid-bg{position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background:linear-gradient(var(--line-2) 1px,transparent 1px),linear-gradient(90deg,var(--line-2) 1px,transparent 1px);
+    background-size:44px 44px;mask:radial-gradient(120% 90% at 78% 0%,#000,transparent 70%)}
+  .hero .wrap{position:relative}
+  .eyebrow{display:inline-flex;align-items:center;gap:9px;margin-bottom:22px}
+  h1.title{font-size:clamp(2.6rem,7vw,5.4rem);letter-spacing:-.045em;line-height:.92}
+  h1.title .red{color:var(--accent)}
+  .lede{max-width:60ch;margin:22px 0 0;font-size:clamp(1.05rem,2vw,1.32rem);color:var(--ink-2);line-height:1.5;letter-spacing:-.01em}
+  .meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+  .chip{font-size:.78rem;font-weight:600;padding:7px 12px;border-radius:999px;border:1px solid var(--line);
+    background:var(--surface);display:inline-flex;gap:7px;align-items:center;color:var(--ink-2)}
+  .chip b{color:var(--ink);font-weight:800}
+  .disc{margin-top:30px;display:flex;gap:12px;align-items:flex-start;max-width:66ch;
+    background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));
+    padding:14px 16px;border-radius:12px;font-size:.9rem;color:var(--ink)}
+  .disc .bang{color:var(--accent);font-weight:900;font-size:1.05rem;line-height:1.3;flex:none}
+
+  section.sec{padding:52px 0;border-top:1px solid var(--line)}
+  .sechead{display:flex;align-items:baseline;gap:16px;margin-bottom:26px;flex-wrap:wrap}
+  .snum{font-family:var(--mono);color:var(--accent);font-weight:700;font-size:.9rem;padding-top:6px}
+  h2.h{font-size:clamp(1.5rem,3.4vw,2.3rem)}
+  .sub{color:var(--ink-2);max-width:64ch;margin:10px 0 0;font-size:1rem}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+  .pad{padding:22px}
+
+  /* code / prompt block */
+  .code{position:relative;background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;
+    font-family:var(--mono);font-size:.83rem;line-height:1.55;white-space:pre-wrap;word-break:break-word;
+    padding:16px 16px;color:var(--ink);max-height:320px;overflow:auto;letter-spacing:0}
+  .copy{position:absolute;top:9px;right:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    font-family:var(--sans);font-size:.74rem;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer;letter-spacing:.02em}
+  .copy:hover{border-color:var(--accent);color:var(--accent)}
+  .copy.done{color:#fff;background:var(--ok);border-color:var(--ok)}
+
+  /* prompts grid */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+  .pcard{display:flex;flex-direction:column}
+  .pcard .top{display:flex;gap:12px;align-items:flex-start;padding:18px 18px 12px}
+  .pcard .no{font-family:var(--mono);font-weight:700;font-size:.82rem;color:var(--accent);
+    border:1px solid var(--line);border-radius:7px;padding:3px 8px;flex:none}
+  .pcard h3{font-size:1.02rem;letter-spacing:-.02em;font-weight:800}
+  .pcard .bl{color:var(--ink-2);font-size:.87rem;margin-top:3px;line-height:1.4}
+  .pcard details{border-top:1px solid var(--line-2);margin-top:auto}
+  .pcard summary{cursor:pointer;list-style:none;padding:12px 18px;font-size:.82rem;font-weight:700;color:var(--ink-2);
+    display:flex;justify-content:space-between;align-items:center}
+  .pcard summary::-webkit-details-marker{display:none}
+  .pcard summary:hover{color:var(--accent)}
+  .pcard summary .arw{transition:transform .2s}
+  .pcard details[open] summary .arw{transform:rotate(90deg)}
+  .pcard .body{padding:0 14px 14px}
+
+  /* composer */
+  .comp{display:grid;grid-template-columns:minmax(0,0.92fr) minmax(0,1.08fr);gap:20px}
+  @media(max-width:840px){.comp{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .field label{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2)}
+  .field input,.field select,.field textarea{font-family:var(--sans);font-size:.92rem;color:var(--ink);
+    background:var(--surface-3);border:1px solid var(--line);border-radius:9px;padding:10px 12px;width:100%}
+  .field textarea{resize:vertical;min-height:92px;line-height:1.5}
+  .field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-2) 50%),linear-gradient(135deg,var(--ink-2) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+  input:focus,select:focus,textarea:focus,a:focus-visible,button:focus-visible,summary:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px;border-color:transparent}
+  .hint{font-size:.82rem;color:var(--ink-2);margin-top:2px;display:flex;gap:8px;align-items:flex-start}
+  .out{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:100%}
+  .out .oh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line-2)}
+  .out .oh .label{color:var(--ink-2)}
+  .out pre{margin:0;padding:14px;font-family:var(--mono);font-size:.82rem;line-height:1.55;white-space:pre-wrap;
+    word-break:break-word;overflow:auto;flex:1;color:var(--ink)}
+  .out pre .ph{color:var(--accent);background:var(--accent-soft);border-radius:3px;padding:0 2px}
+  .flow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px;font-size:.84rem;color:var(--ink-2)}
+  .flow .step{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-weight:600}
+  .flow .arr{color:var(--accent);font-weight:800}
+
+  /* sources */
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+  .tab{font-size:.82rem;font-weight:700;padding:8px 13px;border-radius:9px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink-2);cursor:pointer}
+  .tab[aria-selected="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .portals{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:22px}
+  .portal{display:block;text-decoration:none;padding:15px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+  .portal:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .portal .pn{font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+  .portal .pd{font-size:.82rem;color:var(--ink-2);margin-top:4px}
+  .portal .lk{font-family:var(--mono);font-size:.74rem;color:var(--accent);margin-top:8px;word-break:break-all}
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+  table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:520px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-2)}
+  thead th{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);background:var(--surface-2)}
+  tbody tr:hover{background:var(--surface-2)}
+  td.sr{font-family:var(--mono);font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+  td.ab{font-weight:800}
+  .catblock{display:none}
+  .catblock.on{display:block}
+
+  footer{border-top:1px solid var(--line);padding:40px 0 60px;color:var(--ink-2);font-size:.88rem}
+  footer h3{font-size:1rem;margin-bottom:10px;color:var(--ink)}
+  footer a{color:var(--accent-ink);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:30px}
+  @media(max-width:680px){.foot-grid{grid-template-columns:1fr}nav.links{display:none}}
+  .srcline{line-height:1.9}
+</style>
+
+<header class="bar">
+  <div class="wrap">
+    <div class="brand"><span class="cross"></span> Mein&nbsp;Rechtshelfer</div>
+    <nav class="links">
+      <a href="#system">System-Prompt</a>
+      <a href="#composer">Composer</a>
+      <a href="#prompts">10 Prompts</a>
+      <a href="#quellen">Rechtsquellen</a>
+    </nav>
+    <button class="tbtn" id="theme" title="Hell / Dunkel" aria-label="Theme wechseln">◐</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="grid-bg"></div>
+  <div class="wrap">
+    <div class="eyebrow"><span class="cross" style="width:26px;height:26px"></span>
+      <span class="label">KI-Baukasten · Schweizer Recht</span></div>
+    <h1 class="title">Dein Rechtshelfer<br><span class="red">für Schweizer Recht.</span></h1>
+    <p class="lede">System-Prompt, zehn erprobte Rechts-Prompts und der komplette Katalog
+      offizieller Rechtsquellen — zusammengestellt, damit du in deinem KI-Projekt einen
+      verlässlichen Assistenten für Schweizer Recht betreibst.</p>
+    <div class="meta">
+      <span class="chip"><b>26</b> Kantone</span>
+      <span class="chip"><b>~40</b> Gesetze mit SR-Nr.</span>
+      <span class="chip"><b>10</b> Prompt-Vorlagen</span>
+      <span class="chip">Fedlex-&nbsp;&amp;&nbsp;BGer-verifizierbar</span>
+    </div>
+    <div class="disc"><span class="bang">!</span>
+      <div><b>Allgemeine rechtliche Information, keine verbindliche Beratung.</b> KI kann Artikel
+      und Urteile falsch wiedergeben — prüfe zentrale Fundstellen auf fedlex.admin.ch / bger.ch.
+      Bei Fristen oder Strafsachen rechtzeitig eine zugelassene Anwältin / einen Anwalt beiziehen.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SYSTEM PROMPT -->
+<section class="sec" id="system">
+  <div class="wrap">
+    <div class="sechead"><span class="snum">01</span>
+      <div><h2 class="h">Der System-Prompt</h2>
+        <p class="sub">Kopiere diesen Text in die <b>Projektanweisung</b> deines KI-Tools
+          (Claude-Projekt · ChatGPT Custom Instructions · API-<span class="mono">system</span>).
+          Damit wird die KI zum «Mein Rechtshelfer» für Schweizer Recht.</p></div>
+    </div>
+    <div class="card pad">
+      <div class="label" style="margin-bottom:10px">Kurzform — sofort einsetzbar</div>
+      <div class="code" id="sysShort"></div>
+      <details style="margin-top:16px">
+        <summary style="cursor:pointer;font-weight:700;color:var(--accent)">▸ Vollständige Fassung anzeigen (Rolle · Arbeitsweise · Zitierregeln · Grenzen)</summary>
+        <div class="code" style="margin-top:12px;max-height:420px" id="sysFull"></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- COMPOSER -->
+<section class="sec" id="composer">
+  <div class="wrap">
+    <div class="sechead"><span class="snum">02</span>
+      <div><h2 class="h">Prompt-Composer</h2>
+        <p class="sub">Wähle eine Aufgabe, ergänze deine Angaben — die Seite baut daraus den
+          fertigen Prompt. Kopieren und in deinen KI-Rechtshelfer einfügen.
+          <br><span style="color:var(--ink-3);font-size:.9rem">Hinweis: Dies ist ein Prompt-Generator, kein Live-Chat —
+          die eigentliche Antwort erzeugt dein KI-Tool (z.&nbsp;B. dein Claude-Projekt).</span></p></div>
+    </div>
+    <div class="card pad">
+      <div class="comp">
+        <div>
+          <div class="field">
+            <label for="task">Aufgabe</label>
+            <select id="task"></select>
+          </div>
+          <div class="field">
+            <label for="kanton">Kanton</label>
+            <select id="kanton"></select>
+          </div>
+          <div class="field">
+            <label for="partei">Meine Rolle / Partei</label>
+            <input id="partei" placeholder="z. B. Arbeitnehmer · Vermieterin · Beschuldigter">
+          </div>
+          <div class="field">
+            <label for="ziel">Ziel</label>
+            <input id="ziel" placeholder="z. B. Kündigung anfechten · Forderung durchsetzen">
+          </div>
+          <div class="field">
+            <label for="sv">Sachverhalt / Details</label>
+            <textarea id="sv" placeholder="Schildere kurz die Fakten, Daten und Fristen…"></textarea>
+          </div>
+          <div class="hint"><span style="color:var(--accent);font-weight:800">↳</span>
+            Leere Felder bleiben als <span class="mono" style="color:var(--accent)">[PLATZHALTER]</span> stehen — die kannst du auch später ausfüllen.</div>
+        </div>
+        <div class="out">
+          <div class="oh"><span class="label">Dein fertiger Prompt</span>
+            <button class="copy" id="copyComp" style="position:static">Kopieren</button></div>
+          <pre id="compOut"></pre>
+        </div>
+      </div>
+      <div class="flow">
+        <span class="step">1 · System-Prompt gesetzt</span><span class="arr">→</span>
+        <span class="step">2 · Prompt kopieren</span><span class="arr">→</span>
+        <span class="step">3 · in KI-Rechtshelfer einfügen</span><span class="arr">→</span>
+        <span class="step">4 · Fundstellen prüfen</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 PROMPTS -->
+<section class="sec" id="prompts">
+  <div class="wrap">
+    <div class="sechead"><span class="snum">03</span>
+      <div><h2 class="h">Die 10 besten Rechts-Prompts</h2>
+        <p class="sub">Erprobte Vorlagen für typische Aufgaben, auf Schweizer Recht und
+          Terminologie angepasst. Aufklappen, kopieren, Platzhalter ersetzen.</p></div>
+    </div>
+    <div class="pgrid" id="pgrid"></div>
+  </div>
+</section>
+
+<!-- QUELLEN -->
+<section class="sec" id="quellen">
+  <div class="wrap">
+    <div class="sechead"><span class="snum">04</span>
+      <div><h2 class="h">Offizielle Rechtsquellen</h2>
+        <p class="sub">Womit dein KI-Rechtshelfer jede Aussage belegen kann — und du sie nachprüfst.
+          Zuerst die amtlichen Portale, dann die wichtigsten Gesetze mit SR-Nummer.</p></div>
+    </div>
+    <div class="portals" id="portals"></div>
+    <div class="tabs" id="cattabs"></div>
+    <div id="cats"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <h3><span class="cross" style="width:18px;height:18px;display:inline-grid;vertical-align:-3px"></span>&nbsp; Mein Rechtshelfer &amp; Assistent</h3>
+      <p><b>Haftungshinweis:</b> Dieser Baukasten liefert allgemeine rechtliche Information und
+        Werkzeuge, <b>keine rechtsverbindliche Beratung</b> und begründet kein Mandatsverhältnis.
+        Prüfe zentrale Fundstellen an der offiziellen Quelle. Bei fristgebundenen, existenziellen
+        oder strafrechtlichen Angelegenheiten ziehe eine zugelassene Anwältin / einen Anwalt bei
+        (<a href="https://www.sav-fsa.ch" target="_blank" rel="noopener">SAV/FSA</a>).</p>
+      <p style="color:var(--ink-3);font-size:.82rem">SR-Nummern und Links nach bestem Wissen zusammengestellt;
+        geltende Fassung stets direkt auf Fedlex prüfen (laufende Revisionen: ZPO, revDSG, Erb-, Aktienrecht).</p>
+    </div>
+    <div>
+      <h3>Quellen der Recherche</h3>
+      <div class="srcline">
+        <a href="https://www.fedlex.admin.ch" target="_blank" rel="noopener">Fedlex — Bundesrecht</a><br>
+        <a href="https://www.bger.ch" target="_blank" rel="noopener">Bundesgericht (BGer)</a><br>
+        <a href="https://entscheidsuche.ch" target="_blank" rel="noopener">entscheidsuche.ch</a><br>
+        <a href="https://www.lexfind.ch" target="_blank" rel="noopener">Lexfind — kantonales Recht</a><br>
+        <a href="https://spellbook.com/learn/ai-prompts-for-lawyers" target="_blank" rel="noopener">Spellbook — Prompt-Best-Practice</a><br>
+        <a href="https://www.americanbar.org/groups/law_practice/resources/law-technology-today/2025/legal-chatgpt-tips-prompts-and-use-cases/" target="_blank" rel="noopener">American Bar Association</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ---------- System prompt texts ----------
+const SYS_SHORT = `Du bist «Mein Rechtshelfer», ein juristischer Assistent für SCHWEIZER RECHT. Antworte präzise in Schweizer Hochdeutsch nach dem Schema: Sachverhalt → Rechtsfrage → Normen (mit Art. + Gesetz + SR-Nummer) → Subsumtion → Ergebnis/Empfehlung. Frag nach dem KANTON und nach fehlenden Fakten, bevor du verbindlich einschätzt. ERFINDE NIE Artikel, BGE-Fundstellen oder Fristen — kennzeichne Unsicheres als «zu verifizieren». Du gibst ALLGEMEINE rechtliche Information, KEINE verbindliche Beratung, und begründest kein Mandatsverhältnis; bei Fristen oder Strafsachen verweise auf eine zugelassene Anwältin/einen Anwalt. Nenne laufende Fristen deutlich.`;
+
+const SYS_FULL = `ROLLE
+Du bist «Mein Rechtshelfer», ein spezialisierter juristischer Assistent für Schweizer Recht. Du denkst wie eine erfahrene, zugelassene Schweizer Rechtsanwältin / ein Rechtsanwalt mit Praxis in Zivilrecht (ZGB/OR), Arbeits-, Miet-, Straf- und Strafprozessrecht, SchKG, Verwaltungs- und Sozialversicherungsrecht, Datenschutz (revDSG) und Gesellschaftsrecht. Du beachtest die föderale Struktur (Bund/Kanton/Gemeinde) und fragst nach dem Kanton, sobald kantonales Recht oder kantonale Zuständigkeit relevant sein könnte.
+
+SPRACHE
+Klares Schweizer Hochdeutsch («ss» statt «ß»); Schweizer Terminologie (Betreibung, Schlichtungsbehörde, Rechtsvorschlag, Verrechnung …). Ausschliesslich Schweizer Recht, sofern nicht anders verlangt; auf IPRG-Konstellationen (Auslandsbezug) aktiv hinweisen.
+
+ARBEITSWEISE (Gutachten-/Subsumtionsschema)
+1) Sachverhalt klären — bei fehlenden Angaben (Kanton, Daten/Fristen, Vertragsart, Streitwert, Parteien) gezielt nachfragen.
+2) Rechtsfrage(n) benennen.
+3) Anwendbare Normen zitieren — mit Artikel + Gesetz + SR-Nummer (z. B. «Art. 336c OR [SR 220]»), bei Bedarf BGE.
+4) Subsumtion — Voraussetzungen, Rechtsfolgen, Fristen, Beweislast.
+5) Ergebnis & priorisierte Handlungsempfehlung — nächste Schritte, Zuständigkeit, Risiken.
+6) Restunsicherheiten offenlegen.
+Antworte mit Zwischenüberschriften und Aufzählungen; erkläre Fachbegriffe kurz.
+
+ZITIER- & GENAUIGKEITSREGELN
+Erfinde niemals Artikel, Artikelnummern, BGE-Fundstellen, Urteile oder Fristen. Unsicheres ausdrücklich als «zu verifizieren» kennzeichnen. Format «Art. 336c Abs. 1 lit. b OR» (kein «§»). Zentrale Gesetze mit SR-Nummer nennen. Auf Stand des Rechts und mögliche kantonale Abweichungen hinweisen.
+
+RECHTLICHE GRENZEN
+Du bist KI-Assistent, kein zugelassener Anwalt; kein Mandatsverhältnis; allgemeine Information statt verbindlicher Einzelfallberatung. Bei fristgebundenen, existenziellen oder strafrechtlichen Sachen: rechtzeitig zugelassene Anwältin/Anwalt (SAV/FSA) oder zuständige Behörde beiziehen. Fristen aktiv und deutlich benennen. Keine Beihilfe zu rechtswidrigem Handeln. Sparsam mit Personendaten Dritter.
+
+TON
+Sachlich, ruhig, verständlich, lösungsorientiert; ehrlich über Unsicherheiten.`;
+
+// ---------- 10 prompts ({{...}} = vom Composer gefüllt, [...] = manuell) ----------
+const PROMPTS = [
+ {t:"Rechtsgutachten / Fallanalyse", b:"Strukturierte Subsumtion mit Normen, Fristen und Empfehlung.",
+  x:`Erstelle ein strukturiertes Kurzgutachten zu folgendem Fall nach Schweizer Recht.
+Sachverhalt: {{SACHVERHALT}}
+Kanton: {{KANTON}}
+Meine Rolle / Partei: {{PARTEI}}
+Ziel: {{ZIEL}}
+Gliedere: 1) Relevanter Sachverhalt 2) Rechtsfrage(n) 3) Anwendbare Normen (Art. + Gesetz + SR-Nr., ggf. BGE) 4) Subsumtion (Voraussetzungen, Rechtsfolgen, Beweislast, Fristen) 5) Ergebnis + priorisierte Empfehlung 6) Offene Fragen.
+Fehlende Fakten zuerst erfragen. Unsichere Fundstellen als «zu verifizieren» kennzeichnen.`},
+ {t:"Vertrag entwerfen", b:"Gesetzeskonformer OR-Vertrag mit Prüf-Checkliste.",
+  x:`Entwirf einen [VERTRAGSART: Arbeitsvertrag / Mietvertrag / Werkvertrag …] nach Schweizer Obligationenrecht.
+Parteien: {{PARTEI}} und [GEGENPARTEI]
+Kanton / Gerichtsstand: {{KANTON}}
+Ziel / Zweck: {{ZIEL}}
+Eckpunkte: {{SACHVERHALT}}
+Anforderungen: gesetzeskonforme OR-Klauseln; klare, eindeutige Definitionen; Klauseln markieren, die zwingendes Recht betreffen oder anzupassen sind; Formvorschriften nennen (Schriftform, öffentliche Beurkundung); am Ende Checkliste «vor Unterschrift prüfen».`},
+ {t:"Vertrag prüfen (Redlining)", b:"Risiken, unzulässige Klauseln und Formulierungsvorschläge.",
+  x:`Prüfe den folgenden Vertrag aus Sicht von {{PARTEI}} nach Schweizer Recht.
+Kanton: {{KANTON}}
+[VERTRAGSTEXT HIER EINFÜGEN]
+Gib mir: 5–10 grösste Risiken (nach Wichtigkeit); Klauseln gegen zwingendes Recht oder einseitig; je Problemstelle Grund + konkreter Formulierungsvorschlag; fehlende übliche Klauseln (Gerichtsstand, anwendbares Recht, Haftung, Datenschutz). Abschluss als Tabelle: Klausel | Risiko | Empfehlung | Priorität.`},
+ {t:"Rechtsrecherche", b:"Normen, Leitentscheide und Suchbegriffe zum Nachrecherchieren.",
+  x:`Ich recherchiere zu folgender Rechtsfrage im Schweizer Recht: {{ZIEL}}
+Kontext / Sachverhalt: {{SACHVERHALT}}
+Kanton: {{KANTON}}
+1) einschlägige Artikel (Art. + Gesetz + SR-Nr.) 2) relevante BGE/Urteile — falls unsicher, ausdrücklich «Fundstelle zu verifizieren» 3) herrschende Lehre + Streitpunkte 4) Kernaussage in einem Satz 5) drei Suchbegriffe/Filter für fedlex.admin.ch und entscheidsuche.ch.
+Keine Urteile/Artikel erfinden.`},
+ {t:"Schreiben an Gegenpartei / Behörde", b:"Sachliches, fundiertes Schreiben mit Frist.",
+  x:`Verfasse ein sachliches, juristisch fundiertes Schreiben nach Schweizer Recht.
+Absender (ich): {{PARTEI}}
+Empfänger: [GEGENPARTEI / BEHÖRDE]
+Kanton: {{KANTON}}
+Anliegen / Ziel: {{ZIEL}}
+Relevante Fakten & Daten: {{SACHVERHALT}}
+Höflich, bestimmt, faktenbasiert; Rechtsgrundlage nennen; angemessene Frist + nächste Schritte bei Nichteinhaltung. Struktur: Betreff, Sachverhalt, Rechtsgrundlage, Forderung, Frist, Grussformel.`},
+ {t:"Klartext-Erklärung für Laien", b:"Rechtslage, Vertrag oder Urteil einfach erklärt.",
+  x:`Erkläre mir in einfachem Deutsch (für eine Person ohne juristische Ausbildung) folgende Rechtslage nach Schweizer Recht:
+Thema / Text: {{SACHVERHALT}}
+Meine Situation: {{PARTEI}}, Kanton {{KANTON}}
+- Was bedeutet das konkret für mich? - Welche Rechte und Pflichten habe ich? - Was sind die nächsten sinnvollen Schritte?
+Vermeide Fachjargon; nötige Fachbegriffe in einem Halbsatz erklären.`},
+ {t:"Fristen- & Zuständigkeits-Check", b:"Alle Fristen, Rechtsweg und Warnung bei Versäumnis.",
+  x:`Prüfe für folgenden Fall die relevanten Fristen und Zuständigkeiten nach Schweizer Recht.
+Fall (mit Daten!): {{SACHVERHALT}}
+Meine Rolle: {{PARTEI}} — Kanton: {{KANTON}}
+Gib mir: alle laufenden/drohenden Fristen (Anfechtung, Beschwerde, Verjährung, Rechtsvorschlag) mit Fristbeginn, Dauer und Rechtsgrundlage; die zuständige Behörde/Instanz und den Rechtsweg; Warnung bei knappen Fristen (Folge bei Versäumnis). Fehlt ein Datum zur Fristberechnung, danach fragen.`},
+ {t:"Argumente pro & contra", b:"Prozessstrategie inkl. Beweislast und Chancen.",
+  x:`Ich vertrete {{PARTEI}} in folgender Streitsache nach Schweizer Recht.
+Sachverhalt: {{SACHVERHALT}}
+Ziel: {{ZIEL}} — Kanton: {{KANTON}}
+Erstelle eine ausgewogene Analyse: stärkste Argumente FÜR meine Position (mit Rechtsgrundlage); stärkste Argumente der GEGENSEITE; Beweisfragen (Beweislast, nötige Beweismittel); realistische Prozesschancen und Risiken (Kosten/Streitwert); Alternativen (Schlichtung, Vergleich, Mediation).`},
+ {t:"Dokument / Urteil zusammenfassen", b:"Kernaussagen, Dispositiv und nächste Schritte.",
+  x:`Fasse das folgende Dokument (Vertrag / Urteil / Verfügung / Schriftsatz) nach Schweizer Recht zusammen.
+Meine Rolle: {{PARTEI}} — Kanton: {{KANTON}}
+[DOKUMENT HIER EINFÜGEN]
+Struktur: worum es geht (1–2 Sätze); wichtigste Kernaussagen (Stichpunkte); bei Urteil: Sachverhalt, Rechtsfrage, Dispositiv, zentrale Begründung; Rechtsfolgen + offene Punkte für mich; was ich als Nächstes tun/prüfen sollte. Nur den Inhalt verwenden, nichts hinzuerfinden.`},
+ {t:"Kosten & Vorgehen einschätzen", b:"Optionen, Kostenfaktoren und To-do-Liste.",
+  x:`Hilf mir, Vorgehen und Kosten für folgende Angelegenheit nach Schweizer Recht einzuschätzen.
+Anliegen: {{ZIEL}}
+Details: {{SACHVERHALT}}
+Meine Rolle: {{PARTEI}} — Kanton: {{KANTON}} — Streitwert (falls bekannt): [BETRAG]
+Gib mir: Vorgehensoptionen (aussergerichtlich / Schlichtung / Klage) mit Vor- und Nachteilen; grobe Kostenfaktoren (Gerichts-/Anwaltskosten, Prozessrisiko, Rechtsschutzversicherung, unentgeltliche Rechtspflege); wann sich der Beizug einer zugelassenen Anwältin/eines Anwalts lohnt; priorisierte To-do-Liste für die nächsten 14 Tage. Hinweis: Tarife sind kantonal geregelt.`}
+];
+
+const KANTONE=["","(Bund / national)","Aargau","Appenzell Ausserrhoden","Appenzell Innerrhoden","Basel-Landschaft","Basel-Stadt","Bern","Freiburg","Genf","Glarus","Graubünden","Jura","Luzern","Neuenburg","Nidwalden","Obwalden","Schaffhausen","Schwyz","Solothurn","St. Gallen","Tessin","Thurgau","Uri","Waadt","Wallis","Zug","Zürich"];
+
+const PORTALS=[
+ {n:"Fedlex",d:"Amtliche, konsolidierte Sammlung des Bundesrechts (SR/AS/BBl), 4 Sprachen.",u:"https://www.fedlex.admin.ch"},
+ {n:"Bundesgericht",d:"Höchstes Gericht — Leitentscheide (BGE) und Urteile.",u:"https://www.bger.ch"},
+ {n:"entscheidsuche.ch",d:"Gratis-Volltext über Bundes- und kantonale Entscheide.",u:"https://entscheidsuche.ch"},
+ {n:"Lexfind",d:"Zentrale Suche über kantonales und kommunales Recht aller Kantone.",u:"https://www.lexfind.ch"},
+ {n:"SAV / FSA",d:"Anwaltsverband — Anwaltssuche und Standesrecht.",u:"https://www.sav-fsa.ch"},
+ {n:"EDÖB",d:"Datenschutzbeauftragter — Guidance zum revDSG.",u:"https://www.edoeb.admin.ch"}
+];
+
+const CATS=[
+ {c:"Verfassung & Staat",r:[["BV","Bundesverfassung","101"],["VwVG","Verwaltungsverfahren","172.021"],["BGG","Bundesgerichtsgesetz","173.110"],["BGÖ","Öffentlichkeitsgesetz","152.3"]]},
+ {c:"Zivilrecht",r:[["ZGB","Zivilgesetzbuch","210"],["OR","Obligationenrecht","220"],["PartG","Partnerschaftsgesetz","211.231"],["HRegV","Handelsregisterverordnung","221.411"],["IPRG","Internationales Privatrecht","291"]]},
+ {c:"Prozess & Vollstreckung",r:[["ZPO","Zivilprozessordnung","272"],["SchKG","Schuldbetreibung & Konkurs","281.1"],["StPO","Strafprozessordnung","312.0"]]},
+ {c:"Strafrecht",r:[["StGB","Strafgesetzbuch","311.0"],["JStG","Jugendstrafgesetz","311.1"],["BetmG","Betäubungsmittelgesetz","812.121"],["SVG","Strassenverkehrsgesetz","741.01"]]},
+ {c:"Arbeit & Sozialvers.",r:[["ArG","Arbeitsgesetz","822.11"],["AHVG","AHV","831.10"],["IVG","Invalidenversicherung","831.20"],["BVG","Berufliche Vorsorge","831.40"],["KVG","Krankenversicherung","832.10"],["UVG","Unfallversicherung","832.20"],["ATSG","Allg. Teil Sozialvers.","830.1"]]},
+ {c:"Datenschutz · Wirtschaft · Steuern",r:[["revDSG","Datenschutzgesetz","235.1"],["UWG","Unlauterer Wettbewerb","241"],["KG","Kartellgesetz","251"],["MWSTG","Mehrwertsteuer","641.20"],["DBG","Direkte Bundessteuer","642.11"],["StHG","Steuerharmonisierung","642.14"]]}
+];
+
+// ---------- render ----------
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+$("#sysShort").textContent=SYS_SHORT; addCopy($("#sysShort"),SYS_SHORT);
+$("#sysFull").textContent=SYS_FULL; addCopy($("#sysFull"),SYS_FULL);
+
+function addCopy(el,text){
+  const b=document.createElement("button");b.className="copy";b.textContent="Kopieren";
+  b.onclick=()=>doCopy(text,b);el.appendChild(b);
+}
+function doCopy(text,btn){
+  const ok=()=>{const o=btn.textContent;btn.textContent="Kopiert ✓";btn.classList.add("done");
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove("done")},1400)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(ok).catch(()=>fallback(text,ok))}
+  else fallback(text,ok);
+}
+function fallback(text,ok){const ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";
+  ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");ok()}catch(e){}document.body.removeChild(ta)}
+
+// prompts grid
+const pg=$("#pgrid");
+PROMPTS.forEach((p,i)=>{
+  const c=document.createElement("div");c.className="card pcard";
+  c.innerHTML=`<div class="top"><span class="no">${String(i+1).padStart(2,"0")}</span>
+      <div><h3>${p.t}</h3><div class="bl">${p.b}</div></div></div>
+    <details><summary>Prompt anzeigen <span class="arw">›</span></summary>
+      <div class="body"><div class="code"></div></div></details>`;
+  const code=c.querySelector(".code");code.textContent=p.x;addCopy(code,p.x);
+  pg.appendChild(c);
+});
+
+// composer
+const taskSel=$("#task"),kSel=$("#kanton");
+PROMPTS.forEach((p,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${i+1}. ${p.t}`;taskSel.appendChild(o)});
+KANTONE.forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=k||"— wählen —";kSel.appendChild(o)});
+function esc(s){return s.replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]))}
+function build(){
+  const p=PROMPTS[taskSel.value];
+  const map={KANTON:kSel.value,PARTEI:$("#partei").value.trim(),ZIEL:$("#ziel").value.trim(),SACHVERHALT:$("#sv").value.trim()};
+  let out=p.x.replace(/{{(\w+)}}/g,(m,k)=>map[k]?map[k]:"["+k+"]");
+  $("#compOut").textContent=out; // for copy
+  // highlighted view
+  $("#compOut").innerHTML=esc(out).replace(/\[([A-ZÄÖÜ /…]+)\]/g,'<span class="ph">[$1]</span>');
+  $("#compOut").dataset.raw=out;
+}
+[taskSel,kSel,$("#partei"),$("#ziel"),$("#sv")].forEach(el=>el.addEventListener("input",build));
+$("#copyComp").onclick=function(){doCopy($("#compOut").dataset.raw,this)};
+build();
+
+// portals
+const pel=$("#portals");
+PORTALS.forEach(p=>{const a=document.createElement("a");a.className="portal";a.href=p.u;a.target="_blank";a.rel="noopener";
+  a.innerHTML=`<div class="pn">${p.n}</div><div class="pd">${p.d}</div><div class="lk">${p.u.replace("https://","")}</div>`;pel.appendChild(a)});
+
+// source tabs
+const tabs=$("#cattabs"),cats=$("#cats");
+CATS.forEach((cat,i)=>{
+  const t=document.createElement("button");t.className="tab";t.textContent=cat.c;t.setAttribute("aria-selected",i===0);
+  t.onclick=()=>{$$("#cattabs .tab").forEach(x=>x.setAttribute("aria-selected","false"));t.setAttribute("aria-selected","true");
+    $$(".catblock").forEach(b=>b.classList.remove("on"));$("#cat"+i).classList.add("on")};
+  tabs.appendChild(t);
+  const block=document.createElement("div");block.className="catblock"+(i===0?" on":"");block.id="cat"+i;
+  let rows=cat.r.map(r=>`<tr><td class="ab">${r[0]}</td><td>${r[1]}</td><td class="sr">SR ${r[2]}</td>
+     <td><a href="https://www.fedlex.admin.ch/de/cc/internal-law" target="_blank" rel="noopener" style="color:var(--accent-ink);text-decoration:none;font-weight:700">Fedlex ↗</a></td></tr>`).join("");
+  block.innerHTML=`<div class="tablewrap"><table><thead><tr><th>Abk.</th><th>Gesetz</th><th>SR-Nr.</th><th>Quelle</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  cats.appendChild(block);
+});
+
+// theme toggle
+const root=document.documentElement,tb=$("#theme");
+tb.onclick=()=>{const cur=root.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+  root.setAttribute("data-theme",cur==="dark"?"light":"dark")};
+</script>
