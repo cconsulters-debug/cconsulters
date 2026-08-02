@@ -36,6 +36,7 @@ DOMAIN = (CFG.get("domain") or "").rstrip("/")
 
 PFLICHT = ["name", "rechtsform", "strasse", "plz_ort", "sitz", "email"]
 _fehlend: list[str] = []
+_warnungen: list[str] = []
 
 
 def feld(key: str) -> str:
@@ -261,10 +262,58 @@ def extract_style(fragment: str) -> str:
     return m.group(0)
 
 
+def example_files() -> dict[str, str]:
+    """Dokumentschluessel -> Beispiel-PDF (Dateien heissen 'NN-<schluessel>.pdf')."""
+    beispiele = ROOT / "beispiele"
+    if not beispiele.exists():
+        return {}
+    mapping: dict[str, str] = {}
+    for f in sorted(beispiele.glob("*.pdf")):
+        m = re.match(r"^\d{2}-(.+)\.pdf$", f.name)
+        if m:
+            mapping[m.group(1)] = f.name
+    return mapping
+
+
+def doc_keys(fragment: str) -> list[str]:
+    """Die Schluessel aus dem DOCS-Objekt des Frontends."""
+    script = re.search(r"<script>(.*)</script>", fragment, re.S).group(1)
+    i = script.index("const DOCS=")
+    j = script.index("{", i)
+    depth, start = 0, j
+    while j < len(script):
+        if script[j] == "{":
+            depth += 1
+        elif script[j] == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        j += 1
+    return re.findall(r'(?:^|[{,\n])\s*"([a-z0-9-]+)"\s*:', script[start:j + 1])
+
+
 def build_index(fragment: str) -> str:
     """Artifact-Fragment -> vollwertige Startseite."""
     # Der Titel des Fragments wird durch den SEO-Titel im head ersetzt.
     body = re.sub(r"^<title>.*?</title>\s*", "", fragment, count=1, flags=re.S)
+
+    # Beispiel-PDFs bekanntgeben — nur hier, nicht im Artifact-Fragment.
+    ex = example_files()
+    keys = doc_keys(fragment)
+    ohne = [k for k in keys if k not in ex]
+    if ohne:
+        _warnungen.append(
+            f"{len(ohne)} Dokumenttypen ohne Beispiel-PDF: {', '.join(ohne[:5])}"
+            + (" …" if len(ohne) > 5 else "")
+        )
+    ex = {k: v for k, v in ex.items() if k in keys}
+    body = body.replace(
+        "<script>",
+        "<script>window.EXAMPLE_FILES="
+        + json.dumps(ex, ensure_ascii=False, separators=(",", ":"))
+        + ";</script>\n<script>",
+        1,
+    )
 
     faq = {
         "Ist das ein Anwalt?": (
@@ -322,7 +371,6 @@ def build_index(fragment: str) -> str:
             },
         ],
     }
-    import json
 
     extra = (
         '<script type="application/ld+json">'
@@ -447,6 +495,8 @@ def main() -> None:
     built = sorted(p.name for p in OUT.iterdir())
     print("site/ gebaut:", ", ".join(built))
 
+    for w in _warnungen:
+        print("!! " + w)
     if _fehlend:
         print()
         print("!! NOCH NICHT LIVE-TAUGLICH — fehlende Pflichtangaben in site.config.json:")

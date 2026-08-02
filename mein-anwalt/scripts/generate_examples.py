@@ -531,7 +531,7 @@ build_pdf(
 # 10. WERKZEUGE — Rechtsgutachten / Fallanalyse
 # ============================================================
 build_pdf(
-    "10-werkzeuge-rechtsgutachten.pdf",
+    "10-rechtsgutachten.pdf",
     "Rechtsgutachten / Fallanalyse",
     "Strukturierte Einschätzung für ein beliebiges Rechtsthema — Beispiel",
     "Premium", 39.90,
