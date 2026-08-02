@@ -1,50 +1,54 @@
-<title>Mein Rechtshelfer &amp; Assistent — Aktenzeichen für Schweizer Recht</title>
+<title>Mein Rechtshelfer &amp; Assistent — Schweizer Rechtsdokumente selbst erstellen</title>
 <style>
   :root{
-    --paper:#E8E4D6; --surface:#F7F5EC; --surface-2:#EFEBDD;
-    --ink:#201E19; --ink-2:#5B5648; --ink-3:#8C8672;
-    --stamp:#A5301F; --stamp-2:#7C2417; --stamp-soft:#F1DCD5;
-    --akte:#33473D; --akte-soft:#DDE4DA;
-    --mark:#A9721D; --mark-soft:#EEE1C7;
-    --line:#CBC6B7; --line-2:#D9D5C7;
+    --paper:#EAE7DA; --surface:#F6F4EC; --surface-2:#E3E0D0;
+    --ink:#23271B; --ink-2:#575C48; --ink-3:#878B74;
+    --stamp:#7E6420; --stamp-2:#5E4A16; --stamp-soft:#F0E7CE;
+    --akte:#3B4430; --akte-soft:#DFE2D2;
+    --mark:#A98B3C; --mark-soft:#EFE6CD;
+    --line:#CBC7B4; --line-2:#DAD6C6;
+    --sans:"Helvetica Neue",Helvetica,Arial,"Liberation Sans",sans-serif;
+    --display:"Arial Black","Helvetica Neue",Helvetica,Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","Cascadia Mono","Roboto Mono","Liberation Mono",Consolas,Menlo,monospace;
-    --serif:Georgia,Cambria,"Times New Roman",serif;
     --maxw:1180px;
+    /* Hero bleibt bewusst immer dunkel — wie das Titelbild einer echten Kanzlei-Website */
+    --hero-bg:#2B2F22; --hero-bg2:#454B33; --hero-gold:#CDB884; --hero-gold2:#9A8449; --hero-cream:#EFEAD9;
   }
   @media (prefers-color-scheme:dark){
     :root{
-      --paper:#201E19; --surface:#29261F; --surface-2:#332F26;
-      --ink:#EEE9DB; --ink-2:#B3AC98; --ink-3:#756F5C;
-      --stamp:#D2664F; --stamp-2:#E58165; --stamp-soft:#3A241E;
-      --akte:#6B9284; --akte-soft:#28322C;
-      --mark:#D6A44A; --mark-soft:#332A18;
-      --line:#3A362B; --line-2:#322E24;
+      --paper:#1E2218; --surface:#282D20; --surface-2:#333829;
+      --ink:#EDEAD9; --ink-2:#AFB29B; --ink-3:#7B7F68;
+      --stamp:#C9AC5E; --stamp-2:#DCC27E; --stamp-soft:#332B14;
+      --akte:#8AA07E; --akte-soft:#2A3324;
+      --mark:#C9A34E; --mark-soft:#332B18;
+      --line:#3A3F2E; --line-2:#333828;
     }
   }
   :root[data-theme="dark"]{
-    --paper:#201E19; --surface:#29261F; --surface-2:#332F26;
-    --ink:#EEE9DB; --ink-2:#B3AC98; --ink-3:#756F5C;
-    --stamp:#D2664F; --stamp-2:#E58165; --stamp-soft:#3A241E;
-    --akte:#6B9284; --akte-soft:#28322C;
-    --mark:#D6A44A; --mark-soft:#332A18;
-    --line:#3A362B; --line-2:#322E24;
+    --paper:#1E2218; --surface:#282D20; --surface-2:#333829;
+    --ink:#EDEAD9; --ink-2:#AFB29B; --ink-3:#7B7F68;
+    --stamp:#C9AC5E; --stamp-2:#DCC27E; --stamp-soft:#332B14;
+    --akte:#8AA07E; --akte-soft:#2A3324;
+    --mark:#C9A34E; --mark-soft:#332B18;
+    --line:#3A3F2E; --line-2:#333828;
   }
   :root[data-theme="light"]{
-    --paper:#E8E4D6; --surface:#F7F5EC; --surface-2:#EFEBDD;
-    --ink:#201E19; --ink-2:#5B5648; --ink-3:#8C8672;
-    --stamp:#A5301F; --stamp-2:#7C2417; --stamp-soft:#F1DCD5;
-    --akte:#33473D; --akte-soft:#DDE4DA;
-    --mark:#A9721D; --mark-soft:#EEE1C7;
-    --line:#CBC6B7; --line-2:#D9D5C7;
+    --paper:#EAE7DA; --surface:#F6F4EC; --surface-2:#E3E0D0;
+    --ink:#23271B; --ink-2:#575C48; --ink-3:#878B74;
+    --stamp:#7E6420; --stamp-2:#5E4A16; --stamp-soft:#F0E7CE;
+    --akte:#3B4430; --akte-soft:#DFE2D2;
+    --mark:#A98B3C; --mark-soft:#EFE6CD;
+    --line:#CBC7B4; --line-2:#DAD6C6;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.6;
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;
     -webkit-font-smoothing:antialiased}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
   a{color:inherit}
-  h1,h2,h3{margin:0;text-wrap:balance;font-family:var(--mono)}
+  h1,h2,h3{margin:0;text-wrap:balance}
+  h2,h3{font-family:var(--sans)}
   p{max-width:66ch}
   .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
   .eyebrow{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.16em;font-weight:700;color:var(--stamp)}
@@ -54,59 +58,102 @@
 
   /* ---------- Masthead ---------- */
   header.bar{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--paper) 92%,transparent);
-    backdrop-filter:blur(6px);border-bottom:2px solid var(--ink)}
-  header.bar::before{content:"";display:block;height:5px;background:var(--stamp)}
-  .bar .wrap{display:flex;align-items:center;gap:22px;height:60px}
-  .brand{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-weight:700;font-size:1rem;letter-spacing:-.01em;text-decoration:none}
-  .brand .ref{color:var(--ink-3);font-weight:600;font-size:.74rem;letter-spacing:.05em}
-  nav.links{margin-left:auto;display:flex;gap:22px;flex-wrap:wrap}
-  nav.links a{font-family:var(--mono);font-size:.76rem;font-weight:600;color:var(--ink-2);text-decoration:none;letter-spacing:.02em;
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar .wrap{display:flex;align-items:center;gap:22px;height:64px}
+  .brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+  .monogram{width:30px;height:30px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;flex:none}
+  .monogram svg{width:17px;height:17px;display:block}
+  .brand .bn{font-weight:700;font-size:.98rem;letter-spacing:-.01em;line-height:1.15}
+  .brand .bn small{display:block;font-family:var(--mono);font-size:.6rem;font-weight:600;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--ink-3);margin-top:1px}
+  nav.links{margin-left:auto;display:flex;gap:24px;flex-wrap:wrap}
+  nav.links a{font-size:.82rem;font-weight:600;color:var(--ink-2);text-decoration:none;letter-spacing:.01em;
     border-bottom:2px solid transparent;padding-bottom:2px}
   nav.links a:hover{color:var(--stamp);border-color:var(--stamp)}
 
-  /* ---------- Hero ---------- */
-  .hero{padding:52px 0 46px;border-bottom:2px solid var(--ink)}
-  .hero .grid2{display:grid;grid-template-columns:1.35fr .9fr;gap:44px;align-items:start}
-  @media(max-width:880px){.hero .grid2{grid-template-columns:1fr}}
-  h1.title{font-weight:700;font-size:clamp(2.1rem,4.6vw,3.5rem);line-height:1.08;letter-spacing:-.015em}
-  h1.title .accent{color:var(--stamp)}
-  .lede{font-family:var(--serif);max-width:56ch;margin:20px 0 0;font-size:clamp(1.05rem,1.5vw,1.2rem);color:var(--ink-2);line-height:1.65}
-  .lede b{color:var(--ink)}
-  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-  .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-weight:700;font-size:.86rem;padding:13px 20px;
-    text-decoration:none;cursor:pointer;border:2px solid var(--ink);letter-spacing:.01em;border-radius:2px}
-  .btn.primary{background:var(--stamp);color:var(--surface);border-color:var(--stamp)}
-  .btn.primary:hover{background:var(--stamp-2);border-color:var(--stamp-2)}
-  .btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
-  .btn.ghost:hover{background:var(--ink);color:var(--paper)}
+  /* ---------- Hero (immer dunkel, wie ein Titelbild) ---------- */
+  .hero{position:relative;background:var(--hero-bg);color:var(--hero-cream);overflow:hidden;isolation:isolate}
+  .hero .wrap{position:relative;z-index:3;padding-top:56px;padding-bottom:44px}
+  /* Tiefenschärfe-Kulisse: weiche Lichtflächen wie ein unscharfes Foto */
+  .heroart{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .heroart .glow{position:absolute;border-radius:50%;filter:blur(70px)}
+  .heroart .g1{width:60%;height:150%;left:-14%;top:-28%;background:radial-gradient(circle,#6E764D 0%,transparent 68%);opacity:.85}
+  .heroart .g2{width:46%;height:120%;left:16%;top:-10%;background:radial-gradient(circle,#A8A06A 0%,transparent 62%);opacity:.42}
+  .heroart .g3{width:52%;height:130%;right:-10%;bottom:-30%;background:radial-gradient(circle,#1B1F14 0%,transparent 66%);opacity:.9}
+  /* Justitia-Waage als grosses, leicht unscharfes Motiv links */
+  .heroart .scales{position:absolute;left:-6%;top:50%;transform:translateY(-50%);height:92%;width:auto;
+    color:var(--hero-gold);opacity:.34;filter:blur(2px) drop-shadow(0 8px 28px rgba(0,0,0,.5))}
+  @media(max-width:880px){.heroart .scales{left:-26%;opacity:.2}}
+  .hero::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:linear-gradient(100deg,rgba(30,34,22,.55) 0%,rgba(30,34,22,.2) 38%,rgba(30,34,22,.72) 100%)}
 
-  /* Stamp graphic (CSS-drawn ink stamp, the hero's visual thesis) */
-  .stampwrap{display:flex;flex-direction:column;align-items:center;gap:26px;padding-top:8px}
-  .inkstamp{width:196px;height:196px;border-radius:50%;border:5px solid var(--stamp);position:relative;
-    display:grid;place-items:center;transform:rotate(-9deg);color:var(--stamp);
-    box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--stamp) 35%,transparent);opacity:.92;flex:none}
-  .inkstamp::before{content:"";position:absolute;inset:12px;border:1.5px solid var(--stamp);border-radius:50%;opacity:.6}
-  .inkstamp .st{font-family:var(--mono);text-align:center;font-weight:800;line-height:1.35}
-  .inkstamp .st b{display:block;font-size:1.1rem;letter-spacing:.03em}
-  .inkstamp .st small{display:block;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;margin-top:4px;opacity:.85}
-  .indexcard{background:var(--surface);border:1px solid var(--line);width:100%;padding:18px 20px}
-  .indexcard .row1{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px}
-  .indexcard .stat b{display:block;font-family:var(--mono);font-size:1.5rem;font-weight:700;letter-spacing:-.02em}
-  .indexcard .stat span{font-size:.72rem;color:var(--ink-2);letter-spacing:.01em}
-  .indexcard hr{border:none;border-top:1px solid var(--line-2);margin:14px 0}
+  .herohead{display:flex;justify-content:flex-end;margin-bottom:26px}
+  .heroeyebrow{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--hero-gold);border:1px solid rgba(205,184,132,.45);border-radius:999px;padding:6px 14px}
+  .herogrid{display:grid;grid-template-columns:1fr 1.05fr;gap:34px;align-items:end;min-height:330px}
+  @media(max-width:880px){.herogrid{grid-template-columns:1fr;min-height:0}}
+  .herotext{grid-column:2}
+  @media(max-width:880px){.herotext{grid-column:1}}
+  h1.title{font-family:var(--display);font-weight:900;text-transform:uppercase;
+    font-size:clamp(2.6rem,7.6vw,5.6rem);line-height:.92;letter-spacing:-.035em;color:var(--hero-gold);
+    text-shadow:0 3px 22px rgba(0,0,0,.45)}
+  h1.title .l2{display:block;color:var(--hero-cream);font-size:.44em;letter-spacing:-.015em;margin-top:.28em}
+  /* Gold-Band mit Tagline + Pfeil-Button (wie in der Vorlage) */
+  .goldband{display:flex;align-items:center;gap:18px;margin-top:22px;padding:14px 18px;
+    background:linear-gradient(90deg,rgba(154,132,73,.92) 0%,rgba(154,132,73,.34) 62%,rgba(154,132,73,0) 100%)}
+  .goldband p{margin:0;font-size:.95rem;line-height:1.45;color:var(--hero-cream);max-width:42ch}
+  .arrowbtn{margin-left:auto;flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid var(--hero-cream);
+    display:grid;place-items:center;color:var(--hero-cream);text-decoration:none;transition:background .18s,color .18s}
+  .arrowbtn:hover{background:var(--hero-cream);color:var(--hero-bg)}
+  .arrowbtn svg{width:19px;height:19px;display:block}
+  /* Pill-Suchleiste — hier funktional: durchsucht alle 80 Dokumenttypen */
+  .searchpill{position:relative;margin-top:26px;max-width:520px}
+  .searchpill form{display:flex;align-items:center;gap:10px;background:rgba(20,23,15,.5);border:1px solid rgba(239,234,217,.42);
+    border-radius:999px;padding:11px 16px;backdrop-filter:blur(4px)}
+  .searchpill input{flex:1;background:none;border:none;color:var(--hero-cream);font-family:var(--sans);font-size:.94rem;outline:none;min-width:0}
+  .searchpill input::placeholder{color:rgba(239,234,217,.6)}
+  .searchpill button{background:none;border:none;color:var(--hero-gold);cursor:pointer;display:grid;place-items:center;padding:2px}
+  .searchpill button svg{width:19px;height:19px;display:block}
+  .sresults{position:absolute;left:0;right:0;top:calc(100% + 8px);background:var(--surface);border:1px solid var(--line);
+    border-radius:14px;overflow:hidden;display:none;z-index:20;box-shadow:0 18px 44px rgba(0,0,0,.3)}
+  .sresults.on{display:block}
+  /* Buttons zentrieren ihren Inhalt per UA-Default — Ausrichtung explizit setzen */
+  .sresults button{display:flex;flex-direction:column;align-items:flex-start;width:100%;text-align:left;
+    background:none;border:none;border-bottom:1px solid var(--line-2);
+    padding:11px 16px;cursor:pointer;font-family:var(--sans);color:var(--ink);font-size:.9rem}
+  .sresults button:last-child{border-bottom:none}
+  .sresults button:hover{background:var(--surface-2)}
+  .sresults .st{font-weight:600}
+  .sresults .sm{font-family:var(--mono);font-size:.7rem;color:var(--ink-3);margin-top:2px}
+  .sresults .none{padding:12px 16px;font-size:.88rem;color:var(--ink-2)}
 
-  .disc{margin-top:32px;display:flex;gap:12px;align-items:flex-start;max-width:74ch;
-    background:var(--surface);border:1px solid var(--ink);border-left:5px solid var(--stamp);padding:14px 16px}
-  .disc .b{font-family:var(--mono);color:var(--stamp);font-weight:900;flex:none}
-  .disc p,.disc div{font-size:.88rem;color:var(--ink-2);margin:0}
-  .disc b{color:var(--ink)}
+  .herostats{display:flex;gap:0;flex-wrap:wrap;margin-top:34px;border-top:1px solid rgba(239,234,217,.22);padding-top:18px}
+  .herostats .stat{padding-right:30px;margin-right:30px;border-right:1px solid rgba(239,234,217,.18)}
+  .herostats .stat:last-child{border-right:none;margin-right:0;padding-right:0}
+  .herostats .stat b{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:1.4rem;
+    font-weight:700;color:var(--hero-gold);letter-spacing:-.02em}
+  .herostats .stat span{font-size:.74rem;color:rgba(239,234,217,.72)}
+
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.88rem;padding:13px 22px;
+    text-decoration:none;cursor:pointer;border:1.5px solid transparent;border-radius:999px;letter-spacing:.01em}
+  .btn.primary{background:var(--hero-gold);color:#242818;border-color:var(--hero-gold)}
+  .btn.primary:hover{background:var(--hero-cream);border-color:var(--hero-cream)}
+  .btn.ghost{background:transparent;color:var(--hero-cream);border-color:rgba(239,234,217,.5)}
+  .btn.ghost:hover{border-color:var(--hero-cream);background:rgba(239,234,217,.1)}
+
+  .disc{margin:0;padding:16px 0 0;display:flex;gap:12px;align-items:flex-start;max-width:76ch;
+    border-top:1px solid rgba(239,234,217,.22);position:relative;z-index:3}
+  .disc .b{font-family:var(--mono);color:var(--hero-gold);font-weight:900;flex:none}
+  .disc p,.disc div{font-size:.85rem;color:rgba(239,234,217,.76);margin:0;line-height:1.55}
+  .disc b{color:var(--hero-cream)}
 
   /* ---------- Sections ---------- */
   section.sec{padding:56px 0;border-bottom:1px solid var(--line)}
   .sechead{display:flex;gap:16px;align-items:baseline;margin-bottom:28px;flex-wrap:wrap}
   .snum{font-family:var(--mono);color:var(--stamp);font-size:.95rem;font-weight:700;padding-top:5px;flex:none}
   h2.h{font-weight:700;font-size:clamp(1.35rem,2.6vw,1.9rem);letter-spacing:-.01em}
-  .sub{font-family:var(--serif);color:var(--ink-2);max-width:68ch;margin:10px 0 0;font-size:1rem}
+  .sub{font-family:var(--sans);color:var(--ink-2);max-width:68ch;margin:10px 0 0;font-size:1rem}
 
   .card{background:var(--surface);border:1px solid var(--line)}
   .pad{padding:24px}
@@ -118,8 +165,8 @@
   .stp:last-child{border-right:none}
   @media(max-width:760px){.stp{border-right:none;border-bottom:1px solid var(--line)}.stp:last-child{border-bottom:none}}
   .stp .sn{font-family:var(--mono);font-weight:800;color:var(--stamp);font-size:.85rem;letter-spacing:.05em}
-  .stp h3{font-weight:700;margin:9px 0 8px;font-size:1.02rem;font-family:var(--serif)}
-  .stp p{font-size:.9rem;color:var(--ink-2);margin:0;font-family:var(--serif)}
+  .stp h3{font-weight:700;margin:9px 0 8px;font-size:1.02rem;font-family:var(--sans)}
+  .stp p{font-size:.9rem;color:var(--ink-2);margin:0;font-family:var(--sans)}
 
   /* Composer */
   .comp{display:grid;grid-template-columns:.95fr 1.05fr;gap:0;border:1px solid var(--line)}
@@ -128,12 +175,12 @@
   @media(max-width:860px){.comp>div:first-child{border-right:none;border-bottom:1px solid var(--line)}}
   .field{display:flex;flex-direction:column;gap:6px;margin-bottom:15px}
   .field label{font-family:var(--mono);font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2)}
-  .field input,.field select,.field textarea{font-family:var(--serif);font-size:.95rem;color:var(--ink);
+  .field input,.field select,.field textarea{font-family:var(--sans);font-size:.95rem;color:var(--ink);
     background:var(--paper);border:1px solid var(--ink-3);border-radius:2px;padding:10px 12px;width:100%}
   .field textarea{resize:vertical;min-height:92px;line-height:1.5}
   .field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink) 50%),linear-gradient(135deg,var(--ink) 50%,transparent 50%);
     background-position:calc(100% - 18px) 55%,calc(100% - 13px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:34px}
-  .hint{font-size:.82rem;color:var(--ink-2);display:flex;gap:8px;font-family:var(--serif)}
+  .hint{font-size:.82rem;color:var(--ink-2);display:flex;gap:8px;font-family:var(--sans)}
   .out{background:var(--surface-2);display:flex;flex-direction:column;overflow:hidden;min-height:100%}
   .out .oh{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
   .lockpill{font-family:var(--mono);font-size:.66rem;font-weight:700;color:var(--stamp);border:1px solid var(--stamp);padding:4px 9px;letter-spacing:.03em}
@@ -158,7 +205,7 @@
   .portal:nth-child(1){border-top:none}
   .portal:hover{background:var(--surface)}
   .portal .pn{font-weight:700;font-family:var(--mono);font-size:.92rem;letter-spacing:-.01em}
-  .portal .pd{font-size:.82rem;color:var(--ink-2);margin-top:5px;font-family:var(--serif)}
+  .portal .pd{font-size:.82rem;color:var(--ink-2);margin-top:5px;font-family:var(--sans)}
   .portal .lk{font-family:var(--mono);font-size:.7rem;color:var(--stamp);margin-top:9px;word-break:break-all}
   .tabs{display:flex;gap:0;flex-wrap:wrap;margin-bottom:0}
   .tab{font-family:var(--mono);font-size:.76rem;font-weight:700;padding:9px 15px;border:1px solid var(--line);border-bottom:none;
@@ -186,8 +233,8 @@
   .pcard[data-tier="Info"] .no{background:var(--akte)}
   .pcard[data-tier="Standard"] .no{background:var(--mark)}
   .pcard[data-tier="Premium"] .no{background:var(--stamp)}
-  .pcard h3{font-size:1rem;font-weight:700;letter-spacing:-.01em;font-family:var(--serif)}
-  .pcard .bl{color:var(--ink-2);font-size:.85rem;margin-top:5px;line-height:1.45;font-family:var(--serif)}
+  .pcard h3{font-size:1rem;font-weight:700;letter-spacing:-.01em;font-family:var(--sans)}
+  .pcard .bl{color:var(--ink-2);font-size:.85rem;margin-top:5px;line-height:1.45;font-family:var(--sans)}
   .pfoot{margin-top:auto;border-top:1px solid var(--line);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface-2)}
   .ptier{font-family:var(--mono);font-size:.72rem;color:var(--ink-2);font-weight:700;letter-spacing:.02em}
 
@@ -212,12 +259,12 @@
   .kachel::before{content:"KACHEL";position:absolute;top:-1px;right:-1px;font-family:var(--mono);font-size:.6rem;font-weight:800;
     letter-spacing:.1em;background:var(--ink);color:var(--paper);padding:3px 8px}
   .kachel .price{font-family:var(--mono);font-size:2rem;font-weight:800;letter-spacing:-.02em}
-  .kachel .price small{font-size:.85rem;color:var(--ink-2);font-family:var(--serif);font-weight:400}
-  .kachel ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:.88rem;line-height:1.7;font-family:var(--serif)}
+  .kachel .price small{font-size:.85rem;color:var(--ink-2);font-family:var(--sans);font-weight:400}
+  .kachel ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:.88rem;line-height:1.7;font-family:var(--sans)}
   .hist{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
-  .hist .hitem{display:flex;justify-content:space-between;gap:10px;font-size:.83rem;padding:7px 0;border-bottom:1px dotted var(--line);color:var(--ink-2);font-family:var(--serif)}
+  .hist .hitem{display:flex;justify-content:space-between;gap:10px;font-size:.83rem;padding:7px 0;border-bottom:1px dotted var(--line);color:var(--ink-2);font-family:var(--sans)}
   .hist .hitem b{color:var(--ink);font-weight:600}
-  .note{font-size:.82rem;color:var(--ink-3);line-height:1.5;font-family:var(--serif)}
+  .note{font-size:.82rem;color:var(--ink-3);line-height:1.5;font-family:var(--sans)}
   .twint{font-family:var(--mono);font-weight:900;color:#fff;background:#000;padding:2px 7px;font-size:.76rem;letter-spacing:.02em}
   .modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;background:rgba(20,18,14,.6);padding:20px}
   .modal.on{display:grid}
@@ -238,70 +285,94 @@
   .prog i{display:block;height:100%;background:var(--mark)}
   .abobadge{font-family:var(--mono);font-size:.66rem;font-weight:800;color:var(--surface);background:var(--akte);padding:4px 9px;white-space:nowrap}
   .redeem{display:flex;gap:8px;margin-top:8px}
-  .mini{font-size:.76rem;color:var(--ink-2);line-height:1.4;font-family:var(--serif)}
+  .mini{font-size:.76rem;color:var(--ink-2);line-height:1.4;font-family:var(--sans)}
   .hitem .rd{cursor:pointer;color:var(--stamp);border:1px solid var(--stamp);padding:2px 7px;font-size:.68rem;font-weight:700;
     background:none;margin-left:6px;font-family:var(--mono)}
   .hitem .rd:hover{background:var(--stamp);color:var(--surface)}
   .drop{border:2px dashed var(--ink-3);padding:16px;text-align:center;color:var(--ink-2);font-size:.85rem;cursor:pointer;
-    background:var(--paper);font-family:var(--serif)}
+    background:var(--paper);font-family:var(--sans)}
   .drop.over{border-color:var(--stamp);color:var(--stamp);background:var(--stamp-soft)}
   .drop .u{color:var(--stamp);text-decoration:underline}
   .chip2{margin-top:9px;font-size:.82rem;color:var(--ink);display:inline-flex;gap:9px;align-items:center;background:var(--mark-soft);
-    border:1px solid var(--mark);padding:6px 11px;font-family:var(--serif)}
+    border:1px solid var(--mark);padding:6px 11px;font-family:var(--sans)}
   .chip2 .x{cursor:pointer;color:var(--ink-2);font-weight:800}
   .chip2 .x:hover{color:var(--stamp)}
 
-  footer{border-top:2px solid var(--ink);padding:40px 0 56px;color:var(--ink-2);font-size:.88rem;font-family:var(--serif)}
+  footer{border-top:2px solid var(--ink);padding:40px 0 56px;color:var(--ink-2);font-size:.88rem;font-family:var(--sans)}
   footer h3{font-family:var(--mono);font-size:.95rem;color:var(--ink);margin-bottom:11px}
   footer a{color:var(--stamp);text-decoration:none}footer a:hover{text-decoration:underline}
   .foot-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:34px}
   @media(max-width:680px){.foot-grid{grid-template-columns:1fr}nav.links{display:none}}
-  .srcline{line-height:2;font-family:var(--serif)}
+  .srcline{line-height:2;font-family:var(--sans)}
 </style>
 
 <header class="bar"><div class="wrap">
-  <a class="brand" href="#top"><span>Mein Rechtshelfer</span><span class="ref">Nr. CH-2026/RA</span></a>
+  <a class="brand" href="#top">
+    <span class="monogram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3v18M5 8h14M5 8l-3 6h6zM19 8l-3 6h6z"/></svg></span>
+    <span class="bn">Mein Rechtshelfer<small>&amp; Assistent</small></span>
+  </a>
   <nav class="links">
     <a href="#system">Ablauf</a><a href="#composer">Dokument erstellen</a>
-    <a href="#shop">Dossier</a><a href="#prompts">Register</a><a href="#quellen">Quellen</a><a href="#faq">FAQ</a>
+    <a href="#shop">Dossier</a><a href="#prompts">Dokumente</a><a href="#quellen">Quellen</a><a href="#faq">FAQ</a>
   </nav>
 </div></header>
 
-<section class="hero" id="top"><div class="wrap">
-  <div class="grid2">
-    <div>
-      <div class="eyebrow">Aktenzeichen CH-Recht · digitale Dokumentenstelle</div>
-      <h1 class="title">Ein Schreiben,<br>das Gewicht hat —<br><span class="accent">selbst erstellt.</span></h1>
-      <p class="lede">Beschreibe dein Anliegen — «Mein Rechtshelfer» erstellt dir in Minuten das
-        passende, auf Schweizer Recht zugeschnittene Dokument und klärt deine Rechtsfragen. Du kannst
-        <b>eigenes Aktenmaterial beifügen</b>, das erste Dokument ist <b>gratis</b>, danach <b>ab CHF 9.90</b>
-        — ein Bruchteil eines Anwaltshonorars (Vergleich: schriftliche Rechtsberatung ab CHF 50,
-        Vertragserstellung ab CHF 590).</p>
-      <div class="cta">
-        <a class="btn primary" href="#composer">Dokument erstellen →</a>
-        <a class="btn ghost" href="#system">Ablauf ansehen</a>
-      </div>
-    </div>
-    <div class="stampwrap">
-      <div class="inkstamp"><div class="st"><b>GEPRÜFT</b>Schweizer&nbsp;Recht<small>Fedlex · BGer verifizierbar</small></div></div>
-      <div class="indexcard">
-        <div class="row1">
-          <div class="stat mono"><b>26</b><span>Kantone berücksichtigt</span></div>
-          <div class="stat mono"><b>~40</b><span>Gesetze mit SR-Nr.</span></div>
-        </div>
-        <hr>
-        <div class="row1">
-          <div class="stat mono"><b>80</b><span>Dokumenttypen im Register</span></div>
-          <div class="stat mono"><b>CHF&nbsp;9.90</b><span>ab, statt CHF 50+ Beratung</span></div>
-        </div>
-      </div>
-    </div>
+<section class="hero" id="top">
+  <div class="heroart" aria-hidden="true">
+    <span class="glow g1"></span><span class="glow g2"></span><span class="glow g3"></span>
+    <svg class="scales" viewBox="0 0 400 460" fill="none" stroke="currentColor" stroke-width="5"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="200" cy="36" r="13" fill="currentColor" stroke="none"/>
+      <path d="M200 52v352"/>
+      <path d="M60 96h280"/>
+      <path d="M78 96l-42 92M78 96l42 92M322 96l-42 92M322 96l42 92"/>
+      <path d="M28 188h100a50 50 0 0 1-100 0Z"/>
+      <path d="M272 188h100a50 50 0 0 1-100 0Z"/>
+      <path d="M150 404h100l26 42H124Z"/>
+      <path d="M108 446h184"/>
+    </svg>
   </div>
-  <div class="disc"><span class="b">§</span>
-    <div><b>Allgemeine rechtliche Information, keine verbindliche Beratung.</b> KI kann Artikel und
-      Urteile falsch wiedergeben — zentrale Fundstellen auf fedlex.admin.ch / bger.ch prüfen. Bei
-      Fristen oder Strafsachen rechtzeitig eine zugelassene Anwältin / einen Anwalt beiziehen.</div></div>
-</div></section>
+  <div class="wrap">
+    <div class="herohead"><span class="heroeyebrow">Schweizer Recht · digitale Dokumentenstelle</span></div>
+    <div class="herogrid">
+      <div class="herotext">
+        <h1 class="title">Rechtshelfer<span class="l2">&amp; Assistent</span></h1>
+        <div class="goldband">
+          <p>Rechtssichere Schreiben nach Schweizer Recht — in Minuten selbst erstellt, ohne Anwaltshonorar.</p>
+          <a class="arrowbtn" href="#composer" aria-label="Zum Dokument-Editor">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </div>
+        <div class="searchpill">
+          <form id="dsearchForm" role="search" autocomplete="off">
+            <label for="dsearch" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Dokument suchen</label>
+            <input id="dsearch" type="search" placeholder="Wobei brauchst du Hilfe? z.&nbsp;B. Kündigung anfechten">
+            <button type="submit" aria-label="Suchen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"/><path d="M20 20l-4.2-4.2"/></svg></button>
+          </form>
+          <div class="sresults" id="dsearchOut"></div>
+        </div>
+        <div class="cta">
+          <a class="btn primary" href="#composer">Dokument erstellen</a>
+          <a class="btn ghost" href="#prompts">Alle 80 Dokumente ansehen</a>
+        </div>
+        <div class="herostats">
+          <div class="stat"><b>80</b><span>Dokumenttypen</span></div>
+          <div class="stat"><b>26</b><span>Kantone</span></div>
+          <div class="stat"><b>CHF&nbsp;9.90</b><span>ab Preis pro Dokument</span></div>
+          <div class="stat"><b>Gratis</b><span>1. Dokument zum Testen</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="disc"><span class="b">§</span>
+      <div><b>Allgemeine rechtliche Information, keine verbindliche Beratung.</b> KI kann Artikel und
+        Urteile falsch wiedergeben — zentrale Fundstellen auf fedlex.admin.ch / bger.ch prüfen. Bei
+        Fristen oder Strafsachen rechtzeitig eine zugelassene Anwältin / einen Anwalt beiziehen.</div></div>
+  </div>
+</section>
+
 
 <section class="sec" id="system"><div class="wrap">
   <div class="sechead"><span class="snum">§ 1</span>
@@ -424,7 +495,7 @@
             <div class="pt">CHF 100</div><div class="pb">+18 Bonus → 118.00</div><div class="pm">Bester Preis</div></div>
           <div class="pack feat" style="grid-column:1/-1;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:default">
             <div><div class="pt" style="font-size:1.1rem">Flatrate · CHF 24.90 / Monat</div>
-              <div class="pm" style="letter-spacing:0;text-transform:none;color:var(--ink-2);font-family:var(--serif)">Bis zu 15 Dokumente/Monat aller Stufen (Fair-Use). Pro/KMU-Volumen auf Anfrage.</div></div>
+              <div class="pm" style="letter-spacing:0;text-transform:none;color:var(--ink-2);font-family:var(--sans)">Bis zu 15 Dokumente/Monat aller Stufen (Fair-Use). Pro/KMU-Volumen auf Anfrage.</div></div>
             <button class="gbtn solid" id="aboBtn">Abo aktivieren</button>
           </div>
         </div>
@@ -455,17 +526,17 @@
   <div class="sechead"><span class="snum">§ 6</span>
     <div><h2 class="h">Häufige Fragen</h2></div></div>
   <div class="pgrid">
-    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px;font-family:var(--serif)">Ist das ein Anwalt?</h3>
+    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px;font-family:var(--sans)">Ist das ein Anwalt?</h3>
       <p class="note">Nein. «Mein Rechtshelfer &amp; Assistent» ist ein KI-Werkzeug für allgemeine rechtliche
         Information — keine Anwaltskanzlei, keine verbindliche Beratung, kein Mandatsverhältnis. Bei Fristen
         oder Strafsachen empfehlen wir eine zugelassene Anwältin/einen Anwalt.</p></div>
-    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px;font-family:var(--serif)">Was, wenn das Dokument nicht passt?</h3>
+    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px;font-family:var(--sans)">Was, wenn das Dokument nicht passt?</h3>
       <p class="note">Du siehst vor der Bezahlung eine Vorschau mit deinen eigenen Angaben. Passt der Ansatz
         nicht, wähle einen anderen Dokumenttyp oder ergänze den Sachverhalt — erst danach fällt die Gebühr an.</p></div>
-    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px;font-family:var(--serif)">Was passiert mit meinen Daten und Uploads?</h3>
+    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px;font-family:var(--sans)">Was passiert mit meinen Daten und Uploads?</h3>
       <p class="note">Deine Angaben und ein beigefügtes Dokument werden nur zur Erstellung deines Dokuments
         verwendet, nicht dauerhaft gespeichert. Details in der Datenschutzerklärung.</p></div>
-    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px;font-family:var(--serif)">Verfällt mein Guthaben?</h3>
+    <div class="card pad"><h3 style="font-size:1rem;margin-bottom:8px;font-family:var(--sans)">Verfällt mein Guthaben?</h3>
       <p class="note">Nein. Aufgeladenes Guthaben bleibt in deinem Dossier, bis du es einsetzt — ohne
         Ablaufdatum und ohne Abo-Zwang.</p></div>
   </div>
@@ -488,7 +559,7 @@
 
 <div class="modal" id="twintModal"><div class="mbox">
   <span class="demo-badge">Demo · Testmodus</span>
-  <h3 style="margin:14px 0 4px;font-weight:700;font-family:var(--serif)">Guthaben aufladen</h3>
+  <h3 style="margin:14px 0 4px;font-weight:700;font-family:var(--sans)">Guthaben aufladen</h3>
   <p class="note">Betrag: <b id="topAmt" style="color:var(--stamp)">CHF 0.00</b> &nbsp;via&nbsp; <span class="twint">TWINT</span></p>
   <div class="qr"></div>
   <p class="note">QR-Code mit der TWINT-App scannen — in dieser Demo simuliert, es fliesst <b>kein echtes Geld</b>.</p>
@@ -899,4 +970,40 @@ async function kachelAction(){
 }
 
 build();renderAcct();
+
+/* Suchleiste im Hero: durchsucht Titel + Kurzbeschrieb aller Dokumenttypen */
+(function(){
+  const inp=g("dsearch"),out=g("dsearchOut"),frm=g("dsearchForm");
+  if(!inp||!out||!frm)return;
+  const norm=s=>s.toLowerCase().replace(/[äàâ]/g,"a").replace(/[öô]/g,"o").replace(/[üû]/g,"u").replace(/ß/g,"ss");
+  function pick(k){
+    taskSel.value=k;build();updateKachel();
+    out.classList.remove("on");inp.value=DOCS[k].t;
+    document.getElementById("composer").scrollIntoView({behavior:"smooth"});
+  }
+  function run(){
+    const q=norm(inp.value.trim());
+    if(q.length<2){out.classList.remove("on");out.innerHTML="";return;}
+    const hits=DOC_KEYS.filter(k=>norm(DOCS[k].t+" "+DOCS[k].b).includes(q)).slice(0,6);
+    out.innerHTML="";
+    if(!hits.length){
+      out.innerHTML='<div class="none">Nichts gefunden — sieh dir die vollständige Liste unter «Dokumente» an.</div>';
+    }else hits.forEach(k=>{
+      const b=document.createElement("button");b.type="button";
+      b.innerHTML='<div class="st"></div><div class="sm"></div>';
+      b.querySelector(".st").textContent=DOCS[k].t;
+      b.querySelector(".sm").textContent=DOCS[k].tier+" · "+fmt(DOCS[k].price);
+      b.onclick=()=>pick(k);out.appendChild(b);
+    });
+    out.classList.add("on");
+  }
+  inp.addEventListener("input",run);
+  frm.addEventListener("submit",e=>{
+    e.preventDefault();
+    const q=norm(inp.value.trim());
+    const first=q.length>=2?DOC_KEYS.find(k=>norm(DOCS[k].t+" "+DOCS[k].b).includes(q)):null;
+    if(first)pick(first);else document.getElementById("prompts").scrollIntoView({behavior:"smooth"});
+  });
+  document.addEventListener("click",e=>{if(!e.target.closest(".searchpill"))out.classList.remove("on");});
+})();
 </script>
