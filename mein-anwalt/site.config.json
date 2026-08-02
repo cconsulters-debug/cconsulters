@@ -1,20 +1,17 @@
 {
   "_hinweis": "Zentrale Angaben für Website und Rechtstexte. Nur diese Datei ausfüllen, dann 'python3 scripts/build_site.py' ausführen — die Werte werden in Impressum, Datenschutzerklärung und AGB eingesetzt. Leere Pflichtfelder meldet der Build als Warnung.",
-
-  "domain": "https://mein-rechtshelfer.ch",
-
+  "domain": "https://meinrechtshelfer.ch",
   "betreiber": {
-    "name": "",
-    "rechtsform": "",
+    "name": "Cconsulters — Simone Carecci",
+    "rechtsform": "Einzelfirma",
     "strasse": "",
-    "plz_ort": "",
-    "sitz": "",
-    "email": "",
+    "plz_ort": "8953 Dietikon",
+    "sitz": "Dietikon",
+    "email": "cconsulters@gmail.com",
     "telefon": "",
     "uid": "",
     "mwst": ""
   },
-
   "_felder": {
     "domain": "Pflicht. Vollständig mit https://, ohne Schrägstrich am Ende. Speist canonical, Open Graph und sitemap.xml.",
     "name": "Pflicht. Firmenname oder Vor- und Nachname der verantwortlichen Person.",
