@@ -45,7 +45,7 @@ Wir bewahren Daten nur so lange auf, wie es für die genannten Zwecke oder geset
 ## 6. Deine Rechte
 
 Du hast das Recht auf **Auskunft, Berichtigung, Löschung** und **Datenherausgabe/-übertragung**
-sowie auf Widerspruch (Art. 25 ff. revDSG). Wende dich an [datenschutz@deine-domain.ch].
+sowie auf Widerspruch (Art. 25 ff. revDSG). Wende dich an {{email}}.
 Du kannst dich zudem beim **EDÖB** (edoeb.admin.ch) beschweren.
 
 ## 7. Datensicherheit
