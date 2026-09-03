@@ -1,0 +1,14 @@
+rules_version = '2';
+/* Firestore-Regeln für die CRM-Synchronisation.
+   Jede Kanzlei sieht ausschliesslich ihre eigenen Daten – und diese sind
+   bereits vor dem Hochladen clientseitig verschlüsselt (AES-256-GCM).   */
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /crm/{uid}/{store}/{docId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == uid
+                         && store in ['clients', 'dossiers', 'docs'];
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

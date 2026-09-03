@@ -123,6 +123,13 @@ dialog::backdrop{background:rgba(15,22,36,.5)}
 .toast.show{opacity:1;transform:none}
 .hidden{display:none !important}
 
+/* Sperrbildschirm */
+body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
+#lockScreen{position:fixed;inset:0;background:rgba(15,22,36,.62);display:grid;place-items:center;z-index:200}
+.lock-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;width:min(430px,92vw);box-shadow:0 24px 70px rgba(0,0,0,.4)}
+.keybox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;letter-spacing:.06em;background:var(--panel-2);
+        border:1px dashed var(--line-strong);border-radius:8px;padding:12px;text-align:center;word-break:break-all}
+
 @media print{
   .side,.no-print,button{display:none !important}
   .app{display:block} .main{padding:0;max-width:none}
@@ -296,16 +303,213 @@ function openDB(){
   });
 }
 const tx = (store, mode="readonly") => db.transaction(store, mode).objectStore(store);
-const dbAll = store => new Promise((res, rej) => { const r = tx(store).getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-const dbPut = (store, val) => new Promise((res, rej) => { const r = tx(store,"readwrite").put(val); r.onsuccess = () => res(val); r.onerror = () => rej(r.error); });
-const dbDel = (store, key) => new Promise((res, rej) => { const r = tx(store,"readwrite").delete(key); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
-const dbGet = (store, key) => new Promise((res, rej) => { const r = tx(store).get(key); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const rawAll = store => new Promise((res, rej) => { const r = tx(store).getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const rawPut = (store, val) => new Promise((res, rej) => { const r = tx(store,"readwrite").put(val); r.onsuccess = () => res(val); r.onerror = () => rej(r.error); });
+const rawDel = (store, key) => new Promise((res, rej) => { const r = tx(store,"readwrite").delete(key); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
+const rawGet = (store, key) => new Promise((res, rej) => { const r = tx(store).get(key); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+
+/* ------------------------------------------------------------------
+   VERSCHLÜSSELUNG (optional, standardmässig aktivierbar)
+   Passwort -> PBKDF2 -> Schlüsselschlüssel (KEK) -> entpackt den
+   eigentlichen Datenschlüssel (DEK, AES-GCM 256). Der DEK liegt
+   zusätzlich mit einem Wiederherstellungsschlüssel verpackt vor,
+   damit ein vergessenes Passwort nicht das Ende der Daten ist.
+   ------------------------------------------------------------------ */
+const SEC = { key:null, on:false, meta:null, idleMs:15*60*1000, timer:null, locked:false };
+const PBKDF2_ITER = 310000;
+const b64e = buf => { const u = new Uint8Array(buf); let s = ""; for(let i=0;i<u.length;i++) s += String.fromCharCode(u[i]); return btoa(s); };
+const b64d = str => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+const randBytes = n => crypto.getRandomValues(new Uint8Array(n));
+
+async function deriveKek(pass, saltB64, iter){
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pass), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name:"PBKDF2", salt:b64d(saltB64), iterations:iter || PBKDF2_ITER, hash:"SHA-256" },
+    base, { name:"AES-GCM", length:256 }, false, ["encrypt","decrypt"]);
+}
+const importDek = raw => crypto.subtle.importKey("raw", raw, { name:"AES-GCM" }, true, ["encrypt","decrypt"]);
+async function wrapDek(dekRaw, kek){
+  const iv = randBytes(12);
+  const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, kek, dekRaw);
+  return { iv:b64e(iv), ct:b64e(ct) };
+}
+async function unwrapDek(wrapped, kek){
+  const raw = await crypto.subtle.decrypt({ name:"AES-GCM", iv:b64d(wrapped.iv) }, kek, b64d(wrapped.ct));
+  return new Uint8Array(raw);
+}
+async function encJson(obj){
+  const iv = randBytes(12);
+  const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, SEC.key,
+              new TextEncoder().encode(JSON.stringify(obj)));
+  return { iv, ct };
+}
+async function decJson(iv, ct){
+  const buf = await crypto.subtle.decrypt({ name:"AES-GCM", iv }, SEC.key, ct);
+  return JSON.parse(new TextDecoder().decode(buf));
+}
+async function encBytes(buf){
+  const iv = randBytes(12);
+  return { iv, ct: await crypto.subtle.encrypt({ name:"AES-GCM", iv }, SEC.key, buf) };
+}
+const decBytes = (iv, ct) => crypto.subtle.decrypt({ name:"AES-GCM", iv }, SEC.key, ct);
+
+/* Wiederherstellungsschlüssel: 20 Byte, lesbar in 5er-Gruppen. */
+const RECOVERY_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function newRecoveryKey(){
+  const b = randBytes(20); let out = "";
+  for(let i = 0; i < b.length; i++){ out += RECOVERY_ALPHABET[b[i] % 32]; if(i % 5 === 4 && i < b.length-1) out += "-"; }
+  return out;
+}
+const normRecovery = s => String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+
+/* ---------- Speicher-Wrapper: verschlüsseln/entschlüsseln transparent ---------- */
+async function dbPut(store, val){
+  if(store === "kv") return rawPut(store, val);
+  const prev = await rawGet(store, val.id).catch(() => null);
+  if(!SEC.key){
+    const rec = { ...val };
+    if(!rec.blob && prev && prev.blob) rec.blob = prev.blob;   // Datei nicht verlieren
+    delete rec.e; delete rec.iv; delete rec.ct; delete rec.fiv; delete rec.fct; delete rec.ftype;
+    rec.rev = Date.now();
+    await rawPut(store, rec);
+    return val;
+  }
+  const { blob, ...meta } = val;
+  const { iv, ct } = await encJson(meta);
+  const rec = { id:val.id, e:1, iv, ct, rev:Date.now() };
+  if(blob){
+    const f = await encBytes(await blob.arrayBuffer());
+    rec.fiv = f.iv; rec.fct = f.ct; rec.ftype = blob.type || "application/octet-stream";
+  } else if(prev && prev.fct){                                  // bestehende Datei übernehmen
+    rec.fiv = prev.fiv; rec.fct = prev.fct; rec.ftype = prev.ftype;
+  } else if(prev && prev.blob){                                 // vorher unverschlüsselt abgelegt
+    const f = await encBytes(await prev.blob.arrayBuffer());
+    rec.fiv = f.iv; rec.fct = f.ct; rec.ftype = prev.blob.type || "application/octet-stream";
+  }
+  await rawPut(store, rec);
+  return val;
+}
+async function unpack(rec, withFile){
+  if(!rec) return rec;
+  if(!rec.e){ const { blob, ...meta } = rec; return withFile && blob ? { ...meta, blob } : meta; }
+  if(!SEC.key) throw new Error("locked");
+  const meta = await decJson(rec.iv, rec.ct);
+  if(withFile && rec.fct) meta.blob = new Blob([await decBytes(rec.fiv, rec.fct)], { type:rec.ftype || "application/octet-stream" });
+  return meta;
+}
+async function dbAll(store){
+  const raw = await rawAll(store);
+  const out = [];
+  for(const r of raw) if(!r.del) out.push(await unpack(r, false));   // Dateien bleiben auf der Platte
+  return out;
+}
+const dbGet = async (store, key, withFile=true) => {
+  const r = await rawGet(store, key);
+  return (!r || r.del) ? undefined : unpack(r, withFile);
+};
+/* Löschen hinterlässt einen Grabstein, damit die Löschung auch auf
+   andere Geräte synchronisiert wird (statt dort wieder aufzutauchen). */
+const dbDel = (store, key) => rawPut(store, { id:key, del:1, rev:Date.now() });
+
+/* Alle Datensätze neu schreiben – beim Ein-/Ausschalten der Verschlüsselung
+   und beim Passwortwechsel (der Datenschlüssel selbst bleibt gleich).       */
+async function rewriteAll(newKey){
+  const oldKey = SEC.key;
+  for(const store of ["clients","dossiers","docs"]){
+    for(const r of await rawAll(store)){
+      if(r.del) continue;
+      SEC.key = oldKey; const full = await unpack(r, true);
+      SEC.key = newKey; await dbPut(store, full);
+    }
+  }
+  SEC.key = newKey; SEC.on = !!newKey;
+}
+
+/* ---------- Sperren, Entsperren, Passwort verwalten ---------- */
+const loadSecMeta = async () => (await rawGet("kv","crypto"))?.v || null;
+const saveSecMeta = meta => rawPut("kv", { k:"crypto", v:meta });
+
+async function encryptionEnable(pass){
+  const dekRaw = randBytes(32);
+  const salt = b64e(randBytes(16)), recSalt = b64e(randBytes(16));
+  const kek = await deriveKek(pass, salt, PBKDF2_ITER);
+  const recKey = newRecoveryKey();
+  const rkek = await deriveKek(normRecovery(recKey), recSalt, PBKDF2_ITER);
+  const meta = { v:1, iter:PBKDF2_ITER, salt, recSalt,
+                 wrap: await wrapDek(dekRaw, kek), rwrap: await wrapDek(dekRaw, rkek), since:today() };
+  await rewriteAll(await importDek(dekRaw));
+  SEC.meta = meta; await saveSecMeta(meta);
+  return recKey;
+}
+async function encryptionDisable(pass){
+  if(!await unlockWithPassword(pass, true)) return false;
+  await rewriteAll(null);
+  SEC.meta = null; await rawDel("kv","crypto");
+  return true;
+}
+async function unlockWithPassword(pass, keepState){
+  const meta = SEC.meta || await loadSecMeta(); if(!meta) return false;
+  try{
+    const kek = await deriveKek(pass, meta.salt, meta.iter);
+    const dekRaw = await unwrapDek(meta.wrap, kek);
+    SEC.key = await importDek(dekRaw); SEC.on = true; SEC.meta = meta; SEC.locked = false;
+    return true;
+  }catch(e){ if(!keepState){ SEC.key = null; } return false; }
+}
+async function unlockWithRecovery(recKey, newPass){
+  const meta = SEC.meta || await loadSecMeta(); if(!meta) return false;
+  try{
+    const rkek = await deriveKek(normRecovery(recKey), meta.recSalt, meta.iter);
+    const dekRaw = await unwrapDek(meta.rwrap, rkek);
+    SEC.key = await importDek(dekRaw); SEC.on = true; SEC.locked = false;
+    const salt = b64e(randBytes(16));
+    meta.salt = salt; meta.wrap = await wrapDek(dekRaw, await deriveKek(newPass, salt, meta.iter));
+    SEC.meta = meta; await saveSecMeta(meta);
+    return true;
+  }catch(e){ SEC.key = null; return false; }
+}
+async function changePassword(oldPass, newPass){
+  const meta = SEC.meta || await loadSecMeta(); if(!meta) return false;
+  try{
+    const kek = await deriveKek(oldPass, meta.salt, meta.iter);
+    const dekRaw = await unwrapDek(meta.wrap, kek);
+    const salt = b64e(randBytes(16));
+    meta.salt = salt; meta.wrap = await wrapDek(dekRaw, await deriveKek(newPass, salt, meta.iter));
+    SEC.meta = meta; await saveSecMeta(meta);
+    return true;
+  }catch(e){ return false; }
+}
+async function newRecoveryFor(pass){
+  const meta = SEC.meta || await loadSecMeta(); if(!meta) return null;
+  try{
+    const dekRaw = await unwrapDek(meta.wrap, await deriveKek(pass, meta.salt, meta.iter));
+    const recKey = newRecoveryKey(), recSalt = b64e(randBytes(16));
+    meta.recSalt = recSalt;
+    meta.rwrap = await wrapDek(dekRaw, await deriveKek(normRecovery(recKey), recSalt, meta.iter));
+    SEC.meta = meta; await saveSecMeta(meta);
+    return recKey;
+  }catch(e){ return null; }
+}
+function lockNow(){
+  if(!SEC.on) return;
+  SEC.key = null; SEC.locked = true;
+  S.clients = []; S.dossiers = []; S.docs = []; S.queue = [];
+  clearTimeout(SEC.timer);
+  showLock();
+}
+function touchIdle(){
+  if(!SEC.on || SEC.locked) return;
+  clearTimeout(SEC.timer);
+  if(SEC.idleMs > 0) SEC.timer = setTimeout(lockNow, SEC.idleMs);
+}
 
 /* Zentraler Zustand – wird beim Start einmal komplett geladen. */
 const S = {
   clients:[], dossiers:[], docs:[],
-  settings:{ kanzlei:"C Consulters – Treuhand & Steuerberatung", bearbeiter:"", email:"", telefon:"",
-             kanton:"Zürich", jahr:new Date().getFullYear()-1, mailer:"gmail", frist:"30.09." },
+  settings:{ produkt:"Steuer-CRM", kanzlei:"C Consulters – Treuhand & Steuerberatung", bearbeiter:"", email:"", telefon:"",
+             kanton:"Zürich", jahr:new Date().getFullYear()-1, mailer:"gmail", frist:"30.09.",
+             farbe:"#1F3864", akzent:"#0f8fa3", idleMin:15,
+             gmailClientId:"", gmailFrom:"", syncCfg:"", syncOn:false, lizenz:"" },
   view:"dashboard", clientId:null, jahr:null, queue:[]
 };
 
@@ -333,6 +537,17 @@ const slug   = s => String(s||"").replace(/\u00e4/g,"ae").replace(/\u00c4/g,"Ae"
 const clientName = c => c ? [c.name, c.vorname].filter(Boolean).join(", ") || "(ohne Namen)" : "–";
 const clientById = id => S.clients.find(c => c.id === id);
 
+function applyBranding(){
+  const st = S.settings;
+  document.title = `${st.produkt || "Steuer-CRM"}${st.kanzlei ? " · " + st.kanzlei.split("–")[0].trim() : ""}`;
+  $("#brandName").textContent = st.produkt || "Steuer-CRM";
+  $("#brandSub").textContent  = (st.kanzlei || "").split("–")[0].trim();
+  $(".brand .logo").textContent = (st.produkt || "CC").replace(/[^A-Za-z]/g,"").slice(0,2).toUpperCase() || "CC";
+  const r = document.documentElement.style;
+  if(st.farbe)  r.setProperty("--navy", st.farbe);
+  if(st.akzent){ r.setProperty("--teal", st.akzent); r.setProperty("--teal-600", st.akzent); }
+  SEC.idleMs = Math.max(0, (+st.idleMin || 0)) * 60000;
+}
 function toast(msg){
   const t = $("#toast"); t.textContent = msg; t.classList.add("show");
   clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
@@ -564,8 +779,9 @@ function render(){
   const v = { dashboard:viewDashboard, clients:viewClients, client:viewClient, dossier:viewDossier,
               converter:viewConverter, mail:viewMail, settings:viewSettings }[S.view] || viewDashboard;
   v();
-  $("#brandSub").textContent = S.settings.kanzlei.split("–")[0].trim() || "Steuer-CRM";
-  $("#storageInfo").textContent = `${S.clients.length} Kunden · ${S.docs.length} Dokumente`;
+  applyBranding();
+  $("#storageInfo").textContent = `${S.clients.length} Kunden · ${S.docs.length} Dokumente`
+    + (SEC.on ? " · 🔒 verschlüsselt" : "");
 }
 const yearOptions = sel => {
   const now = new Date().getFullYear(), out = [];
@@ -935,8 +1151,14 @@ async function reclassifyDialog(docId){
 
 /* ZIP-Export: Ordner je Register, Dateien nach Schema benannt. */
 async function exportZip(c, jahr){
+  const blob = await dossierZipBlob(c, jahr);
+  if(!blob) return toast("Keine Dokumente");
+  download(blob, `Steuerdossier_${jahr}_${slug(clientName(c).replace(", ","-"))}.zip`);
+  toast("Dossier exportiert");
+}
+async function dossierZipBlob(c, jahr){
   const docs = docsOf(c.id, jahr);
-  if(!docs.length) return toast("Keine Dokumente");
+  if(!docs.length) return null;
   toast("ZIP wird erstellt…");
   const files = [];
   for(const d of docs){
@@ -948,9 +1170,7 @@ async function exportZip(c, jahr){
   }
   const enc = new TextEncoder();
   files.push({ name:`${jahr}_${slug(clientName(c).replace(", ","-"))}/00_Inhaltsverzeichnis.txt`, data:enc.encode(tocText(c, jahr)) });
-  const blob = await makeZip(files);
-  download(blob, `Steuerdossier_${jahr}_${slug(clientName(c).replace(", ","-"))}.zip`);
-  toast(files.length - 1 + " Dokumente exportiert");
+  return makeZip(files);
 }
 function tocText(c, jahr){
   const docs = docsOf(c.id, jahr), list = buildChecklist(c, jahr), st = checklistStats(list);
@@ -997,7 +1217,12 @@ function viewConverter(){
       <b>Dateien hierher ziehen</b>
       <p class="small">PDF, Bilder, Excel – beliebig viele auf einmal. PDFs werden zusätzlich am Inhalt erkannt.</p>
       <button class="btn-primary" id="pick">Dateien auswählen</button>
+      <button id="gmailImport" ${gmailReady() && c.email ? "" : "disabled"}>Belege aus Gmail holen</button>
       <input type="file" id="file" multiple class="hidden">
+      <p class="small" style="margin-top:8px">${gmailReady()
+        ? (c.email ? `Sucht Anhänge in Mails von ${esc(c.email)} (letzte 12 Monate).`
+                   : "Für den Gmail-Import beim Kunden eine E-Mail-Adresse hinterlegen.")
+        : esc(gmailWhyNot())}</p>
     </div>
     <div id="status" class="small" style="margin-top:10px"></div>
   </div>
@@ -1026,6 +1251,7 @@ function viewConverter(){
   $("#toDos").onclick       = () => go("dossier", { clientId:c.id, jahr });
   $("#pick").onclick        = () => $("#file").click();
   $("#file").onchange       = e => intake([...e.target.files], jahr);
+  $("#gmailImport") && ($("#gmailImport").onclick = () => gmailImportDialog(c, jahr));
   const drop = $("#drop");
   ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
   ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
@@ -1036,6 +1262,30 @@ function viewConverter(){
   $$("[data-qx]").forEach(b => b.onclick = () => { S.queue.splice(+b.dataset.qx,1); render(); });
   $("#clearQ") && ($("#clearQ").onclick = () => { S.queue = []; render(); });
   $("#apply")  && ($("#apply").onclick  = () => applyQueue(c, jahr));
+}
+
+/* Anhänge aus den Mails des Kunden auswählen und in die Warteschlange laden. */
+async function gmailImportDialog(c, jahr){
+  const stat = $("#status");
+  try{
+    if(stat) stat.textContent = "Durchsuche Gmail …";
+    const found = await gmailFindAttachments(c.email, 12);
+    if(stat) stat.textContent = "";
+    if(!found.length) return toast("Keine Anhänge in Mails dieses Kunden gefunden");
+    const ok = await modal({ title:`${found.length} Anhänge gefunden`, ok:"Ausgewählte übernehmen", wide:true, body:
+      found.map((a,i) => `<label class="check"><input type="checkbox" name="ga_${i}" checked>
+        <span><b>${esc(a.name)}</b> <span class="small">· ${kb(a.size)} · Betreff: ${esc(a.subject)}</span></span></label>`).join("") });
+    if(!ok) return;
+    const pick = found.filter((_,i) => $(`[name="ga_${i}"]`, $("#dlgBody"))?.checked !== false);
+    const files = [];
+    for(let i = 0; i < found.length; i++){
+      if(!pick.includes(found[i])) continue;
+      if(stat) stat.textContent = `Lade ${found[i].name} …`;
+      files.push(await gmailGetAttachment(found[i].msgId, found[i].attId, found[i].name));
+    }
+    await intake(files, jahr);
+    toast(files.length + " Anhänge geladen");
+  }catch(e){ if(stat) stat.textContent = ""; toast("Gmail: " + e.message); }
 }
 
 /* Dateien einlesen, Text extrahieren, klassifizieren. */
@@ -1063,6 +1313,7 @@ async function applyQueue(c, jahr){
                   blob:q.file, newName:q.name, added:new Date().toISOString() };
     doc.newName = buildName(doc, c, 1);
     await dbPut("docs", doc);
+    delete doc.blob;                 // Datei liegt in der Datenbank, nicht im Arbeitsspeicher
     S.docs.push(doc);
     years.add(String(q.jahr));
   }
@@ -1186,12 +1437,15 @@ function viewMail(){
   <div style="height:10px"></div>
   <label>Text</label><textarea id="mBody" style="min-height:320px">${esc(body)}</textarea>
   <div class="row" style="margin-top:12px">
-    <button class="btn-primary" id="sendGmail">In Gmail öffnen</button>
-    <button id="sendMailto">Mit Mailprogramm öffnen</button>
+    <button class="btn-primary" id="sendApi" ${gmailReady() ? "" : "disabled"}>Direkt über Gmail senden</button>
+    <label class="check" style="margin:0 8px 0 0"><input type="checkbox" id="attachZip"> Dossier-ZIP anhängen</label>
+    <button id="sendGmail">In Gmail öffnen</button>
+    <button id="sendMailto">Mailprogramm</button>
     <button id="copyMail">Text kopieren</button>
     <span class="spacer"></span>
     <button class="btn-teal" id="markSent">Als «angefordert» markieren</button>
   </div>
+  <p class="small" id="sendMsg" style="margin-top:8px">${gmailReady() ? "" : esc(gmailWhyNot())}</p>
   ${c.email ? "" : '<div class="hint warn" style="margin-top:10px">Beim Kunden ist keine E-Mail-Adresse hinterlegt.</div>'}
   </div>
   <div class="card no-print"><h3>Anhänge</h3>
@@ -1202,6 +1456,24 @@ function viewMail(){
   $("#mailYear").onchange   = e => go("mail", { clientId:c.id, jahr:e.target.value });
   $$("[data-tpl]").forEach(b => b.onclick = () => { S.tpl = b.dataset.tpl; render(); });
   const get = () => ({ to:$("#mTo").value.trim(), su:$("#mSubj").value, bo:$("#mBody").value });
+  $("#sendApi") && ($("#sendApi").onclick = async () => {
+    const { to, su, bo } = get();
+    if(!to) return toast("Keine Empfängeradresse");
+    const msg = $("#sendMsg");
+    try{
+      msg.textContent = "Sende über Gmail …";
+      const attachments = [];
+      if($("#attachZip").checked){
+        const blob = await dossierZipBlob(c, jahr);
+        if(blob) attachments.push({ name:`Steuerdossier_${jahr}_${slug(clientName(c).replace(", ","-"))}.zip`, blob });
+      }
+      await gmailSend({ to, subject:su, body:bo, from:S.settings.gmailFrom || S.settings.email, attachments });
+      msg.textContent = "Gesendet – die Mail liegt in deinem Gmail-Ordner «Gesendet».";
+      const d = await ensureDossier(c.id, jahr);
+      if(d.status === "neu") { d.status = "angefordert"; await dbPut("dossiers", d); }
+      toast("E-Mail gesendet");
+    }catch(e){ msg.textContent = "Fehler: " + e.message; }
+  });
   $("#sendGmail").onclick = () => { const { to, su, bo } = get();
     window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(su)}&body=${encodeURIComponent(bo)}`, "_blank"); };
   $("#sendMailto").onclick = () => { const { to, su, bo } = get();
@@ -1215,10 +1487,11 @@ function viewMail(){
 
 /* ---------- Einstellungen & Backup ---------- */
 function viewSettings(){
-  const s = S.settings;
+  const s = S.settings, cfgOk = !!syncCfg();
   M().innerHTML = `
-  <div class="page-head"><div><h1>Einstellungen &amp; Backup</h1>
-    <p>Kanzleidaten für die E-Mail-Vorlagen, Standardwerte und Datensicherung.</p></div></div>
+  <div class="page-head"><div><h1>Einstellungen</h1>
+    <p>Kanzleidaten, Erscheinungsbild, Sicherheit, Gmail, Synchronisation und Datensicherung.</p></div></div>
+
   <div class="card"><h3>Kanzlei / Absender</h3>
     <div class="grid g2">
       <div><label>Kanzlei / Firma</label><input id="sKanzlei" value="${esc(s.kanzlei)}"></div>
@@ -1229,28 +1502,96 @@ function viewSettings(){
       <div><label>Standard-Steuerjahr</label><select id="sJahr">${yearOptions(s.jahr)}</select></div>
       <div><label>Standard-Frist (Text)</label><input id="sFrist" value="${esc(s.frist)}"></div>
     </div>
+    <h3 style="margin-top:16px">Erscheinungsbild (White-Label)</h3>
+    <p class="small">Für den Weiterverkauf: Produktname und Farben pro Kunde anpassen.</p>
+    <div class="grid g4">
+      <div><label>Produktname</label><input id="sProdukt" value="${esc(s.produkt||"")}"></div>
+      <div><label>Hauptfarbe</label><input type="color" id="sFarbe" value="${esc(s.farbe||"#1F3864")}"></div>
+      <div><label>Akzentfarbe</label><input type="color" id="sAkzent" value="${esc(s.akzent||"#0f8fa3")}"></div>
+      <div><label>Lizenzschlüssel / Kunde</label><input id="sLizenz" value="${esc(s.lizenz||"")}"></div>
+    </div>
     <div class="row" style="margin-top:12px"><button class="btn-primary" id="saveSet">Speichern</button></div>
   </div>
+
+  <div class="card"><h3>Sicherheit</h3>
+    ${SEC.on ? `<div class="hint"><b>Verschlüsselung aktiv</b> – alle Kundendaten und Dateien liegen mit
+        AES-256 verschlüsselt in diesem Browser (seit ${esc(SEC.meta?.since||"–")}).</div>
+      <div class="grid g2">
+        <div><label>Automatisch sperren nach (Minuten, 0 = nie)</label>
+          <input type="number" id="sIdle" min="0" max="240" value="${+s.idleMin || 0}"></div>
+        <div><label>&nbsp;</label><button id="lockBtn">Jetzt sperren</button></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="pwChange">Passwort ändern</button>
+        <button id="recNew">Neuen Wiederherstellungsschlüssel erzeugen</button>
+        <button class="btn-danger" id="encOff">Verschlüsselung aufheben</button>
+      </div>`
+    : `<div class="hint warn"><b>Noch nicht verschlüsselt.</b> Für echte Kundendaten dringend empfohlen:
+        Ohne Passwort kann jede Person mit Zugriff auf diesen Rechner alle Steuerdaten lesen.</div>
+      <div class="grid g2">
+        <div><label>Passwort (mind. 8 Zeichen)</label><input type="password" id="encPass" autocomplete="new-password"></div>
+        <div><label>Passwort wiederholen</label><input type="password" id="encPass2" autocomplete="new-password"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn-primary" id="encOn">Verschlüsselung aktivieren</button></div>`}
+  </div>
+
+  <div class="card"><h3>Gmail-Anbindung</h3>
+    <p class="small">Mit eigener Google-Client-ID sendet das CRM Mails direkt (inkl. Dossier-ZIP) und liest
+      Anhänge aus Kundenmails in den Konverter. Anleitung: <span class="mono">crm/SETUP-GMAIL.md</span></p>
+    <div class="grid g2">
+      <div><label>Google OAuth-Client-ID</label><input id="sGmailId" value="${esc(s.gmailClientId||"")}" placeholder="…apps.googleusercontent.com"></div>
+      <div><label>Absenderadresse (optional)</label><input id="sGmailFrom" value="${esc(s.gmailFrom||"")}"></div>
+    </div>
+    <div class="row" style="margin-top:10px"><button id="gmTest">Verbindung testen</button>
+      <span class="small" id="gmMsg">${esc(gmailWhyNot())}</span></div>
+  </div>
+
+  <div class="card"><h3>Synchronisation über mehrere Geräte</h3>
+    <p class="small">Optional. Es werden ausschliesslich <b>verschlüsselte</b> Datensätze übertragen –
+      der Anbieter sieht nur Zeitstempel und Dateigrössen. Setzt aktive Verschlüsselung voraus.
+      Anleitung: <span class="mono">crm/SETUP-SYNC.md</span></p>
+    <label>Firebase-Konfiguration (JSON aus der Firebase-Konsole)</label>
+    <textarea id="sSync" style="min-height:110px" placeholder='{"apiKey":"…","authDomain":"…","projectId":"…","storageBucket":"…","appId":"…"}'>${esc(s.syncCfg||"")}</textarea>
+    <div class="grid g2" style="margin-top:10px">
+      <div><label>Anmeldung E-Mail</label><input id="syncMail" value="${esc(s.email||"")}"></div>
+      <div><label>Passwort</label><input type="password" id="syncPass" autocomplete="off"></div>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button id="syncSave">Konfiguration speichern</button>
+      <button class="btn-teal" id="syncGo" ${cfgOk && SEC.on ? "" : "disabled"}>Jetzt synchronisieren</button>
+      <button id="syncAdopt" ${cfgOk && !SEC.on ? "" : "disabled"}>Dieses Gerät mit bestehendem Konto verbinden</button>
+      <span class="small" id="syncMsg">${s.lastSync ? "Zuletzt: " + new Date(s.lastSync).toLocaleString("de-CH")
+        : (SEC.on ? "" : "Zuerst Verschlüsselung aktivieren.")}</span>
+    </div>
+  </div>
+
   <div class="card"><h3>Datensicherung</h3>
-    <div class="hint"><b>Wichtig:</b> Alle Daten liegen ausschliesslich in diesem Browser
-      (IndexedDB). Browserdaten löschen = CRM leer. Mach mindestens monatlich ein Backup.</div>
+    <div class="hint"><b>Wichtig:</b> Ohne Synchronisation liegen alle Daten nur in diesem Browser.
+      Browserdaten löschen = CRM leer. Mindestens monatlich sichern.</div>
     <div class="row">
       <button class="btn-primary" id="expJson">Backup exportieren (Stammdaten)</button>
-      <button id="expFull">Backup inkl. Dateien (gross)</button>
+      <button id="expFull">Backup inkl. Dateien</button>
       <button id="impJson">Backup einlesen</button>
       <input type="file" id="impFile" accept=".json" class="hidden">
     </div>
-    <p class="small" style="margin-top:10px">Stammdaten-Backup enthält Kunden, Dossiers, Checklisten und
-      die Dokumentenliste (ohne die Dateien selbst). Das Vollbackup enthält zusätzlich alle abgelegten Dateien.</p>
+    <p class="small" style="margin-top:10px">${SEC.on
+      ? "Backups werden mit einem Passwort verschlüsselt, das du beim Export festlegst."
+      : "Achtung: ohne aktivierte Verschlüsselung ist das Backup eine Klartext-Datei mit Kundendaten."}</p>
   </div>
-  <div class="card"><h3>Statistik</h3>
+
+  <div class="card"><h3>Demo &amp; Statistik</h3>
     <div class="grid g4">
       <div class="kpi"><b>${S.clients.length}</b><span>Kunden</span></div>
       <div class="kpi"><b>${S.dossiers.length}</b><span>Dossiers</span></div>
       <div class="kpi"><b>${S.docs.length}</b><span>Dokumente</span></div>
       <div class="kpi"><b>${kb(S.docs.reduce((a,d) => a + (d.size||0), 0))}</b><span>Dateivolumen</span></div>
     </div>
+    <div class="row" style="margin-top:12px">
+      <button id="demoOn">Demo-Daten laden (für Verkaufsgespräche)</button>
+      <button id="demoOff">Demo-Daten entfernen</button>
+    </div>
   </div>
+
   <div class="card"><h3>Zurücksetzen</h3>
     <p class="small">Löscht alle Kunden, Dossiers und Dokumente in diesem Browser. Nicht umkehrbar.</p>
     <button class="btn-danger" id="wipe">Alle Daten löschen</button></div>`;
@@ -1258,40 +1599,171 @@ function viewSettings(){
   $("#saveSet").onclick = async () => {
     Object.assign(S.settings, { kanzlei:$("#sKanzlei").value.trim(), bearbeiter:$("#sBearb").value.trim(),
       email:$("#sEmail").value.trim(), telefon:$("#sTel").value.trim(), kanton:$("#sKanton").value.trim(),
-      jahr:+$("#sJahr").value, frist:$("#sFrist").value.trim() });
+      jahr:+$("#sJahr").value, frist:$("#sFrist").value.trim(), produkt:$("#sProdukt").value.trim() || "Steuer-CRM",
+      farbe:$("#sFarbe").value, akzent:$("#sAkzent").value, lizenz:$("#sLizenz").value.trim() });
     await saveSettings(); toast("Einstellungen gespeichert"); render();
   };
+
+  /* --- Sicherheit --- */
+  if($("#encOn")) $("#encOn").onclick = async () => {
+    const p1 = $("#encPass").value, p2 = $("#encPass2").value;
+    if(p1.length < 8) return toast("Passwort zu kurz (mind. 8 Zeichen)");
+    if(p1 !== p2) return toast("Passwörter stimmen nicht überein");
+    toast("Verschlüssle Daten …");
+    const recKey = await encryptionEnable(p1);
+    await loadAll();
+    await modal({ title:"Verschlüsselung aktiv – Schlüssel sichern", ok:"Ich habe den Schlüssel gesichert", cancel:"Später",
+      body:`<p>Notiere diesen <b>Wiederherstellungsschlüssel</b> und lege ihn getrennt vom Rechner ab
+             (Safe, Passwortmanager). Nur damit kommst du bei vergessenem Passwort wieder an die Daten.</p>
+            <div class="keybox">${esc(recKey)}</div>
+            <p class="small" style="margin-top:10px">Der Schlüssel wird nur dieses eine Mal angezeigt.</p>` });
+    render();
+  };
+  if($("#lockBtn")) $("#lockBtn").onclick = () => lockNow();
+  if($("#sIdle")) $("#sIdle").onchange = async e => { S.settings.idleMin = +e.target.value || 0;
+    await saveSettings(); applyBranding(); touchIdle(); toast("Gespeichert"); };
+  if($("#pwChange")) $("#pwChange").onclick = async () => {
+    const ok = await modal({ title:"Passwort ändern", ok:"Ändern", body:`
+      <label>Aktuelles Passwort</label><input type="password" name="alt">
+      <div style="height:8px"></div><label>Neues Passwort (mind. 8 Zeichen)</label><input type="password" name="neu">` });
+    if(!ok) return;
+    const alt = dlgVal("alt"), neu = dlgVal("neu");
+    if(neu.length < 8) return toast("Neues Passwort zu kurz");
+    toast(await changePassword(alt, neu) ? "Passwort geändert" : "Aktuelles Passwort falsch");
+  };
+  if($("#recNew")) $("#recNew").onclick = async () => {
+    const ok = await modal({ title:"Neuer Wiederherstellungsschlüssel", ok:"Erzeugen",
+      body:`<p class="small">Der bisherige Schlüssel wird ungültig.</p>
+            <label>Aktuelles Passwort</label><input type="password" name="pw">` });
+    if(!ok) return;
+    const key = await newRecoveryFor(dlgVal("pw"));
+    if(!key) return toast("Passwort falsch");
+    await modal({ title:"Neuer Wiederherstellungsschlüssel", ok:"Gesichert", cancel:"Schliessen",
+      body:`<div class="keybox">${esc(key)}</div>` });
+  };
+  if($("#encOff")) $("#encOff").onclick = async () => {
+    const ok = await modal({ title:"Verschlüsselung aufheben", ok:"Aufheben", body:`
+      <div class="hint warn">Danach liegen alle Kundendaten wieder unverschlüsselt im Browser.</div>
+      <label>Passwort</label><input type="password" name="pw">` });
+    if(!ok) return;
+    toast("Entschlüssle …");
+    if(await encryptionDisable(dlgVal("pw"))){ await loadAll(); toast("Verschlüsselung aufgehoben"); render(); }
+    else toast("Passwort falsch");
+  };
+
+  /* --- Gmail --- */
+  $("#gmTest").onclick = async () => {
+    $("#gmMsg").textContent = "Verbinde …";
+    S.settings.gmailClientId = $("#sGmailId").value.trim();
+    S.settings.gmailFrom = $("#sGmailFrom").value.trim();
+    await saveSettings();
+    try{ await gmailToken(); $("#gmMsg").textContent = "Verbindung steht – Gmail-Versand ist aktiv."; }
+    catch(e){ $("#gmMsg").textContent = e.message; }
+  };
+
+  /* --- Sync --- */
+  $("#syncSave").onclick = async () => {
+    const raw = $("#sSync").value.trim();
+    if(raw){ try{ JSON.parse(raw); }catch(e){ return toast("Konfiguration ist kein gültiges JSON"); } }
+    S.settings.syncCfg = raw; await saveSettings(); toast("Gespeichert"); render();
+  };
+  $("#syncGo") && ($("#syncGo").onclick = async () => {
+    const msg = $("#syncMsg");
+    try{
+      msg.textContent = "Melde an …";
+      if(!SY.user) await syncLogin($("#syncMail").value.trim(), $("#syncPass").value);
+      const r = await syncRun(t => msg.textContent = t);
+      msg.textContent = `Fertig: ${r.up} hochgeladen, ${r.down} heruntergeladen.`;
+      render();
+    }catch(e){ msg.textContent = "Fehler: " + e.message; }
+  });
+
+  $("#syncAdopt") && ($("#syncAdopt").onclick = async () => {
+    const msg = $("#syncMsg");
+    try{
+      msg.textContent = "Hole Schlüssel aus der Cloud …";
+      await syncAdoptDevice($("#syncMail").value.trim(), $("#syncPass").value);
+      msg.textContent = "Schlüssel übernommen – bitte mit dem Passwort des ersten Geräts entsperren.";
+      SEC.meta = await loadSecMeta(); SEC.on = true; SEC.locked = true;
+      S.clients = []; S.dossiers = []; S.docs = [];
+      showLock("Passwort des ersten Geräts eingeben – danach synchronisieren.");
+    }catch(e){ msg.textContent = "Fehler: " + e.message; }
+  });
+
+  /* --- Backup --- */
   $("#expJson").onclick = () => exportBackup(false);
   $("#expFull").onclick = () => exportBackup(true);
   $("#impJson").onclick = () => $("#impFile").click();
   $("#impFile").onchange = e => importBackup(e.target.files[0]);
+
+  /* --- Demo --- */
+  $("#demoOn").onclick  = () => loadDemoData();
+  $("#demoOff").onclick = () => removeDemoData();
+
   $("#wipe").onclick = async () => {
     if(!confirmBox("Wirklich ALLE Daten löschen? Vorher ein Backup exportieren!")) return;
     if(!confirmBox("Letzte Warnung: alle Kunden, Dossiers und Dokumente werden gelöscht.")) return;
-    for(const st of ["clients","dossiers","docs"]) for(const r of await dbAll(st)) await dbDel(st, r.id);
+    for(const st of ["clients","dossiers","docs"]) for(const r of await rawAll(st)) await rawDel(st, r.id);
     S.clients = []; S.dossiers = []; S.docs = [];
     toast("Alle Daten gelöscht"); go("dashboard");
   };
 }
+
+/* ---------- Backup (auf Wunsch passwortgeschützt) ---------- */
 const blobToDataUrl = b => new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(b); });
-async function exportBackup(withFiles){
-  toast("Backup wird erstellt…");
+async function backupPayload(withFiles){
   const docs = [];
   for(const d of S.docs){
-    const { blob, ...meta } = d;
+    const meta = { ...d }; delete meta.blob;
     if(withFiles){ const full = await dbGet("docs", d.id);
       meta.file = full?.blob ? await blobToDataUrl(full.blob) : null; }
     docs.push(meta);
   }
-  const data = { app:"steuer-crm", version:1, exported:new Date().toISOString(), withFiles,
-                 settings:S.settings, clients:S.clients, dossiers:S.dossiers, docs };
-  download(new Blob([JSON.stringify(data, null, 1)], { type:"application/json" }),
-           `steuer-crm-backup_${today()}${withFiles ? "_mit-dateien" : ""}.json`);
+  return { app:"steuer-crm", version:2, exported:new Date().toISOString(), withFiles,
+           settings:S.settings, clients:S.clients, dossiers:S.dossiers, docs };
+}
+async function exportBackup(withFiles){
+  let pass = null;
+  if(SEC.on){
+    const ok = await modal({ title:"Backup verschlüsseln", ok:"Exportieren", body:`
+      <p class="small">Das Backup enthält Kundendaten. Vergib ein Passwort – ohne dieses ist die Datei nicht lesbar.</p>
+      <label>Backup-Passwort (mind. 8 Zeichen)</label><input type="password" name="bp">
+      <div style="height:8px"></div>
+      <label class="check"><input type="checkbox" name="plain"> Unverschlüsselt exportieren (nicht empfohlen)</label>` });
+    if(!ok) return;
+    if(!dlgVal("plain")){
+      pass = dlgVal("bp");
+      if(String(pass).length < 8) return toast("Backup-Passwort zu kurz");
+    }
+  }
+  toast("Backup wird erstellt …");
+  const data = await backupPayload(withFiles);
+  let blob;
+  if(pass){
+    const salt = b64e(randBytes(16)), iv = randBytes(12);
+    const kek = await deriveKek(pass, salt, PBKDF2_ITER);
+    const ct = await crypto.subtle.encrypt({ name:"AES-GCM", iv }, kek, new TextEncoder().encode(JSON.stringify(data)));
+    blob = new Blob([JSON.stringify({ app:"steuer-crm", enc:1, iter:PBKDF2_ITER, salt,
+      iv:b64e(iv), ct:b64e(ct) })], { type:"application/json" });
+  } else {
+    blob = new Blob([JSON.stringify(data, null, 1)], { type:"application/json" });
+  }
+  download(blob, `steuer-crm-backup_${today()}${withFiles ? "_mit-dateien" : ""}${pass ? "_verschluesselt" : ""}.json`);
 }
 async function importBackup(file){
   if(!file) return;
   let data; try{ data = JSON.parse(await file.text()); }catch(e){ return toast("Datei nicht lesbar"); }
   if(data.app !== "steuer-crm") return toast("Kein gültiges Backup");
+  if(data.enc){
+    const ok = await modal({ title:"Backup entschlüsseln", ok:"Einlesen",
+      body:`<label>Backup-Passwort</label><input type="password" name="bp">` });
+    if(!ok) return;
+    try{
+      const kek = await deriveKek(dlgVal("bp"), data.salt, data.iter);
+      const buf = await crypto.subtle.decrypt({ name:"AES-GCM", iv:b64d(data.iv) }, kek, b64d(data.ct));
+      data = JSON.parse(new TextDecoder().decode(buf));
+    }catch(e){ return toast("Falsches Backup-Passwort"); }
+  }
   if(!confirmBox("Backup einlesen? Vorhandene Einträge mit gleicher ID werden überschrieben.")) return;
   for(const c of data.clients || []) await dbPut("clients", c);
   for(const d of data.dossiers || []) await dbPut("dossiers", d);
@@ -1301,8 +1773,322 @@ async function importBackup(file){
     delete rec.file;
     await dbPut("docs", rec);
   }
-  if(data.settings) { S.settings = Object.assign(S.settings, data.settings); await saveSettings(); }
+  if(data.settings){ S.settings = Object.assign(S.settings, data.settings); await saveSettings(); }
   await loadAll(); toast("Backup eingelesen"); go("dashboard");
+}
+
+/* ---------- Demo-Daten für Verkaufsgespräche ---------- */
+const DEMO = [
+  { mandat:"D-101", anrede:"Frau", vorname:"Anna", name:"Beispiel", strasse:"Musterweg 4", plz:"8400", ort:"Winterthur",
+    gemeinde:"Winterthur", email:"anna.beispiel@example.ch", telefon:"052 000 00 01", zivilstand:"verheiratet",
+    beruf:"Pflegefachfrau", arbeitgeber:"Kantonsspital", honorar:"280",
+    profil:{ unselbstaendig:true, partner_erwerb:true, kinder:true, kinderbetreuung:true, saeule3a:true,
+             fahrkosten:true, wertschriften:true, krankheitskosten:true },
+    kinder:[{ name:"Nino", geburtsdatum:"2018-04-12", status:"im Haushalt" }], status:"angefordert", quote:.35 },
+  { mandat:"D-102", anrede:"Herr", vorname:"Marco", name:"Muster", strasse:"Bahnhofstrasse 12", plz:"8001", ort:"Zürich",
+    gemeinde:"Zürich", email:"marco.muster@example.ch", telefon:"044 000 00 02", zivilstand:"ledig",
+    beruf:"Software-Entwickler", arbeitgeber:"Tech AG", honorar:"350",
+    profil:{ unselbstaendig:true, wertschriften:true, krypto:true, saeule3a:true, weiterbildung:true, spenden:true },
+    kinder:[], status:"bearbeitung", quote:.8 },
+  { mandat:"D-103", anrede:"Familie", vorname:"Elena & Paul", name:"Probst", strasse:"Rebbergweg 8", plz:"8408", ort:"Winterthur",
+    gemeinde:"Winterthur", email:"probst@example.ch", telefon:"052 000 00 03", zivilstand:"verheiratet",
+    beruf:"Architektin", arbeitgeber:"Selbständig", honorar:"640",
+    profil:{ selbstaendig:true, unselbstaendig:true, partner_erwerb:true, wohneigentum:true, schulden:true,
+             kinder:true, lebensversicherung:true, saeule2einkauf:true },
+    kinder:[{ name:"Lia", geburtsdatum:"2012-09-03", status:"in Ausbildung" }], status:"vollstaendig", quote:1 }
+];
+async function loadDemoData(){
+  const jahr = String(S.settings.jahr);
+  for(const d of DEMO){
+    const c = { id:"demo_" + slug(d.mandat), demo:true, kanton:"Zürich", partner:{}, notizen:"Demo-Datensatz",
+                created:today(), updated:today(), ...d };
+    delete c.status; delete c.quote;
+    await dbPut("clients", c);
+    /* ein Teil der Checkliste ist im Demo bereits erledigt – sonst wirkt die
+       Fortschrittsanzeige im Verkaufsgespräch tot. */
+    const req = requiredTypes(c).map(t => t.id);
+    const done = req.slice(0, Math.round(req.length * (d.quote || .4))).map(k => ({ key:k, manual:true }));
+    const dos = { id:"demo_dos_" + slug(d.mandat), demo:true, clientId:c.id, jahr, status:d.status,
+                  frist:`${jahr === String(new Date().getFullYear()) ? jahr : +jahr + 1}-09-30`,
+                  eingereicht:"", items:done, extra:[], notizen:"", created:today(), updated:today() };
+    await dbPut("dossiers", dos);
+  }
+  await loadAll(); toast("Demo-Daten geladen"); go("dashboard");
+}
+async function removeDemoData(){
+  for(const st of ["clients","dossiers","docs"])
+    for(const r of await rawAll(st)) if(String(r.id).startsWith("demo_")) await dbDel(st, r.id);
+  await loadAll(); toast("Demo-Daten entfernt"); go("dashboard");
+}
+
+/* ==================================================================
+   GMAIL-ANBINDUNG (optional)
+   Sendet über das Google-Konto der Kanzlei und liest Anhänge aus
+   Kundenmails direkt in den Konverter ein. Voraussetzung: eigene
+   OAuth-Client-ID (Anleitung in crm/SETUP-GMAIL.md) und Aufruf über
+   https:// oder http://localhost – nicht über file://.
+   ================================================================== */
+const GMAIL_SCOPES = "https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.readonly";
+const GM = { token:null, exp:0, tc:null };
+const gmailReady = () => !!S.settings.gmailClientId && location.protocol !== "file:";
+function gmailWhyNot(){
+  if(!S.settings.gmailClientId) return "Es ist keine Google-Client-ID hinterlegt (Einstellungen → Gmail).";
+  if(location.protocol === "file:") return "Google erlaubt die Anmeldung nur über https:// oder http://localhost – "
+    + "diese Datei läuft lokal (file://). Für Gmail bitte die gehostete Version verwenden.";
+  return "";
+}
+function loadScript(src){
+  return new Promise((res, rej) => {
+    if([...document.scripts].some(s => s.src === src)) return res(true);
+    const el = document.createElement("script");
+    el.src = src; el.onload = () => res(true); el.onerror = () => rej(new Error("Skript nicht geladen: " + src));
+    document.head.appendChild(el);
+  });
+}
+async function gmailToken(){
+  if(GM.token && Date.now() < GM.exp - 60000) return GM.token;
+  if(!gmailReady()) throw new Error(gmailWhyNot());
+  await loadScript("https://accounts.google.com/gsi/client");
+  return new Promise((res, rej) => {
+    try{
+      GM.tc = google.accounts.oauth2.initTokenClient({
+        client_id: S.settings.gmailClientId,
+        scope: GMAIL_SCOPES,
+        callback: r => {
+          if(r.error) return rej(new Error("Google-Anmeldung abgebrochen: " + r.error));
+          GM.token = r.access_token; GM.exp = Date.now() + (r.expires_in || 3600) * 1000;
+          res(GM.token);
+        }
+      });
+      GM.tc.requestAccessToken({ prompt: GM.token ? "" : "consent" });
+    }catch(e){ rej(e); }
+  });
+}
+const b64url = str => btoa(str).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64urlFromBytes = buf => b64e(buf).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const chunk76 = str => str.replace(/(.{76})/g, "$1\r\n");
+/* RFC-822-Nachricht mit optionalen Anhängen bauen. */
+async function buildMime({ to, subject, body, from, attachments = [] }){
+  const bound = "b" + Math.random().toString(36).slice(2);
+  const head = [
+    from ? `From: ${from}` : null,
+    `To: ${to}`,
+    `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+    "MIME-Version: 1.0",
+    attachments.length ? `Content-Type: multipart/mixed; boundary="${bound}"`
+                       : 'Content-Type: text/plain; charset="UTF-8"'
+  ].filter(Boolean).join("\r\n");
+  const utf8 = s => unescape(encodeURIComponent(s));
+  if(!attachments.length) return head + "\r\nContent-Transfer-Encoding: base64\r\n\r\n" + chunk76(btoa(utf8(body)));
+  let out = head + "\r\n\r\n--" + bound + "\r\n" +
+            'Content-Type: text/plain; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n' +
+            chunk76(btoa(utf8(body))) + "\r\n";
+  for(const a of attachments){
+    const bytes = new Uint8Array(await a.blob.arrayBuffer());
+    out += "--" + bound + "\r\n" +
+           `Content-Type: ${a.blob.type || "application/octet-stream"}; name="${a.name}"\r\n` +
+           `Content-Disposition: attachment; filename="${a.name}"\r\n` +
+           "Content-Transfer-Encoding: base64\r\n\r\n" + chunk76(b64e(bytes)) + "\r\n";
+  }
+  return out + "--" + bound + "--";
+}
+async function gmailSend(msg){
+  const token = await gmailToken();
+  const raw = b64urlFromBytes(new TextEncoder().encode(await buildMime(msg)));
+  const r = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method:"POST", headers:{ Authorization:"Bearer " + token, "Content-Type":"application/json" },
+    body: JSON.stringify({ raw })
+  });
+  if(!r.ok) throw new Error("Gmail: " + (await r.text()).slice(0,200));
+  return r.json();
+}
+/* Anhänge aus den Mails eines Kunden holen (Standard: letzte 12 Monate). */
+async function gmailFindAttachments(fromEmail, monate = 12){
+  const token = await gmailToken();
+  const after = new Date(Date.now() - monate * 30 * 86400000).toISOString().slice(0,10).replace(/-/g,"/");
+  const q = `from:${fromEmail} has:attachment after:${after}`;
+  const list = await (await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=25&q="
+      + encodeURIComponent(q), { headers:{ Authorization:"Bearer " + token } })).json();
+  const out = [];
+  for(const m of (list.messages || [])){
+    const full = await (await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${m.id}?format=full`,
+      { headers:{ Authorization:"Bearer " + token } })).json();
+    const subj = (full.payload?.headers || []).find(h => h.name === "Subject")?.value || "";
+    const walk = parts => (parts || []).forEach(p => {
+      if(p.filename && p.body?.attachmentId)
+        out.push({ msgId:m.id, attId:p.body.attachmentId, name:p.filename, size:p.body.size || 0, subject:subj });
+      if(p.parts) walk(p.parts);
+    });
+    walk(full.payload?.parts);
+  }
+  return out;
+}
+async function gmailGetAttachment(msgId, attId, name){
+  const token = await gmailToken();
+  const r = await (await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}/attachments/${attId}`,
+    { headers:{ Authorization:"Bearer " + token } })).json();
+  const bytes = b64d(String(r.data || "").replace(/-/g,"+").replace(/_/g,"/"));
+  const type = /\.pdf$/i.test(name) ? "application/pdf" : "application/octet-stream";
+  return new File([bytes], name, { type });
+}
+
+/* ==================================================================
+   CLOUD-SYNCHRONISATION (optional, Ende-zu-Ende verschlüsselt)
+   Es werden ausschliesslich bereits verschlüsselte Datensätze
+   hochgeladen – der Anbieter sieht nur Zeitstempel und Grössen.
+   Setzt aktivierte Verschlüsselung voraus.
+   ================================================================== */
+const SY = { fb:null, user:null, busy:false };
+const syncCfg = () => { try{ return JSON.parse(S.settings.syncCfg || "null"); }catch(e){ return null; } };
+async function syncInit(){
+  if(SY.fb) return SY.fb;
+  const cfg = syncCfg();
+  if(!cfg) throw new Error("Keine Firebase-Konfiguration hinterlegt (Einstellungen → Synchronisation).");
+  if(location.protocol === "file:") throw new Error("Synchronisation braucht https:// – lokal geöffnete Dateien können sich nicht anmelden.");
+  const V = "https://www.gstatic.com/firebasejs/10.12.2/";
+  let app, auth, fs, stg;
+  try{
+    [app, auth, fs, stg] = await Promise.all([
+      import(V + "firebase-app.js"), import(V + "firebase-auth.js"),
+      import(V + "firebase-firestore.js"), import(V + "firebase-storage.js")
+    ]);
+  }catch(e){ throw new Error("Firebase-Bibliothek konnte nicht geladen werden – Internetverbindung prüfen."); }
+  const a = app.initializeApp(cfg, "crm-sync");
+  SY.fb = { app:a, auth:auth.getAuth(a), db:fs.getFirestore(a), storage:stg.getStorage(a), authM:auth, fsM:fs, stgM:stg };
+  return SY.fb;
+}
+async function syncLogin(email, pass){
+  const fb = await syncInit();
+  const cred = await fb.authM.signInWithEmailAndPassword(fb.auth, email, pass);
+  SY.user = cred.user;
+  return SY.user;
+}
+const rawToCloud = r => ({ e:r.e ? 1 : 0, del:r.del ? 1 : 0, rev:r.rev || 0,
+  iv:r.iv ? b64e(r.iv) : null, ct:r.ct ? b64e(r.ct) : null,
+  fiv:r.fiv ? b64e(r.fiv) : null, ftype:r.ftype || null, hasFile:!!r.fct });
+const cloudToRaw = (id, c) => { const r = { id, rev:c.rev || 0 };
+  if(c.del){ r.del = 1; return r; }
+  if(c.e){ r.e = 1; r.iv = b64d(c.iv); r.ct = b64d(c.ct).buffer; }
+  if(c.fiv){ r.fiv = b64d(c.fiv); r.ftype = c.ftype; }
+  return r; };
+/* Zweites Gerät anmelden: holt den (mit dem Passwort verschlüsselten)
+   Schlüsselcontainer aus der Cloud, danach entsperrt man wie gewohnt.   */
+async function syncAdoptDevice(email, pass){
+  const fb = await syncInit();
+  await syncLogin(email, pass);
+  const snap = await fb.fsM.getDoc(fb.fsM.doc(fb.db, "crm", SY.user.uid, "meta", "crypto"));
+  if(!snap.exists()) throw new Error("In der Cloud liegt noch kein Schlüssel – zuerst auf dem ersten Gerät synchronisieren.");
+  await saveSecMeta(snap.data().meta);
+  return true;
+}
+async function syncMeta(fb, uid){
+  const ref = fb.fsM.doc(fb.db, "crm", uid, "meta", "crypto");
+  const snap = await fb.fsM.getDoc(ref);
+  const local = SEC.meta || await loadSecMeta();
+  if(!snap.exists() && local) await fb.fsM.setDoc(ref, { meta:local, rev:Date.now() });
+  else if(snap.exists() && local && (snap.data().meta?.salt !== local.salt))
+    await fb.fsM.setDoc(ref, { meta:local, rev:Date.now() });   // Passwortwechsel weitergeben
+}
+async function syncRun(onProgress = () => {}){
+  if(SY.busy) return;
+  if(!SEC.on) throw new Error("Synchronisation nur mit aktivierter Verschlüsselung – sonst lägen Kundendaten unverschlüsselt in der Cloud.");
+  const fb = await syncInit();
+  if(!SY.user) throw new Error("Nicht angemeldet (Einstellungen → Synchronisation → Anmelden).");
+  SY.busy = true;
+  const { fsM, stgM } = fb, uid = SY.user.uid;
+  let up = 0, down = 0;
+  try{
+    await syncMeta(fb, uid);
+    for(const store of ["clients","dossiers","docs"]){
+      onProgress(`Gleiche ${store} ab …`);
+      const local = await rawAll(store);
+      const localById = Object.fromEntries(local.map(r => [r.id, r]));
+      const snap = await fsM.getDocs(fsM.collection(fb.db, "crm", uid, store));
+      const remote = {};
+      snap.forEach(d => remote[d.id] = d.data());
+
+      for(const [id, rc] of Object.entries(remote)){          // herunterladen
+        const lc = localById[id];
+        if(lc && (lc.rev || 0) >= (rc.rev || 0)) continue;
+        const rec = cloudToRaw(id, rc);
+        if(rc.hasFile && !rc.del){
+          const url = await stgM.getDownloadURL(stgM.ref(fb.storage, `crm/${uid}/${store}/${id}`));
+          rec.fct = await (await fetch(url)).arrayBuffer();
+        }
+        await rawPut(store, rec); down++;
+      }
+      for(const r of local){                                   // hochladen
+        const rc = remote[r.id];
+        if(rc && (rc.rev || 0) >= (r.rev || 0)) continue;
+        if(r.fct && !r.del)
+          await stgM.uploadBytes(stgM.ref(fb.storage, `crm/${uid}/${store}/${r.id}`), new Uint8Array(r.fct));
+        await fsM.setDoc(fsM.doc(fb.db, "crm", uid, store, r.id), rawToCloud(r));
+        up++;
+      }
+    }
+    S.settings.lastSync = new Date().toISOString(); await saveSettings();
+    await loadAll();
+    return { up, down };
+  } finally { SY.busy = false; }
+}
+
+/* ---------- Sperrbildschirm ---------- */
+function showLock(msg){
+  document.body.classList.add("locked");
+  let el = $("#lockScreen");
+  if(!el){ el = document.createElement("div"); el.id = "lockScreen"; document.body.appendChild(el); }
+  el.innerHTML = `
+    <div class="lock-card">
+      <div class="brand" style="justify-content:center;margin-bottom:14px">
+        <div class="logo">${esc((S.settings.produkt || "Steuer-CRM").slice(0,2).toUpperCase())}</div>
+        <div style="text-align:left"><b style="color:var(--ink)">${esc(S.settings.produkt || "Steuer-CRM")}</b>
+          <span class="small" style="display:block">${esc(S.settings.kanzlei || "")}</span></div>
+      </div>
+      <div id="lockPane">
+        <label>Passwort</label>
+        <input type="password" id="lockPass" autocomplete="current-password" autofocus>
+        <div class="row" style="margin-top:12px">
+          <button class="btn-primary" id="lockGo">Entsperren</button>
+          <button class="btn-ghost" id="lockRec">Passwort vergessen?</button>
+        </div>
+      </div>
+      <p class="small" id="lockMsg" style="color:var(--danger);min-height:18px;margin-top:10px">${esc(msg||"")}</p>
+      <p class="small">Die Daten sind mit AES-256 verschlüsselt. Ohne Passwort oder Wiederherstellungsschlüssel
+         sind sie nicht lesbar – auch nicht für uns.</p>
+    </div>`;
+  const go = async () => {
+    const pass = $("#lockPass").value;
+    $("#lockMsg").textContent = "Entschlüssle …";
+    if(await unlockWithPassword(pass)){ await afterUnlock(); }
+    else $("#lockMsg").textContent = "Falsches Passwort.";
+  };
+  $("#lockGo").onclick = go;
+  $("#lockPass").onkeydown = e => { if(e.key === "Enter") go(); };
+  $("#lockRec").onclick = () => {
+    $("#lockPane").innerHTML = `
+      <label>Wiederherstellungsschlüssel</label>
+      <input id="recKey" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" autocomplete="off">
+      <div style="height:8px"></div>
+      <label>Neues Passwort</label>
+      <input type="password" id="recPass" autocomplete="new-password">
+      <div class="row" style="margin-top:12px">
+        <button class="btn-primary" id="recGo">Entsperren &amp; Passwort neu setzen</button></div>`;
+    $("#recGo").onclick = async () => {
+      const k = $("#recKey").value, np = $("#recPass").value;
+      if(np.length < 8) return $("#lockMsg").textContent = "Neues Passwort: mindestens 8 Zeichen.";
+      $("#lockMsg").textContent = "Prüfe Schlüssel …";
+      if(await unlockWithRecovery(k, np)) await afterUnlock();
+      else $("#lockMsg").textContent = "Wiederherstellungsschlüssel stimmt nicht.";
+    };
+  };
+  $("#lockPass").focus();
+}
+async function afterUnlock(){
+  $("#lockScreen")?.remove();
+  document.body.classList.remove("locked");
+  await loadAll();
+  touchIdle();
+  go(S.view === "dashboard" ? "dashboard" : S.view);
 }
 
 /* ==================================================================
@@ -1316,10 +2102,18 @@ async function importBackup(file){
          und den privaten Modus verlassen.</p></div>`;
     return;
   }
-  await loadAll();
+  const st = await rawGet("kv","settings");
+  if(st && st.v) S.settings = Object.assign(S.settings, st.v);
+  applyBranding();
   $$("#nav button").forEach(b => b.onclick = () => go(b.dataset.view));
   $("#dlgForm").addEventListener("submit", () => {});
   window.addEventListener("keydown", e => { if(e.key === "Escape" && $("#dlg").open) $("#dlg").close("cancel"); });
+  ["click","keydown","mousemove","touchstart"].forEach(ev =>
+    window.addEventListener(ev, touchIdle, { passive:true }));
+
+  SEC.meta = await loadSecMeta();
+  if(SEC.meta){ SEC.on = true; SEC.locked = true; showLock(); return; }   // erst entsperren
+  await loadAll();
   go("dashboard");
 })();
 </script>

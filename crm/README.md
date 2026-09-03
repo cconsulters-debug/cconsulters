@@ -1,7 +1,9 @@
 # Steuer-CRM (privat) – Kundendaten, Dokumenten-Konverter, Checklisten
 
-Ein einziges HTML-File: `crm/index.html`. Kein Server, keine Installation, keine Cloud.
-Alle Kundendaten bleiben in **deinem Browser** (IndexedDB) – sie werden nie hochgeladen.
+Ein einziges HTML-File: `crm/index.html`. Kein Server, keine Installation, keine Cloud-Pflicht.
+Alle Kundendaten bleiben in **deinem Browser** (IndexedDB) – auf Wunsch AES-256-verschlüsselt.
+Optional zuschaltbar: Gmail-Versand, Beleg-Import aus Gmail und Ende-zu-Ende-verschlüsselte
+Synchronisation über mehrere Geräte.
 
 ---
 
@@ -12,12 +14,11 @@ Alle Kundendaten bleiben in **deinem Browser** (IndexedDB) – sie werden nie ho
 2. Doppelklick → öffnet im Browser. **Chrome oder Edge verwenden** (Firefox blockiert die lokale Datenbank bei `file://`).
 3. Lesezeichen setzen.
 
-**Variante B – über die Website** (nur wenn du von mehreren Geräten arbeitest)
+**Variante B – über die eigene Domain** (nötig für Gmail-Anbindung und Synchronisation)
 Nach dem Deploy erreichbar unter `https://<deine-domain>/crm/`. Die Seite ist auf `noindex` gesetzt und
-in `robots.txt` gesperrt. Auch hier gilt: **Daten liegen pro Gerät im Browser**, sie synchronisieren nicht.
+in `robots.txt` gesperrt; die Daten liegen weiterhin im Browser, nicht auf dem Server.
 
-> Achtung: Zwei Geräte = zwei getrennte Datenbestände. Wer synchron arbeiten will, braucht die
-> Ausbaustufe „Cloud" (siehe Abschnitt 7).
+> Ohne aktivierte Synchronisation gilt: zwei Geräte = zwei getrennte Datenbestände (Abschnitt 6b).
 
 ---
 
@@ -25,8 +26,10 @@ in `robots.txt` gesperrt. Auch hier gilt: **Daten liegen pro Gerät im Browser**
 
 1. **Einstellungen & Backup** öffnen → Kanzlei, Bearbeiter/in, E-Mail, Telefon, Standard-Steuerjahr, Standardfrist eintragen → Speichern.
    → Diese Angaben füllen automatisch alle E-Mail-Vorlagen.
-2. **Kunden → + Neuer Kunde** → Stammdaten erfassen.
-3. Im Block **Steuerprofil** ankreuzen, was auf den Kunden zutrifft (Wertschriften, Säule 3a, Kinder, Wohneigentum …).
+2. **Einstellungen → Sicherheit → Verschlüsselung aktivieren** (Passwort vergeben) und den
+   **Wiederherstellungsschlüssel ausdrucken**. Bei echten Kundendaten nicht optional.
+3. **Kunden → + Neuer Kunde** → Stammdaten erfassen.
+4. Im Block **Steuerprofil** ankreuzen, was auf den Kunden zutrifft (Wertschriften, Säule 3a, Kinder, Wohneigentum …).
    → **Das ist der wichtigste Schritt:** aus diesen Häkchen entsteht die komplette Checkliste und die Registerstruktur.
 
 ---
@@ -93,23 +96,59 @@ Beim Hineinziehen einer Datei passiert dreierlei:
 Fünf Vorlagen: Unterlagen anfordern · Erinnerung · Entwurf zur Freigabe · Bestätigung Einreichung · Honorarrechnung.
 Die offenen Checklistenpunkte werden automatisch in den Text eingesetzt.
 
-- **„In Gmail öffnen"** – öffnet dein Gmail-Konto mit fertig ausgefülltem Entwurf (Empfänger, Betreff, Text).
-  Anhänge fügst du dort an; vorher im Dossier das ZIP exportieren.
-- **„Mit Mailprogramm öffnen"** – `mailto:` für Outlook / Apple Mail.
-- **„Text kopieren"** – für alles andere.
+**Ohne Einrichtung (funktioniert sofort):**
+- **„In Gmail öffnen"** – öffnet dein Gmail mit fertigem Entwurf (Empfänger, Betreff, Text).
+- **„Mailprogramm"** – `mailto:` für Outlook / Apple Mail. **„Text kopieren"** – für alles andere.
 
-Bewusst so gebaut: Das CRM verschickt **nichts** selbständig und hat **keinen** Zugriff auf dein Postfach.
-Du siehst jede Mail vor dem Senden.
+**Mit Gmail-Anbindung** (eigene Google-Client-ID, Anleitung in `SETUP-GMAIL.md`):
+- **„Direkt über Gmail senden"** – versendet aus dem CRM, auf Wunsch **mit Dossier-ZIP im Anhang**;
+  der Dossier-Status springt automatisch auf *angefordert*.
+- **Konverter → „Belege aus Gmail holen"** – durchsucht die Mails des Kunden der letzten 12 Monate
+  nach Anhängen, du wählst aus, das CRM erkennt und sortiert sie ein. Das spart pro Mandat den
+  gesamten Download-und-Umbenennen-Schritt.
 
----
+Das CRM verschickt nie etwas ohne Klick, und ohne Gmail-Anbindung hat es **keinerlei** Zugriff auf dein Postfach.
+
+## 6a. Sicherheit: Passwortschutz und Verschlüsselung
+
+*Einstellungen → Sicherheit → Verschlüsselung aktivieren.* Danach gilt:
+
+- Alle Kundendaten **und alle Belege** liegen AES-256-verschlüsselt in der Browser-Datenbank.
+  Wer die Datenbank ausliest, sieht nur Zeitstempel und Grössen – keine Namen, keine Beträge.
+- Beim Öffnen erscheint ein **Sperrbildschirm**; nach Inaktivität (Standard 15 Minuten) sperrt sich das CRM selbst.
+- Beim Aktivieren erhältst du **einmalig einen Wiederherstellungsschlüssel** (`ABCDE-FGHIJ-…`).
+  **Ausdrucken und getrennt vom Rechner aufbewahren** – damit kommst du auch bei vergessenem
+  Passwort wieder an die Daten und setzt ein neues Passwort.
+- Passwort ändern, neuen Wiederherstellungsschlüssel erzeugen und Verschlüsselung wieder aufheben
+  sind jederzeit möglich (alles unter *Sicherheit*).
+
+> Passwort **und** Wiederherstellungsschlüssel verloren = Daten unwiederbringlich weg.
+> Das ist kein Fehler, sondern der Zweck der Verschlüsselung.
+
+## 6b. Synchronisation über mehrere Geräte (optional)
+
+*Einstellungen → Synchronisation.* Setzt aktivierte Verschlüsselung voraus – hochgeladen werden
+**ausschliesslich verschlüsselte Datensätze**, der Cloud-Anbieter sieht keine Inhalte.
+Einrichtung mit eigenem Firebase-Projekt (Region Zürich): `SETUP-SYNC.md`.
+Zweites Gerät: „Dieses Gerät mit bestehendem Konto verbinden", danach mit dem Passwort des ersten
+Geräts entsperren.
+
+## 6c. White-Label (für den Weiterverkauf)
+
+*Einstellungen → Erscheinungsbild*: Produktname, Hauptfarbe, Akzentfarbe und Lizenzschlüssel pro
+Kunde setzen – Titel, Logo-Kürzel, Navigation und Sperrbildschirm übernehmen das sofort.
+*Einstellungen → Demo & Statistik → Demo-Daten laden* erzeugt drei fiktive Mandate für
+Verkaufsgespräche (und entfernt sie auf Knopfdruck wieder).
 
 ## 7. Datensicherung – bitte ernst nehmen
 
-Die Daten liegen nur in diesem Browser. **Browserdaten löschen = CRM leer.**
+Ohne Synchronisation liegen die Daten nur in diesem Browser. **Browserdaten löschen = CRM leer.**
 
 - **Einstellungen → Backup exportieren (Stammdaten)**: Kunden, Dossiers, Checklisten, Dokumentenliste. Klein, monatlich machen.
 - **Backup inkl. Dateien**: zusätzlich alle abgelegten Belege (wird gross, dafür vollständig). Vor jedem Gerätewechsel.
 - **Backup einlesen** stellt alles wieder her (auch auf einem neuen Rechner).
+- Bei aktivierter Verschlüsselung wird das Backup mit einem eigenen Passwort geschützt, das du beim
+  Export festlegst – notiere es zusammen mit dem Wiederherstellungsschlüssel.
 
 Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-Stick ablegen – sie enthalten Kundendaten.
 
@@ -117,15 +156,33 @@ Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-St
 
 ## 8. Grenzen und Ausbaustufen
 
-| Ausbaustufe | Aufwand | Vorteil |
+**Enthalten und einsatzbereit:** lokale Verschlüsselung mit Sperrbildschirm und
+Wiederherstellungsschlüssel · verschlüsselte Backups · Gmail-Versand und Beleg-Import ·
+Ende-zu-Ende-verschlüsselte Cloud-Synchronisation · White-Label · Demo-Modus.
+
+| Nächste Ausbaustufe | Aufwand | Vorteil |
 |---|---|---|
-| **Heute:** lokal, ein Gerät, manuelle Backups | 0 | maximale Datenhoheit, keine Kosten, offline nutzbar |
-| Passwortschutz + Verschlüsselung der lokalen Datenbank | ca. ½ Tag | schützt bei Diebstahl/geteiltem Rechner; Passwort vergessen = Daten weg |
-| Cloud-Synchronisation (z. B. Firebase, Server in CH) | 1–2 Tage + laufende Kosten | mehrere Geräte, automatische Backups; Kundendaten liegen beim Anbieter → Auftragsverarbeitungsvertrag nötig |
-| Gmail-API-Anbindung (Mails automatisch senden, Anhänge aus Kundenmails direkt einlesen) | 1–2 Tage + Google-Cloud-Projekt | Belege landen ohne Handarbeit im Dossier |
-| Direkter Import in ZHprivateTax / eTax | offen | Doppelerfassung entfällt (offizielle Schnittstelle prüfen) |
+| Weitere Kantone (Register/Ziffern) | ½–1 Tag pro Kanton | verkaufbar ausserhalb ZH |
+| OCR für reine Bildscans (Texterkennung im Browser) | 1–2 Tage | erkennt auch Fotos ohne Textebene |
+| Direkter Import in ZHprivateTax / eTax | offen – Schnittstelle prüfen | Doppelerfassung entfällt |
+| Mehrbenutzerbetrieb mit Rollen | 3–5 Tage | Kanzleien ab 3 Personen |
 
 **Bekannte Grenzen heute:**
-- PDF-Inhaltserkennung braucht Internet (lädt pdf.js). Ohne Internet greift die Erkennung nur über den Dateinamen.
-- Gescannte PDF ohne Textebene (reines Bild) werden nicht inhaltlich gelesen – dort zählt der Dateiname.
+- PDF-Inhaltserkennung braucht Internet (lädt pdf.js). Ohne Internet greift die Erkennung über den Dateinamen.
+- Gescannte PDFs ohne Textebene werden nicht inhaltlich gelesen – dort zählt der Dateiname.
+- Gmail und Synchronisation funktionieren nur über `https://` oder `http://localhost`, nicht bei
+  lokal geöffneten Dateien (`file://`). Rein lokaler Betrieb bleibt ohne diese beiden Funktionen möglich.
 - Keine Steuerberechnung: Zahlen erfasst du weiterhin in der offiziellen Steuersoftware.
+- Kein gleichzeitiges Arbeiten zweier Geräte am selben Mandat (der spätere Speichervorgang gewinnt).
+
+## 9. Weiterverkauf
+
+| Dokument | Inhalt |
+|---|---|
+| `VERKAUF.md` | Positionierung, Zielkunden, Preise, Gesprächsleitfaden, Auslieferungs-Checkliste |
+| `LIZENZ.md` | Lizenzvertrag als Vorlage + ehrliche Einordnung zum Kopierschutz |
+| `DATENSCHUTZ.md` | Rollenverteilung nach revDSG, Aufbewahrung, AVV-Muster, Textbaustein für Endkunden |
+| `SETUP-GMAIL.md` / `SETUP-SYNC.md` | Einrichtungsanleitungen für die Zusatzfunktionen |
+| `firestore.crm.rules` / `storage.crm.rules` | Sicherheitsregeln für die Cloud-Synchronisation |
+
+Vor dem ersten Verkauf: Lizenz- und Datenschutzunterlagen einmalig anwaltlich prüfen lassen.
