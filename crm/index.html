@@ -58,7 +58,8 @@ small,.small{font-size:12.5px;color:var(--ink-dim)}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
-@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}.app{grid-template-columns:1fr}.side{position:static;height:auto}}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:900px){.g2,.g3,.g4,.g5{grid-template-columns:1fr}.app{grid-template-columns:1fr}.side{position:static;height:auto}}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .spacer{flex:1}
 
@@ -130,8 +131,12 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
 .keybox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;letter-spacing:.06em;background:var(--panel-2);
         border:1px dashed var(--line-strong);border-radius:8px;padding:12px;text-align:center;word-break:break-all}
 
+.invoice-sheet{padding:26px}
 @media print{
   .side,.no-print,button{display:none !important}
+  body.view-invoice .page-head,
+  body.view-invoice .card:not(.invoice-sheet){display:none !important}
+  body.view-invoice .invoice-sheet{border:none;padding:0}
   .app{display:block} .main{padding:0;max-width:none}
   .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
   body{background:#fff;font-size:12px}
@@ -150,6 +155,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
       <button data-view="clients"><span class="ico">☺</span> Kunden</button>
       <button data-view="dossier"><span class="ico">▤</span> Dossier &amp; Checkliste</button>
       <button data-view="converter"><span class="ico">⇄</span> Dokumenten-Konverter</button>
+      <button data-view="invoices"><span class="ico">₣</span> Honorar &amp; Rechnungen</button>
       <button data-view="mail"><span class="ico">✉</span> E-Mail-Vorlagen</button>
       <button data-view="settings"><span class="ico">⚙</span> Einstellungen &amp; Backup</button>
     </nav>
@@ -310,7 +316,7 @@ const ST = Object.fromEntries(DOSSIER_STATUS.map(s => [s.id, s]));
 /* ==================================================================
    2) DATENHALTUNG – IndexedDB (bleibt im Browser, kein Server)
    ================================================================== */
-const DB_NAME = "steuer-crm", DB_VER = 1;
+const DB_NAME = "steuer-crm", DB_VER = 2;
 let db = null;
 
 function openDB(){
@@ -321,6 +327,7 @@ function openDB(){
       if(!d.objectStoreNames.contains("clients"))  d.createObjectStore("clients",  { keyPath:"id" });
       if(!d.objectStoreNames.contains("dossiers")) d.createObjectStore("dossiers", { keyPath:"id" });
       if(!d.objectStoreNames.contains("docs"))     d.createObjectStore("docs",     { keyPath:"id" });
+      if(!d.objectStoreNames.contains("invoices")) d.createObjectStore("invoices", { keyPath:"id" });
       if(!d.objectStoreNames.contains("kv"))       d.createObjectStore("kv",       { keyPath:"k"  });
     };
     rq.onsuccess = () => res(rq.result);
@@ -440,7 +447,7 @@ const dbDel = (store, key) => rawPut(store, { id:key, del:1, rev:Date.now() });
    und beim Passwortwechsel (der Datenschlüssel selbst bleibt gleich).       */
 async function rewriteAll(newKey){
   const oldKey = SEC.key;
-  for(const store of ["clients","dossiers","docs"]){
+  for(const store of ["clients","dossiers","docs","invoices"]){
     for(const r of await rawAll(store)){
       if(r.del) continue;
       SEC.key = oldKey; const full = await unpack(r, true);
@@ -530,11 +537,15 @@ function touchIdle(){
 
 /* Zentraler Zustand – wird beim Start einmal komplett geladen. */
 const S = {
-  clients:[], dossiers:[], docs:[],
+  clients:[], dossiers:[], docs:[], invoices:[],
   settings:{ produkt:"Steuer-CRM", kanzlei:"C Consulters – Treuhand & Steuerberatung", bearbeiter:"", email:"", telefon:"",
              kanton:"ZH", jahr:new Date().getFullYear()-1, mailer:"gmail", frist:"30.09.",
              farbe:"#1F3864", akzent:"#0f8fa3", idleMin:15,
-             gmailClientId:"", gmailFrom:"", syncCfg:"", syncOn:false, lizenz:"", kantone:{} },
+             gmailClientId:"", gmailFrom:"", syncCfg:"", syncOn:false, lizenz:"", kantone:{},
+             ocr:false, ocrLang:"deu", iban:"", mwstNr:"", mwstSatz:0, zahlungsziel:30, rechnungKreis:"R-{jahr}-{nr}", naechsteNr:1,
+             tarife:[["Steuererklärung natürliche Person","280"],["Wertschriftenverzeichnis","60"],
+                     ["Liegenschaft / Eigenmietwert","90"],["Selbständige Erwerbstätigkeit","250"],
+                     ["Fristerstreckung / Korrespondenz","40"],["Beratung (pro Stunde)","140"]] },
   view:"dashboard", clientId:null, jahr:null, queue:[]
 };
 
@@ -542,6 +553,7 @@ async function loadAll(){
   S.clients  = (await dbAll("clients")).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
   S.dossiers = await dbAll("dossiers");
   S.docs     = await dbAll("docs");
+  S.invoices = (await dbAll("invoices")).sort((a,b) => (b.datum||"").localeCompare(a.datum||""));
   const st = await dbGet("kv","settings");
   if(st && st.v) S.settings = Object.assign(S.settings, st.v);
 }
@@ -835,6 +847,40 @@ async function pdfText(file, maxPages=3){
   }catch(e){ return local; }
 }
 
+/* ------------------------------------------------------------------
+   OCR für Scans und Fotos ohne Textebene (optional).
+   Braucht Internet: tesseract.js wird beim ersten Mal geladen
+   (rund 15 MB inkl. Sprachdaten, danach im Browser-Cache).
+   ------------------------------------------------------------------ */
+const TESSERACT_URL = "https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js";
+const isBild = name => /\.(png|jpe?g|webp|bmp|gif|tiff?)$/i.test(name);
+async function loadTesseract(){
+  if(window.Tesseract) return window.Tesseract;
+  await loadScript(TESSERACT_URL);
+  if(!window.Tesseract) throw new Error("Texterkennung konnte nicht geladen werden (Internetverbindung?).");
+  return window.Tesseract;
+}
+/* Erste Seite eines PDF in ein Bild rendern (dafür wird pdf.js gebraucht). */
+async function pdfPageToCanvas(file, scale = 2){
+  const lib = await loadPdfJs();
+  if(!lib) throw new Error("PDF-Renderer nicht verfügbar – für OCR von PDFs ist eine Internetverbindung nötig.");
+  const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const page = await pdf.getPage(1);
+  const vp = page.getViewport({ scale });
+  const canvas = document.createElement("canvas");
+  canvas.width = vp.width; canvas.height = vp.height;
+  await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+  return canvas;
+}
+async function ocrFile(file, onProgress = () => {}){
+  const T = await loadTesseract();
+  const src = isBild(file.name) ? file : await pdfPageToCanvas(file);
+  const res = await T.recognize(src, S.settings.ocrLang || "deu", {
+    logger: m => { if(m.status === "recognizing text") onProgress(Math.round((m.progress || 0) * 100)); }
+  });
+  return res?.data?.text || "";
+}
+
 /* ---------- ZIP (Store-Verfahren, ohne Bibliothek) ---------- */
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
@@ -881,15 +927,19 @@ function go(view, opts={}){
   S.view = view;
   if(opts.clientId !== undefined) S.clientId = opts.clientId;
   if(opts.jahr !== undefined) S.jahr = opts.jahr;
+  if(opts.invoiceId !== undefined) S.invoiceId = opts.invoiceId;
   $$("#nav button").forEach(b => b.classList.toggle("active", b.dataset.view === view ||
-    (view === "client" && b.dataset.view === "clients")));
+    (view === "client" && b.dataset.view === "clients") ||
+    (view === "invoice" && b.dataset.view === "invoices")));
   render();
   window.scrollTo(0,0);
 }
 function render(){
   const v = { dashboard:viewDashboard, clients:viewClients, client:viewClient, dossier:viewDossier,
-              converter:viewConverter, mail:viewMail, settings:viewSettings }[S.view] || viewDashboard;
+              converter:viewConverter, invoices:viewInvoices, invoice:viewInvoice,
+              mail:viewMail, settings:viewSettings }[S.view] || viewDashboard;
   v();
+  document.body.classList.toggle("view-invoice", S.view === "invoice");
   applyBranding();
   $("#storageInfo").textContent = `${S.clients.length} Kunden · ${S.docs.length} Dokumente`
     + (SEC.on ? " · 🔒 verschlüsselt" : "");
@@ -921,11 +971,13 @@ function viewDashboard(){
       <button class="btn-primary" id="btnNewClient">+ Neuer Kunde</button>
     </div>
   </div>
-  <div class="grid g4" style="margin-bottom:16px">
+  <div class="grid g5" style="margin-bottom:16px">
     <div class="kpi"><b>${S.clients.length}</b><span>Kunden total</span></div>
     <div class="kpi"><b>${offen}</b><span>Offene Dossiers ${jahr}</span></div>
     <div class="kpi"><b>${S.docs.filter(d => String(d.jahr) === String(jahr)).length}</b><span>Dokumente ${jahr}</span></div>
     <div class="kpi"><b>${avg}%</b><span>Ø Unterlagen vollständig</span></div>
+    <div class="kpi"><b>${chf(S.invoices.filter(i => ["offen","gemahnt"].includes(i.status))
+        .reduce((a,i) => a + invSum(i).total, 0))}</b><span>Offene Forderungen CHF</span></div>
   </div>
   ${S.clients.length === 0 ? `<div class="empty"><h3>Noch keine Kunden erfasst</h3>
       <p class="small">Erfasse den ersten Kunden – Checkliste und Dokumentenstruktur entstehen automatisch.</p>
@@ -1089,9 +1141,11 @@ function viewClient(){
     if(!confirmBox(`Kunde "${clientName(c)}" mit allen Dossiers und Dokumenten löschen?`)) return;
     for(const d of S.docs.filter(d => d.clientId === c.id)) await dbDel("docs", d.id);
     for(const d of S.dossiers.filter(d => d.clientId === c.id)) await dbDel("dossiers", d.id);
+    for(const r of S.invoices.filter(r => r.clientId === c.id)) await dbDel("invoices", r.id);
     await dbDel("clients", c.id);
     S.docs = S.docs.filter(d => d.clientId !== c.id);
     S.dossiers = S.dossiers.filter(d => d.clientId !== c.id);
+    S.invoices = S.invoices.filter(r => r.clientId !== c.id);
     S.clients = S.clients.filter(x => x.id !== c.id);
     toast("Kunde gelöscht"); go("clients");
   };
@@ -1183,6 +1237,16 @@ function viewDossier(){
         </div>`).join("")}`).join("")}
   </div>
 
+  <div class="card no-print"><div class="card-head"><h3>Honorar</h3>
+      <button class="btn-sm btn-teal" id="newInv">+ Rechnung für ${jahr}</button></div>
+    ${invOf(c.id, jahr).length ? `<table><thead><tr><th>Nr.</th><th>Datum</th><th class="num">Betrag</th><th>Status</th><th></th></tr></thead>
+      <tbody>${invOf(c.id, jahr).map(i => `<tr><td class="mono">${esc(i.nr)}</td><td>${deAt(i.datum)}</td>
+        <td class="num">${chf(invSum(i).total)}</td>
+        <td><span class="badge ${IST[i.status]?.[2]||""}">${esc(IST[i.status]?.[1]||i.status)}</span></td>
+        <td class="num"><button class="btn-sm" data-inv="${i.id}">Öffnen</button></td></tr>`).join("")}</tbody></table>`
+      : `<p class="small">Noch keine Rechnung für ${jahr}${c.honorar ? ` – hinterlegtes Honorar: CHF ${chf(c.honorar)}` : ""}.</p>`}
+  </div>
+
   <div class="card">
     <div class="card-head"><h3>Dokumente im Dossier (${docs.length})</h3>
       <div class="row no-print">
@@ -1235,6 +1299,8 @@ function viewDossier(){
     await dbDel("docs", b.dataset.rm); S.docs = S.docs.filter(x => x.id !== b.dataset.rm);
     await renumber(c.id, jahr); render(); toast("Entfernt"); });
   $$("[data-redo]").forEach(b => b.onclick = () => reclassifyDialog(b.dataset.redo));
+  $("#newInv").onclick = async () => { const inv = await createInvoice(c, jahr); go("invoice", { invoiceId:inv.id }); };
+  $$("[data-inv]").forEach(b => b.onclick = () => go("invoice", { invoiceId:b.dataset.inv }));
   $("#zip") && ($("#zip").onclick = () => exportZip(c, jahr));
   $("#toc") && ($("#toc").onclick = () => printToc(c, jahr));
 }
@@ -1333,7 +1399,10 @@ function viewConverter(){
       <button class="btn-primary" id="pick">Dateien auswählen</button>
       <button id="gmailImport" ${gmailReady() && c.email ? "" : "disabled"}>Belege aus Gmail holen</button>
       <input type="file" id="file" multiple class="hidden">
-      <p class="small" style="margin-top:8px">${gmailReady()
+      <p class="small" style="margin-top:8px">${S.settings.ocr
+        ? "OCR ist aktiv: Scans ohne Textebene werden automatisch gelesen (braucht Internet)."
+        : "Tipp: Für reine Bildscans OCR in den Einstellungen aktivieren – oder pro Datei den OCR-Knopf nutzen."}</p>
+      <p class="small">${gmailReady()
         ? (c.email ? `Sucht Anhänge in Mails von ${esc(c.email)} (letzte 12 Monate).`
                    : "Für den Gmail-Import beim Kunden eine E-Mail-Adresse hinterlegen.")
         : esc(gmailWhyNot())}</p>
@@ -1353,7 +1422,8 @@ function viewConverter(){
         <div><select data-q="${i}" class="qtype">${DOCTYPES.map(t =>
           `<option value="${t.id}" ${t.id===q.docType?"selected":""}>${REG[t.reg].nr} · ${esc(t.label)}</option>`).join("")}</select></div>
         <div><select data-qy="${i}" class="qyear">${yearOptions(q.jahr)}</select></div>
-        <div class="num"><button class="btn-sm btn-danger" data-qx="${i}">✕</button></div>
+        <div class="num">${q.sicher ? "" : `<button class="btn-sm" data-ocr="${i}" title="Text per OCR lesen">OCR</button> `}
+          <button class="btn-sm btn-danger" data-qx="${i}">✕</button></div>
       </div>`).join("")}
     </div>` : ""}
   <div class="card"><div class="card-head"><h3>Bereits abgelegt: ${docsOf(c.id, jahr).length} Dokumente (${jahr})</h3>
@@ -1375,6 +1445,18 @@ function viewConverter(){
       { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), sicher:true }); });
   $$(".qyear").forEach(sel => sel.onchange = () => { S.queue[+sel.dataset.qy].jahr = sel.value; });
   $$("[data-qx]").forEach(b => b.onclick = () => { S.queue.splice(+b.dataset.qx,1); render(); });
+  $$("[data-ocr]").forEach(b => b.onclick = async () => {
+    const q = S.queue[+b.dataset.ocr], stat = $("#status");
+    try{
+      b.disabled = true; stat.textContent = `Texterkennung läuft: ${q.name} …`;
+      const text = await ocrFile(q.file, pct => stat.textContent = `OCR ${q.name}: ${pct}%`);
+      const cl = classify(q.name, text), t = DT[cl.docType];
+      Object.assign(q, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton),
+                         sicher:cl.sicher, hits:cl.hits, jahr: detectYear(text) || q.jahr });
+      stat.textContent = cl.sicher ? "OCR erfolgreich erkannt." : "OCR gelesen – Zuordnung bitte prüfen.";
+      render();
+    }catch(e){ stat.textContent = "OCR nicht möglich: " + e.message; b.disabled = false; }
+  });
   $("#clearQ") && ($("#clearQ").onclick = () => { S.queue = []; render(); });
   $("#apply")  && ($("#apply").onclick  = () => applyQueue(c, jahr));
 }
@@ -1410,7 +1492,13 @@ async function intake(files, jahr){
   for(let i = 0; i < files.length; i++){
     const f = files[i];
     if(stat) stat.textContent = `Lese ${i+1}/${files.length}: ${f.name} …`;
-    const text = await pdfText(f);
+    let text = await pdfText(f);
+    if(S.settings.ocr && !textUsable(text) && (isBild(f.name) || /\.pdf$/i.test(f.name))){
+      try{
+        if(stat) stat.textContent = `Texterkennung (OCR) läuft: ${f.name} …`;
+        text = await ocrFile(f, pct => { if(stat) stat.textContent = `OCR ${f.name}: ${pct}%`; });
+      }catch(e){ if(stat) stat.textContent = "OCR nicht möglich: " + e.message; }
+    }
     const cl = classify(f.name, text);
     const t = DT[cl.docType];
     S.queue.push({ file:f, name:f.name, size:f.size, docType:t.id, register:t.reg,
@@ -1437,6 +1525,200 @@ async function applyQueue(c, jahr){
   const n = S.queue.length; S.queue = [];
   toast(n + " Dokumente abgelegt");
   go("dossier", { clientId:c.id, jahr:[...years][0] || jahr });
+}
+
+/* ==================================================================
+   HONORAR & RECHNUNGEN
+   ================================================================== */
+const INV_STATUS = [["entwurf","Entwurf","grey"],["offen","Offen",""],["gemahnt","Gemahnt","warn"],
+                    ["bezahlt","Bezahlt","ok"],["storniert","Storniert","grey"]];
+const IST = Object.fromEntries(INV_STATUS.map(x => [x[0], x]));
+const posBetrag = p => (+p.menge || 0) * (+p.ansatz || 0);
+function invSum(inv){
+  const netto = (inv.positionen || []).reduce((a,p) => a + posBetrag(p), 0);
+  const mwst = netto * (+inv.mwstSatz || 0) / 100;
+  return { netto, mwst, total: netto + mwst };
+}
+const invOf = (clientId, jahr) => S.invoices.filter(i => i.clientId === clientId
+  && (jahr === undefined || String(i.jahr) === String(jahr)));
+function nextInvoiceNr(jahr){
+  const nr = +S.settings.naechsteNr || 1;
+  return (S.settings.rechnungKreis || "R-{jahr}-{nr}")
+    .replace("{jahr}", jahr).replace("{nr}", String(nr).padStart(3,"0"));
+}
+async function createInvoice(client, jahr){
+  const heute = today();
+  const faellig = new Date(Date.now() + (+S.settings.zahlungsziel || 30) * 86400000).toISOString().slice(0,10);
+  const inv = { id:uid(), clientId:client.id, jahr:String(jahr), nr:nextInvoiceNr(jahr), datum:heute, faellig,
+    positionen:[{ text:`Erstellung Steuererklärung ${jahr}`, menge:1, ansatz:client.honorar || "" }],
+    mwstSatz:+S.settings.mwstSatz || 0, status:"entwurf", bezahltAm:"", notiz:"",
+    created:heute, updated:heute };
+  S.settings.naechsteNr = (+S.settings.naechsteNr || 1) + 1; await saveSettings();
+  S.invoices.unshift(inv); await dbPut("invoices", inv);
+  return inv;
+}
+const invSave = async inv => { inv.updated = today(); await dbPut("invoices", inv);
+  S.invoices.sort((a,b) => (b.datum||"").localeCompare(a.datum||"")); };
+
+function viewInvoices(){
+  const jahr = S.jahr || S.settings.jahr;
+  const list = S.invoices.filter(i => !S.invFilter || i.status === S.invFilter);
+  const offen = S.invoices.filter(i => ["offen","gemahnt"].includes(i.status));
+  const offenTot = offen.reduce((a,i) => a + invSum(i).total, 0);
+  const jahrUmsatz = S.invoices.filter(i => i.status === "bezahlt" && (i.bezahltAm||i.datum).startsWith(String(new Date().getFullYear())))
+    .reduce((a,i) => a + invSum(i).total, 0);
+  const ueberfaellig = offen.filter(i => i.faellig && i.faellig < today());
+  M().innerHTML = `
+  <div class="page-head">
+    <div><h1>Honorar &amp; Rechnungen</h1>
+      <p>Positionen erfassen, Rechnung drucken oder als PDF speichern, Zahlungseingang festhalten.</p></div>
+    <div class="row no-print">
+      <select id="invClient" style="width:auto"><option value="">Kunde wählen …</option>${S.clients.map(c =>
+        `<option value="${c.id}">${esc(clientName(c))}</option>`).join("")}</select>
+      <select id="invYear" style="width:auto">${yearOptions(jahr)}</select>
+      <button class="btn-primary" id="invNew">+ Neue Rechnung</button>
+    </div>
+  </div>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="kpi"><b>${chf(offenTot)}</b><span>Offene Forderungen</span></div>
+    <div class="kpi"><b>${offen.length}</b><span>Offene Rechnungen</span></div>
+    <div class="kpi"><b>${ueberfaellig.length}</b><span>Überfällig</span></div>
+    <div class="kpi"><b>${chf(jahrUmsatz)}</b><span>Bezahlt ${new Date().getFullYear()}</span></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Rechnungen</h3>
+      <div class="row no-print">${[["","Alle"]].concat(INV_STATUS.map(x => [x[0], x[1]])).map(([v,l]) =>
+        `<button class="pill ${(S.invFilter||"")===v?"active":""}" data-f="${v}">${l}</button>`).join("")}</div></div>
+    ${list.length ? `<table><thead><tr><th>Nr.</th><th>Kunde</th><th>Jahr</th><th>Datum</th><th>Fällig</th>
+      <th class="num">Betrag</th><th>Status</th><th></th></tr></thead><tbody>
+      ${list.map(i => { const c = clientById(i.clientId), sum = invSum(i);
+        const spaet = ["offen","gemahnt"].includes(i.status) && i.faellig && i.faellig < today();
+        return `<tr>
+          <td class="mono">${esc(i.nr)}</td>
+          <td>${esc(clientName(c))}</td>
+          <td>${esc(i.jahr)}</td>
+          <td>${deAt(i.datum)}</td>
+          <td>${deAt(i.faellig)}${spaet ? ' <span class="badge danger">überfällig</span>' : ""}</td>
+          <td class="num">${chf(sum.total)}</td>
+          <td><span class="badge ${IST[i.status]?.[2] || ""}">${esc(IST[i.status]?.[1] || i.status)}</span></td>
+          <td class="num no-print"><button class="btn-sm" data-open="${i.id}">Öffnen</button></td></tr>`; }).join("")}
+      </tbody></table>`
+     : '<div class="empty">Noch keine Rechnungen. Kunde und Jahr wählen, dann «+ Neue Rechnung».</div>'}
+  </div>`;
+  $$("[data-f]").forEach(b => b.onclick = () => { S.invFilter = b.dataset.f; render(); });
+  $$("[data-open]").forEach(b => b.onclick = () => go("invoice", { invoiceId:b.dataset.open }));
+  $("#invNew").onclick = async () => {
+    const cid = $("#invClient").value;
+    if(!cid) return toast("Bitte zuerst einen Kunden wählen");
+    const inv = await createInvoice(clientById(cid), $("#invYear").value);
+    go("invoice", { invoiceId:inv.id });
+  };
+}
+
+function viewInvoice(){
+  const inv = S.invoices.find(i => i.id === S.invoiceId);
+  if(!inv) return go("invoices");
+  const c = clientById(inv.clientId) || {};
+  const st = S.settings, sum = invSum(inv);
+  M().innerHTML = `
+  <div class="page-head no-print">
+    <div><h1>Rechnung ${esc(inv.nr)}</h1><p>${esc(clientName(c))} · Steuerperiode ${esc(inv.jahr)}</p></div>
+    <div class="row">
+      <select id="invStatus" style="width:auto">${INV_STATUS.map(x =>
+        `<option value="${x[0]}" ${inv.status===x[0]?"selected":""}>${x[1]}</option>`).join("")}</select>
+      <button id="invPrint" class="btn-primary">Drucken / als PDF speichern</button>
+      <button id="invMail" class="btn-teal">Per E-Mail</button>
+      <button id="invDel" class="btn-danger">Löschen</button>
+    </div>
+  </div>
+
+  <div class="card no-print"><h3>Positionen</h3>
+    <table><thead><tr><th>Leistung</th><th class="num" style="width:90px">Menge</th>
+      <th class="num" style="width:120px">Ansatz CHF</th><th class="num" style="width:120px">Betrag</th><th></th></tr></thead>
+      <tbody>${(inv.positionen||[]).map((p,i) => `<tr>
+        <td><input data-p="${i}" data-k="text" value="${esc(p.text||"")}"></td>
+        <td><input data-p="${i}" data-k="menge" class="num" value="${esc(p.menge ?? 1)}"></td>
+        <td><input data-p="${i}" data-k="ansatz" class="num" value="${esc(p.ansatz ?? "")}"></td>
+        <td class="num">${chf(posBetrag(p))}</td>
+        <td class="num"><button class="btn-sm btn-danger" data-delp="${i}">✕</button></td></tr>`).join("")}
+      </tbody></table>
+    <div class="row" style="margin-top:10px">
+      <button class="btn-sm" id="addPos">+ Position</button>
+      <select id="tarif" style="width:auto"><option value="">Aus Tarifliste …</option>${(st.tarife||[]).map(([t,a],i) =>
+        `<option value="${i}">${esc(t)} – CHF ${esc(a)}</option>`).join("")}</select>
+      <span class="spacer"></span>
+      <label style="margin:0">MwSt %<input id="invMwst" class="num" style="width:80px" value="${esc(inv.mwstSatz ?? 0)}"></label>
+    </div>
+    <div class="grid g4" style="margin-top:12px">
+      <div><label>Rechnungsdatum</label><input type="date" id="invDatum" value="${esc(inv.datum||"")}"></div>
+      <div><label>Zahlbar bis</label><input type="date" id="invFaellig" value="${esc(inv.faellig||"")}"></div>
+      <div><label>Bezahlt am</label><input type="date" id="invBezahlt" value="${esc(inv.bezahltAm||"")}"></div>
+      <div><label>Rechnungsnummer</label><input id="invNr" value="${esc(inv.nr)}"></div>
+    </div>
+    <div style="margin-top:10px"><label>Bemerkung auf der Rechnung</label>
+      <textarea id="invNotiz" style="min-height:60px">${esc(inv.notiz||"")}</textarea></div>
+  </div>
+
+  <div class="card invoice-sheet">
+    <div class="row" style="align-items:flex-start">
+      <div><b style="font-size:16px">${esc(st.kanzlei || "")}</b><br>
+        <span class="small">${esc(st.bearbeiter||"")}${st.bearbeiter ? "<br>" : ""}${esc(st.email||"")}${st.telefon ? " · " + esc(st.telefon) : ""}
+        ${st.mwstNr ? "<br>MWST-Nr. " + esc(st.mwstNr) : ""}</span></div>
+      <span class="spacer"></span>
+      <div style="text-align:right" class="small">Rechnungsdatum ${deAt(inv.datum)}<br>Rechnung ${esc(inv.nr)}</div>
+    </div>
+    <div style="margin:26px 0 20px">
+      ${esc([c.anrede, c.vorname, c.name].filter(Boolean).join(" "))}<br>
+      ${esc(c.strasse||"")}<br>${esc([c.plz, c.ort].filter(Boolean).join(" "))}
+    </div>
+    <h2 style="margin-bottom:12px">Honorar Steuererklärung ${esc(inv.jahr)}</h2>
+    <table><thead><tr><th>Leistung</th><th class="num">Menge</th><th class="num">Ansatz</th><th class="num">Betrag CHF</th></tr></thead>
+      <tbody>${(inv.positionen||[]).filter(p => p.text || posBetrag(p)).map(p => `<tr>
+        <td>${esc(p.text||"")}</td><td class="num">${esc(p.menge ?? 1)}</td>
+        <td class="num">${chf(p.ansatz||0)}</td><td class="num">${chf(posBetrag(p))}</td></tr>`).join("")}
+        <tr><td colspan="3" class="num"><b>Zwischentotal</b></td><td class="num"><b>${chf(sum.netto)}</b></td></tr>
+        ${inv.mwstSatz ? `<tr><td colspan="3" class="num">MwSt ${esc(inv.mwstSatz)}%</td><td class="num">${chf(sum.mwst)}</td></tr>` : ""}
+        <tr><td colspan="3" class="num"><b>Total</b></td><td class="num"><b>CHF ${chf(sum.total)}</b></td></tr>
+      </tbody></table>
+    <p style="margin-top:18px">Zahlbar innert ${Math.max(0, Math.round((new Date(inv.faellig||inv.datum) - new Date(inv.datum)) / 86400000))} Tagen,
+      bis ${deAt(inv.faellig)}.${st.iban ? " Bitte auf IBAN " + esc(st.iban) + " überweisen, unter Angabe der Rechnungsnummer " + esc(inv.nr) + "." : ""}</p>
+    ${inv.notiz ? `<p class="small">${esc(inv.notiz)}</p>` : ""}
+    ${inv.status === "bezahlt" ? `<p class="badge ok">Bezahlt am ${deAt(inv.bezahltAm)}</p>` : ""}
+    <p class="small" style="margin-top:26px">Vielen Dank für Ihr Vertrauen.</p>
+  </div>`;
+
+  const upd = async (patch) => { Object.assign(inv, patch); await invSave(inv); render(); };
+  $$("[data-p]").forEach(el => el.onchange = async () => {
+    const p = inv.positionen[+el.dataset.p];
+    p[el.dataset.k] = el.dataset.k === "text" ? el.value : el.value.replace(",", ".");
+    await invSave(inv); render();
+  });
+  $$("[data-delp]").forEach(b => b.onclick = async () => {
+    inv.positionen.splice(+b.dataset.delp, 1); await invSave(inv); render(); });
+  $("#addPos").onclick = async () => { (inv.positionen ||= []).push({ text:"", menge:1, ansatz:"" });
+    await invSave(inv); render(); };
+  $("#tarif").onchange = async e => {
+    if(e.target.value === "") return;
+    const [t, a] = S.settings.tarife[+e.target.value];
+    (inv.positionen ||= []).push({ text:t, menge:1, ansatz:a });
+    await invSave(inv); render();
+  };
+  $("#invMwst").onchange   = e => upd({ mwstSatz:+e.target.value || 0 });
+  $("#invDatum").onchange  = e => upd({ datum:e.target.value });
+  $("#invFaellig").onchange= e => upd({ faellig:e.target.value });
+  $("#invNr").onchange     = e => upd({ nr:e.target.value.trim() });
+  $("#invNotiz").onchange  = e => upd({ notiz:e.target.value });
+  $("#invBezahlt").onchange= e => upd({ bezahltAm:e.target.value, status:e.target.value ? "bezahlt" : inv.status });
+  $("#invStatus").onchange = e => upd({ status:e.target.value,
+    bezahltAm:e.target.value === "bezahlt" ? (inv.bezahltAm || today()) : inv.bezahltAm });
+  $("#invPrint").onclick = () => window.print();
+  $("#invMail").onclick  = () => { S.tpl = "honorar"; go("mail", { clientId:inv.clientId, jahr:inv.jahr }); };
+  $("#invDel").onclick = async () => {
+    if(!confirmBox(`Rechnung ${inv.nr} löschen?`)) return;
+    await dbDel("invoices", inv.id);
+    S.invoices = S.invoices.filter(x => x.id !== inv.id);
+    toast("Rechnung gelöscht"); go("invoices");
+  };
 }
 
 /* ---------- E-Mail-Vorlagen ---------- */
@@ -1501,8 +1783,8 @@ Freundliche Grüsse
 
 Für die Erstellung Ihrer Steuererklärung {jahr} erlaube ich mir, folgendes Honorar in Rechnung zu stellen:
 
-Honorar: CHF {honorar}
-Zahlbar innert 30 Tagen.
+Rechnung {rechnungsnr}: CHF {betrag}
+Zahlbar bis {rechnungfaellig}.
 
 Vielen Dank für Ihr Vertrauen.
 
@@ -1523,6 +1805,10 @@ function fillTemplate(tpl, c, jahr){
     "{telefon}": S.settings.telefon || "", "{email}": S.settings.email || "",
     "{honorar}": c.honorar ? chf(c.honorar) : "___"
   };
+  const inv = invOf(c.id, jahr).find(i => i.status !== "storniert");
+  map["{rechnungsnr}"] = inv ? inv.nr : "—";
+  map["{betrag}"] = inv ? chf(invSum(inv).total) : (c.honorar ? chf(c.honorar) : "___");
+  map["{rechnungfaellig}"] = inv && inv.faellig ? deAt(inv.faellig) : "30 Tagen";
   const rep = s => Object.entries(map).reduce((a,[k,v]) => a.split(k).join(v), s);
   return { subj:rep(tpl.subj), body:rep(tpl.body) };
 }
@@ -1649,6 +1935,36 @@ function viewSettings(){
         <div><label>Passwort wiederholen</label><input type="password" id="encPass2" autocomplete="new-password"></div>
       </div>
       <div class="row" style="margin-top:10px"><button class="btn-primary" id="encOn">Verschlüsselung aktivieren</button></div>`}
+  </div>
+
+  <div class="card"><h3>Rechnungsstellung</h3>
+    <div class="grid g4">
+      <div><label>IBAN</label><input id="sIban" value="${esc(s.iban||"")}" placeholder="CH.. .... .... .... ."></div>
+      <div><label>MWST-Nr. (optional)</label><input id="sMwstNr" value="${esc(s.mwstNr||"")}"></div>
+      <div><label>MwSt-Satz % (0 = keine)</label><input id="sMwstSatz" class="num" value="${esc(s.mwstSatz ?? 0)}"></div>
+      <div><label>Zahlungsziel (Tage)</label><input id="sZiel" class="num" value="${esc(s.zahlungsziel ?? 30)}"></div>
+      <div><label>Nummernkreis</label><input id="sKreis" value="${esc(s.rechnungKreis||"R-{jahr}-{nr}")}"></div>
+      <div><label>Nächste Nummer</label><input id="sNr" class="num" value="${esc(s.naechsteNr ?? 1)}"></div>
+    </div>
+    <label style="margin-top:12px">Tarifliste (eine Zeile: Leistung | Ansatz)</label>
+    <textarea id="sTarife" style="min-height:110px">${esc((s.tarife||[]).map(t => t.join(" | ")).join("\n"))}</textarea>
+    <div class="row" style="margin-top:10px"><button class="btn-primary" id="saveInvSet">Speichern</button>
+      <span class="small">Nächste Rechnung erhält die Nummer <b>${esc(nextInvoiceNr(s.jahr))}</b></span></div>
+  </div>
+
+  <div class="card"><h3>Texterkennung (OCR)</h3>
+    <p class="small">Digitale PDF werden immer und ohne Internet gelesen. Für <b>eingescannte Belege
+      und Fotos ohne Textebene</b> lässt sich zusätzlich OCR aktivieren – dafür wird beim ersten Mal
+      eine Bibliothek von rund 15 MB geladen (danach im Browser-Cache) und eine Internetverbindung benötigt.</p>
+    <div class="grid g2">
+      <div><label class="check"><input type="checkbox" id="sOcr" ${s.ocr ? "checked" : ""}>
+        OCR automatisch anwenden, wenn ein PDF keinen Text enthält</label></div>
+      <div><label>Sprache</label><select id="sOcrLang">${[["deu","Deutsch"],["fra","Französisch"],
+        ["ita","Italienisch"],["eng","Englisch"],["deu+fra","Deutsch + Französisch"]].map(([v,l]) =>
+        `<option value="${v}" ${ (s.ocrLang||"deu")===v ? "selected":""}>${l}</option>`).join("")}</select></div>
+    </div>
+    <p class="small">Ohne diese Option bleibt der OCR-Knopf pro Datei im Konverter verfügbar – so lädst
+      du die Bibliothek nur, wenn du sie wirklich brauchst.</p>
   </div>
 
   <div class="card"><h3>Kantons-Profile</h3>
@@ -1783,6 +2099,19 @@ function viewSettings(){
     else toast("Passwort falsch");
   };
 
+  $("#sOcr").onchange = async e => { S.settings.ocr = e.target.checked; await saveSettings();
+    toast(e.target.checked ? "OCR aktiviert" : "OCR deaktiviert"); };
+  $("#sOcrLang").onchange = async e => { S.settings.ocrLang = e.target.value; await saveSettings(); };
+
+  $("#saveInvSet").onclick = async () => {
+    Object.assign(S.settings, { iban:$("#sIban").value.trim(), mwstNr:$("#sMwstNr").value.trim(),
+      mwstSatz:+$("#sMwstSatz").value || 0, zahlungsziel:+$("#sZiel").value || 30,
+      rechnungKreis:$("#sKreis").value.trim() || "R-{jahr}-{nr}", naechsteNr:+$("#sNr").value || 1,
+      tarife:$("#sTarife").value.split("\n").map(l => l.split("|").map(x => x.trim()))
+             .filter(t => t[0]).map(t => [t[0], t[1] || ""]) });
+    await saveSettings(); toast("Rechnungsdaten gespeichert"); render();
+  };
+
   /* --- Kantons-Profile --- */
   $("#ktEdit").onclick = () => kantonEditor($("#ktSel").value);
   $("#ktExp").onclick = () => {
@@ -1856,8 +2185,8 @@ function viewSettings(){
   $("#wipe").onclick = async () => {
     if(!confirmBox("Wirklich ALLE Daten löschen? Vorher ein Backup exportieren!")) return;
     if(!confirmBox("Letzte Warnung: alle Kunden, Dossiers und Dokumente werden gelöscht.")) return;
-    for(const st of ["clients","dossiers","docs"]) for(const r of await rawAll(st)) await rawDel(st, r.id);
-    S.clients = []; S.dossiers = []; S.docs = [];
+    for(const st of ["clients","dossiers","docs","invoices"]) for(const r of await rawAll(st)) await rawDel(st, r.id);
+    S.clients = []; S.dossiers = []; S.docs = []; S.invoices = [];
     toast("Alle Daten gelöscht"); go("dashboard");
   };
 }
@@ -1872,8 +2201,8 @@ async function backupPayload(withFiles){
       meta.file = full?.blob ? await blobToDataUrl(full.blob) : null; }
     docs.push(meta);
   }
-  return { app:"steuer-crm", version:2, exported:new Date().toISOString(), withFiles,
-           settings:S.settings, clients:S.clients, dossiers:S.dossiers, docs };
+  return { app:"steuer-crm", version:3, exported:new Date().toISOString(), withFiles,
+           settings:S.settings, clients:S.clients, dossiers:S.dossiers, invoices:S.invoices, docs };
 }
 async function exportBackup(withFiles){
   let pass = null;
@@ -1920,6 +2249,7 @@ async function importBackup(file){
   if(!confirmBox("Backup einlesen? Vorhandene Einträge mit gleicher ID werden überschrieben.")) return;
   for(const c of data.clients || []) await dbPut("clients", c);
   for(const d of data.dossiers || []) await dbPut("dossiers", d);
+  for(const r of data.invoices || []) await dbPut("invoices", r);
   for(const d of data.docs || []){
     const rec = { ...d };
     if(rec.file){ const r = await fetch(rec.file); rec.blob = await r.blob(); }
@@ -1962,12 +2292,12 @@ const DEMO = [
     beruf:"Pflegefachfrau", arbeitgeber:"Kantonsspital", honorar:"280",
     profil:{ unselbstaendig:true, partner_erwerb:true, kinder:true, kinderbetreuung:true, saeule3a:true,
              fahrkosten:true, wertschriften:true, krankheitskosten:true },
-    kinder:[{ name:"Nino", geburtsdatum:"2018-04-12", status:"im Haushalt" }], status:"angefordert", quote:.35 },
+    kinder:[{ name:"Nino", geburtsdatum:"2018-04-12", status:"im Haushalt" }], status:"angefordert", quote:.35, rechnung:"offen" },
   { mandat:"D-102", anrede:"Herr", vorname:"Marco", name:"Muster", strasse:"Bahnhofstrasse 12", plz:"8001", ort:"Zürich",
     gemeinde:"Zürich", email:"marco.muster@example.ch", telefon:"044 000 00 02", zivilstand:"ledig",
     beruf:"Software-Entwickler", arbeitgeber:"Tech AG", honorar:"350",
     profil:{ unselbstaendig:true, wertschriften:true, krypto:true, saeule3a:true, weiterbildung:true, spenden:true },
-    kinder:[], status:"bearbeitung", quote:.8 },
+    kinder:[], status:"bearbeitung", quote:.8, rechnung:"bezahlt" },
   { mandat:"D-103", anrede:"Familie", vorname:"Elena & Paul", name:"Probst", strasse:"Rebbergweg 8", plz:"8408", ort:"Winterthur",
     gemeinde:"Winterthur", email:"probst@example.ch", telefon:"052 000 00 03", zivilstand:"verheiratet",
     beruf:"Architektin", arbeitgeber:"Selbständig", honorar:"640",
@@ -1980,7 +2310,7 @@ async function loadDemoData(){
   for(const d of DEMO){
     const c = { id:"demo_" + slug(d.mandat), demo:true, kanton:"Zürich", partner:{}, notizen:"Demo-Datensatz",
                 created:today(), updated:today(), ...d };
-    delete c.status; delete c.quote;
+    delete c.status; delete c.quote; delete c.rechnung;
     await dbPut("clients", c);
     /* ein Teil der Checkliste ist im Demo bereits erledigt – sonst wirkt die
        Fortschrittsanzeige im Verkaufsgespräch tot. */
@@ -1990,11 +2320,20 @@ async function loadDemoData(){
                   frist:`${jahr === String(new Date().getFullYear()) ? jahr : +jahr + 1}-09-30`,
                   eingereicht:"", items:done, extra:[], notizen:"", created:today(), updated:today() };
     await dbPut("dossiers", dos);
+    if(d.rechnung){
+      const inv = { id:"demo_inv_" + slug(d.mandat), demo:true, clientId:c.id, jahr, nr:`R-${jahr}-${d.mandat.slice(-3)}`,
+        datum:`${jahr}-11-15`, faellig:`${jahr}-12-15`, status:d.rechnung,
+        bezahltAm:d.rechnung === "bezahlt" ? `${jahr}-11-28` : "",
+        positionen:[{ text:`Erstellung Steuererklärung ${jahr}`, menge:1, ansatz:d.honorar },
+                    { text:"Wertschriftenverzeichnis", menge:1, ansatz:"60" }],
+        mwstSatz:0, notiz:"", created:today(), updated:today() };
+      await dbPut("invoices", inv);
+    }
   }
   await loadAll(); toast("Demo-Daten geladen"); go("dashboard");
 }
 async function removeDemoData(){
-  for(const st of ["clients","dossiers","docs"])
+  for(const st of ["clients","dossiers","docs","invoices"])
     for(const r of await rawAll(st)) if(String(r.id).startsWith("demo_")) await dbDel(st, r.id);
   await loadAll(); toast("Demo-Daten entfernt"); go("dashboard");
 }
@@ -2177,7 +2516,7 @@ async function syncRun(onProgress = () => {}){
   let up = 0, down = 0;
   try{
     await syncMeta(fb, uid);
-    for(const store of ["clients","dossiers","docs"]){
+    for(const store of ["clients","dossiers","docs","invoices"]){
       onProgress(`Gleiche ${store} ab …`);
       const local = await rawAll(store);
       const localById = Object.fromEntries(local.map(r => [r.id, r]));

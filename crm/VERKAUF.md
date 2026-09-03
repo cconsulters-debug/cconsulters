@@ -37,6 +37,7 @@ höchstens die Dokumentensortierung als Ergänzung.
 | **Basis** | Lizenz, eigenes Branding, Einrichtung per Videocall (1 Std.), Handbuch | **CHF 890** einmalig |
 | **Plus** | Basis + Gmail-Anbindung eingerichtet + Cloud-Sync eingerichtet | **CHF 1'490** einmalig |
 | **Wartung** | Updates, neue Steuerperiode, 4 Supportanfragen/Jahr | **CHF 240/Jahr** |
+| **Rechnungsmodul** | im Preis enthalten: Tarifliste, MwSt, Nummernkreis, Rechnungsdruck | – |
 | **Kantonspaket** | Ziffern eines weiteren Kantons erfasst und geprüft | **CHF 290** einmalig |
 | **Anpassung** | eigene Register, Sonderwünsche | **CHF 140/Std.** |
 
@@ -55,6 +56,8 @@ Stundenansatz von CHF 120 sind das CHF 6'000 – das Paket amortisiert sich im e
    E-Mail mit genau den fehlenden Punkten.
 5. **Sicherheit:** Verschlüsselung aktivieren, sperren, entsperren. Ein Satz: „Ihre Daten verlassen
    dieses Gerät nur, wenn Sie es wollen."
+6. **Abrechnung zeigen:** aus dem Dossier heraus eine Rechnung erzeugen, Position aus der Tarifliste
+   wählen, drucken. Treuhänder erkennen dort sofort, dass die Saison damit vollständig abgedeckt ist.
 6. **Abschluss:** „Soll ich es Ihnen bis Freitag mit Ihrem Logo und Ihren Farben einrichten?"
 
 **Vor der Demo immer:** Demo-Daten laden, echte Kundendaten vorher entfernen oder ein separates
@@ -79,7 +82,9 @@ Browserprofil verwenden.
 2. **Eigene Mandate 2–3 Wochen damit führen** – jede Rückfrage aus der Praxis macht das Produkt besser
    und liefert dir die Sätze für das Verkaufsgespräch.
 3. **Referenzkunde:** die erste Lizenz stark vergünstigt gegen ein schriftliches Testimonial.
-4. **Landingpage** mit dem Satz aus Abschnitt 1, drei Screenshots und einem Kontaktformular.
+4. **Landingpage** – ist fertig: `steuer-crm/index.html` mit echten Screenshots, Preisen und FAQ.
+   Vor dem Veröffentlichen nur den Block `KONTAKT` am Ende der Datei ausfüllen (Firma, E-Mail, Telefon).
+   Die Seite ist indexierbar; die App selbst (`/crm/`) bleibt auf `noindex`.
 
 ## 7. Ehrliche Grenzen – im Gespräch offen nennen
 

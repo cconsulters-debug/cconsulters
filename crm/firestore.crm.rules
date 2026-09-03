@@ -7,7 +7,7 @@ service cloud.firestore {
     match /crm/{uid}/{store}/{docId} {
       allow read, write: if request.auth != null
                          && request.auth.uid == uid
-                         && store in ['clients', 'dossiers', 'docs'];
+                         && store in ['clients', 'dossiers', 'docs', 'invoices', 'meta'];
     }
     match /{document=**} { allow read, write: if false; }
   }

@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /crm/
+Allow: /steuer-crm/
 
 Sitemap: /sitemap.xml

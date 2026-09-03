@@ -151,6 +151,35 @@ Kunde setzen – Titel, Logo-Kürzel, Navigation und Sperrbildschirm übernehmen
 *Einstellungen → Demo & Statistik → Demo-Daten laden* erzeugt drei fiktive Mandate für
 Verkaufsgespräche (und entfernt sie auf Knopfdruck wieder).
 
+## 6d. Honorar & Rechnungen
+
+*Honorar & Rechnungen* im Menü, oder direkt im Dossier über „+ Rechnung für <Jahr>".
+
+- Positionen aus der **Tarifliste** (Einstellungen → Rechnungsstellung) oder frei erfassen,
+  Menge × Ansatz wird gerechnet, MwSt optional.
+- **Nummernkreis** frei wählbar (`R-{jahr}-{nr}`), die nächste Nummer vergibt das CRM.
+- Status **Entwurf → Offen → Gemahnt → Bezahlt**; überfällige Rechnungen werden markiert.
+- **Drucken / als PDF speichern** erzeugt eine saubere A4-Rechnung mit Kanzleikopf, Adresse,
+  Positionen, Total, Zahlungsziel und IBAN – im Druck erscheint nur der Rechnungsbeleg.
+- Die Übersicht und die Seite „Honorar & Rechnungen" zeigen **offene Forderungen**,
+  überfällige Rechnungen und den bezahlten Jahresumsatz.
+- Die E-Mail-Vorlage „Honorarrechnung" zieht Rechnungsnummer, Betrag und Fälligkeit automatisch.
+
+> Schweizer QR-Rechnung ist bewusst **nicht** enthalten – eine fehlerhafte QR-Rechnung wäre schlimmer
+> als keine. Die Rechnung nennt IBAN und Rechnungsnummer im Text; für Kleinmandate genügt das.
+> Eine echte QR-Rechnung ist eine mögliche Ausbaustufe.
+
+## 6e. Texterkennung für Scans (OCR)
+
+Digitale PDF liest das CRM immer und ohne Internet. Für **eingescannte Belege und Fotos ohne
+Textebene** gibt es zusätzlich OCR (*Einstellungen → Texterkennung*):
+
+- Entweder automatisch, sobald ein PDF keinen Text enthält, oder pro Datei über den **OCR-Knopf**
+  in der Warteschlange des Konverters.
+- Beim ersten Mal werden rund 15 MB geladen (danach im Browser-Cache) – **Internet nötig**.
+- Sprachen: Deutsch, Französisch, Italienisch, Englisch.
+- Ohne Internet oder bei einem Fehler bleibt alles bedienbar; der Beleg landet in Register 99 „prüfen".
+
 ## 7. Datensicherung – bitte ernst nehmen
 
 Ohne Synchronisation liegen die Daten nur in diesem Browser. **Browserdaten löschen = CRM leer.**
@@ -167,19 +196,20 @@ Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-St
 
 ## 8. Grenzen und Ausbaustufen
 
-**Enthalten und einsatzbereit:** Inhaltserkennung von PDFs ohne Internet · Kantons-Profile ·
+**Enthalten und einsatzbereit:** Inhaltserkennung von PDFs ohne Internet · OCR für Scans (zuschaltbar) ·
+Kantons-Profile · Honorar und Rechnungen ·
 lokale Verschlüsselung mit Sperrbildschirm und Wiederherstellungsschlüssel · verschlüsselte Backups ·
 Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisation · White-Label · Demo-Modus.
 
 | Nächste Ausbaustufe | Aufwand | Vorteil |
 |---|---|---|
-| OCR für reine Bildscans (Texterkennung im Browser) | 1–2 Tage | erkennt auch Fotos und Scans ohne Textebene |
+| Schweizer QR-Rechnung im Rechnungsdruck | 2–3 Tage | Zahlung per Banking-App scannbar |
 | Direkter Import in ZHprivateTax / eTax | offen – Schnittstelle prüfen | Doppelerfassung entfällt |
 | Mehrbenutzerbetrieb mit Rollen | 3–5 Tage | Kanzleien ab 3 Personen |
 
 **Bekannte Grenzen heute:**
-- Gescannte PDFs und Fotos **ohne Textebene** werden nicht inhaltlich gelesen – dort zählt der Dateiname.
-  (Scanner mit Texterkennung/OCR verwenden, dann greift die Inhaltserkennung.)
+- Gescannte PDFs und Fotos ohne Textebene brauchen die zuschaltbare OCR (und dafür Internet);
+  ohne OCR zählt bei ihnen nur der Dateiname.
 - Sehr exotisch eingebettete Schriften können unlesbaren Text liefern; mit Internetverbindung
   springt automatisch pdf.js als Reserve ein.
 - Gmail und Synchronisation funktionieren nur über `https://` oder `http://localhost`, nicht bei
@@ -192,6 +222,7 @@ Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisa
 | Dokument | Inhalt |
 |---|---|
 | `VERKAUF.md` | Positionierung, Zielkunden, Preise, Gesprächsleitfaden, Auslieferungs-Checkliste |
+| `../steuer-crm/index.html` | fertige Verkaufs-Landingpage mit echten Screenshots (nur Kontaktblock ausfüllen) |
 | `LIZENZ.md` | Lizenzvertrag als Vorlage + ehrliche Einordnung zum Kopierschutz |
 | `DATENSCHUTZ.md` | Rollenverteilung nach revDSG, Aufbewahrung, AVV-Muster, Textbaustein für Endkunden |
 | `SETUP-GMAIL.md` / `SETUP-SYNC.md` | Einrichtungsanleitungen für die Zusatzfunktionen |
