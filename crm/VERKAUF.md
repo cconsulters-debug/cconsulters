@@ -12,7 +12,8 @@ Nicht „ein CRM" – davon gibt es hunderte. Du verkaufst:
 
 Drei Argumente, die im Verkaufsgespräch tragen:
 
-1. **Zeit:** Belege sortieren und benennen fällt weg (realistisch 15–30 Min. pro Mandat).
+1. **Zeit:** Belege sortieren und benennen fällt weg (realistisch 15–30 Min. pro Mandat) – das CRM
+   liest den Inhalt der PDFs, auch wenn die Datei `Scan_0007.pdf` heisst.
 2. **Datenhoheit:** läuft lokal, verschlüsselt, keine Cloud-Pflicht – das Gegenargument gegen jedes
    US-SaaS-Angebot, und für Treuhänder das stärkste Argument überhaupt.
 3. **Kein Projekt:** eine Datei, Doppelklick, keine IT, keine Migration, keine Schulungswoche.
@@ -36,7 +37,8 @@ höchstens die Dokumentensortierung als Ergänzung.
 | **Basis** | Lizenz, eigenes Branding, Einrichtung per Videocall (1 Std.), Handbuch | **CHF 890** einmalig |
 | **Plus** | Basis + Gmail-Anbindung eingerichtet + Cloud-Sync eingerichtet | **CHF 1'490** einmalig |
 | **Wartung** | Updates, neue Steuerperiode, 4 Supportanfragen/Jahr | **CHF 240/Jahr** |
-| **Anpassung** | eigene Register, weitere Kantone, Sonderwünsche | **CHF 140/Std.** |
+| **Kantonspaket** | Ziffern eines weiteren Kantons erfasst und geprüft | **CHF 290** einmalig |
+| **Anpassung** | eigene Register, Sonderwünsche | **CHF 140/Std.** |
 
 Rechnung für den Kunden: 20 Minuten pro Mandat × 150 Mandate = 50 Stunden pro Jahr. Bei einem
 Stundenansatz von CHF 120 sind das CHF 6'000 – das Paket amortisiert sich im ersten Monat der Saison.
@@ -46,8 +48,9 @@ Stundenansatz von CHF 120 sind das CHF 6'000 – das Paket amortisiert sich im e
 
 1. **Frage statt Pitch:** „Wie kommen die Belege heute bei Ihnen an – und wer benennt sie?"
 2. **Demo-Daten laden** (Einstellungen → Demo-Daten) → Übersicht mit drei Mandaten zeigen.
-3. **Der Moment, der verkauft:** 8 zufällige Belege in den Konverter ziehen und zusehen, wie sie
-   erkannt, umbenannt und einsortiert werden. Danach ZIP exportieren und den Ordner öffnen.
+3. **Der Moment, der verkauft:** 8 zufällige Belege in den Konverter ziehen – am besten mit
+   nichtssagenden Dateinamen, damit sichtbar wird, dass der **Inhalt** gelesen wird – und zusehen,
+   wie sie erkannt, umbenannt und einsortiert werden. Danach ZIP exportieren und den Ordner öffnen.
 4. **Checkliste zeigen:** Profil ankreuzen → Checkliste entsteht → „Unterlagen anfordern" → fertige
    E-Mail mit genau den fehlenden Punkten.
 5. **Sicherheit:** Verschlüsselung aktivieren, sperren, entsperren. Ein Satz: „Ihre Daten verlassen
@@ -84,7 +87,7 @@ Das schafft Vertrauen und verhindert Reklamationen:
 
 - Keine Steuerberechnung und keine Übermittlung ans Steueramt – die Zahlen werden weiterhin in
   ZHprivateTax/eTax erfasst.
-- Register und Ziffern folgen dem Kanton Zürich; andere Kantone brauchen eine Anpassung
-  (verkaufbar als Zusatzleistung).
+- Mitgeliefert sind die Ziffern des Kantons Zürich. Andere Kantone werden im CRM erfasst
+  (Einstellungen → Kantons-Profile) – als Kantonspaket verkaufbar; erfundene Ziffern gibt es nicht.
 - Erkennung reiner Bildscans erfolgt über den Dateinamen – Scanner mit Texterkennung empfehlen.
 - Kein Mehrbenutzerbetrieb mit gleichzeitigem Zugriff auf dasselbe Mandat.

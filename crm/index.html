@@ -270,6 +270,31 @@ const PROFILE_FIELDS = [
 ];
 const PROFILE_LABELS = Object.fromEntries(PROFILE_FIELDS.flatMap(g => g.items));
 
+/* Kantone: Die Ziffern in DOCTYPES sind die des Kantons Zürich (Grundlage
+   Steuerdossier ZH). Für andere Kantone lassen sich die Ziffern im CRM
+   erfassen (Einstellungen → Kantons-Profile) und als Profil weitergeben.  */
+const KANTONE = [
+  ["ZH","Zürich"],["BE","Bern"],["LU","Luzern"],["UR","Uri"],["SZ","Schwyz"],["OW","Obwalden"],
+  ["NW","Nidwalden"],["GL","Glarus"],["ZG","Zug"],["FR","Freiburg"],["SO","Solothurn"],
+  ["BS","Basel-Stadt"],["BL","Basel-Landschaft"],["SH","Schaffhausen"],["AR","Appenzell A.Rh."],
+  ["AI","Appenzell I.Rh."],["SG","St. Gallen"],["GR","Graubünden"],["AG","Aargau"],["TG","Thurgau"],
+  ["TI","Tessin"],["VD","Waadt"],["VS","Wallis"],["NE","Neuenburg"],["GE","Genf"],["JU","Jura"]
+];
+const KANTON_NAME = Object.fromEntries(KANTONE);
+const kantonCode = v => {
+  const x = String(v || "").trim();
+  if(KANTON_NAME[x.toUpperCase()]) return x.toUpperCase();
+  const hit = KANTONE.find(([,n]) => n.toLowerCase() === x.toLowerCase());
+  return hit ? hit[0] : "ZH";
+};
+/* Ziffer eines Dokumenttyps im jeweiligen Kanton. */
+function zifferFor(typeId, kanton){
+  const k = kantonCode(kanton);
+  if(k === "ZH") return DT[typeId]?.ziffer || "–";
+  const prof = (S.settings.kantone || {})[k] || {};
+  return prof[typeId] || "–";
+}
+
 const DOSSIER_STATUS = [
   { id:"neu",        label:"Neu angelegt",          badge:"grey"  },
   { id:"angefordert",label:"Unterlagen angefordert",badge:"warn"  },
@@ -507,9 +532,9 @@ function touchIdle(){
 const S = {
   clients:[], dossiers:[], docs:[],
   settings:{ produkt:"Steuer-CRM", kanzlei:"C Consulters – Treuhand & Steuerberatung", bearbeiter:"", email:"", telefon:"",
-             kanton:"Zürich", jahr:new Date().getFullYear()-1, mailer:"gmail", frist:"30.09.",
+             kanton:"ZH", jahr:new Date().getFullYear()-1, mailer:"gmail", frist:"30.09.",
              farbe:"#1F3864", akzent:"#0f8fa3", idleMin:15,
-             gmailClientId:"", gmailFrom:"", syncCfg:"", syncOn:false, lizenz:"" },
+             gmailClientId:"", gmailFrom:"", syncCfg:"", syncOn:false, lizenz:"", kantone:{} },
   view:"dashboard", clientId:null, jahr:null, queue:[]
 };
 
@@ -570,6 +595,10 @@ function modal({ title, body, ok="Speichern", cancel="Abbrechen", wide=false }){
     dlg.style.width = wide ? "min(980px,96vw)" : "";
     const done = () => { dlg.removeEventListener("close", done); res(dlg.returnValue === "ok"); };
     dlg.addEventListener("close", done);
+    const copy = $("#ktCopyZH", $("#dlgBody"));
+    if(copy) copy.onclick = () => DOCTYPES.forEach(t => {
+      const el = $(`[name="z_${t.id}"]`, $("#dlgBody"));
+      if(el && !el.value && t.ziffer !== "–") el.value = t.ziffer; });
     dlg.showModal();
   });
 }
@@ -605,7 +634,7 @@ function buildChecklist(client, jahr){
   const state = Object.fromEntries((dos?.items || []).map(i => [i.key, i]));
   const list = requiredTypes(client).map(t => {
     const st = state[t.id] || {};
-    return { key:t.id, label:t.label, reg:t.reg, ziffer:t.ziffer,
+    return { key:t.id, label:t.label, reg:t.reg, ziffer:zifferFor(t.id, client.kanton),
              auto:have.has(t.id), manual:!!st.manual, na:!!st.na, note:st.note || "" };
   });
   (dos?.extra || []).forEach(x => list.push({ key:x.key, label:x.label, reg:x.reg || "R10", ziffer:x.ziffer || "–",
@@ -689,8 +718,88 @@ function renumber(clientId, jahr){
   return Promise.all(list.map(d => dbPut("docs", d)));
 }
 
-/* PDF-Text lesen (pdf.js wird nur bei Internetverbindung nachgeladen;
-   ohne Verbindung greift die Erkennung über den Dateinamen).            */
+/* ------------------------------------------------------------------
+   PDF-Text ohne externe Bibliothek lesen.
+   Zieht die Textstellen direkt aus den (meist Flate-komprimierten)
+   Inhaltsströmen. Damit funktioniert die Inhaltserkennung auch offline
+   und bei lokal geöffneten Dateien. Für Sonderfälle (exotische
+   Schrifteinbettung) bleibt pdf.js als Reserve.
+   ------------------------------------------------------------------ */
+const latin1 = u8 => { let s = "", n = 32768;
+  for(let i = 0; i < u8.length; i += n) s += String.fromCharCode.apply(null, u8.subarray(i, i+n));
+  return s; };
+async function inflate(bytes){
+  if(typeof DecompressionStream === "undefined") return null;
+  for(const fmt of ["deflate","deflate-raw"]){
+    try{
+      const buf = await new Response(new Blob([bytes]).stream()
+        .pipeThrough(new DecompressionStream(fmt))).arrayBuffer();
+      const out = new Uint8Array(buf);
+      if(out.length) return out;
+    }catch(e){ /* nächstes Format versuchen */ }
+  }
+  return null;
+}
+/* Textstücke aus einem Inhaltsstrom: (…) Tj / [(…)…] TJ / <hex> Tj */
+function streamText(str){
+  const out = [];
+  const re = /\((?:\\.|[^()\\])*\)|<[0-9A-Fa-f\s]+>/g;
+  let m;
+  while((m = re.exec(str))){
+    const raw = m[0];
+    if(raw[0] === "<"){
+      const hex = raw.slice(1,-1).replace(/\s+/g,"");
+      let t = "";
+      for(let i = 0; i + 1 < hex.length; i += 2){
+        const code = parseInt(hex.substr(i,2), 16);
+        if(code >= 32 || code === 10) t += String.fromCharCode(code);
+      }
+      out.push(t);
+    } else {
+      out.push(raw.slice(1,-1)
+        .replace(/\\([nrtbf])/g, " ")
+        .replace(/\\([0-7]{1,3})/g, (_,o) => String.fromCharCode(parseInt(o,8)))
+        .replace(/\\(.)/g, "$1"));
+    }
+  }
+  return out.join(" ");
+}
+async function pdfTextLocal(file, maxBytes = 12e6){
+  try{
+    const bytes = new Uint8Array(await file.slice(0, maxBytes).arrayBuffer());
+    if(latin1(bytes.subarray(0,5)) !== "%PDF-") return "";
+    const doc = latin1(bytes);
+    let out = "", i = 0, streams = 0;
+    while((i = doc.indexOf("stream", i)) !== -1 && streams < 60){
+      const dictStart = doc.lastIndexOf("<<", i);
+      const dict = dictStart === -1 ? "" : doc.slice(dictStart, i);
+      let s = i + 6;
+      if(doc[s] === "\r") s++;
+      if(doc[s] === "\n") s++;
+      const end = doc.indexOf("endstream", s);
+      if(end === -1) break;
+      i = end + 9;
+      if(/\/(Image|DCTDecode|JPXDecode|JBIG2Decode|CCITTFaxDecode)/.test(dict)) continue;
+      /* Ende exakt bestimmen: /Length wenn vorhanden, sonst Zeilenumbrüche
+         vor "endstream" abschneiden – sonst scheitert die Dekomprimierung. */
+      const lenM = dict.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
+      let stop = end;
+      if(lenM && s + (+lenM[1]) <= end) stop = s + (+lenM[1]);
+      else while(stop > s && (bytes[stop-1] === 10 || bytes[stop-1] === 13)) stop--;
+      let data = bytes.subarray(s, stop);
+      if(/FlateDecode/.test(dict)) data = await inflate(data);
+      if(!data) continue;
+      streams++;
+      out += streamText(latin1(data)) + "\n";
+      if(out.length > 40000) break;
+    }
+    return out;
+  }catch(e){ return ""; }
+}
+const textUsable = t => (String(t).match(/[A-Za-zÄÖÜäöü]{3,}/g) || []).length >= 5;
+
+/* Reserve: pdf.js (nur mit Internetverbindung, z.B. für PDFs mit
+   ungewöhnlicher Schrifteinbettung).                                     */
 let pdfjsReady = null;
 function loadPdfJs(){
   if(pdfjsReady) return pdfjsReady;
@@ -710,7 +819,9 @@ function loadPdfJs(){
 }
 async function pdfText(file, maxPages=3){
   if(!/\.pdf$/i.test(file.name)) return "";
-  const lib = await loadPdfJs(); if(!lib) return "";
+  const local = await pdfTextLocal(file);          // erst ohne Netz versuchen
+  if(textUsable(local)) return local;
+  const lib = await loadPdfJs(); if(!lib) return local;
   try{
     const buf = await file.arrayBuffer();
     const pdf = await lib.getDocument({ data:buf }).promise;
@@ -720,8 +831,8 @@ async function pdfText(file, maxPages=3){
       const c = await page.getTextContent();
       out += c.items.map(it => it.str).join(" ") + "\n";
     }
-    return out;
-  }catch(e){ return ""; }
+    return textUsable(out) ? out : local;
+  }catch(e){ return local; }
 }
 
 /* ---------- ZIP (Store-Verfahren, ohne Bibliothek) ---------- */
@@ -917,7 +1028,8 @@ function viewClient(){
         ${f("plz","PLZ",c.plz)}
         ${f("ort","Ort",c.ort)}
         ${f("gemeinde","Steuergemeinde",c.gemeinde)}
-        ${f("kanton","Kanton",c.kanton)}
+        <div><label>Kanton</label><select name="kanton">${KANTONE.map(([k,n]) =>
+          `<option value="${k}" ${kantonCode(c.kanton)===k?"selected":""}>${k} – ${n}</option>`).join("")}</select></div>
         ${f("email","E-Mail",c.email,"email")}
         ${f("telefon","Telefon",c.telefon,"tel")}
         ${f("geburtsdatum","Geburtsdatum",c.geburtsdatum,"date")}
@@ -1130,17 +1242,19 @@ function viewDossier(){
 /* Dokument manuell einem anderen Register / Typ zuordnen. */
 async function reclassifyDialog(docId){
   const d = await dbGet("docs", docId); if(!d) return;
+  const kt = clientById(d.clientId)?.kanton || S.settings.kanton;
   const ok = await modal({ title:"Dokument neu zuordnen", ok:"Übernehmen", body:`
     <p class="small">${esc(d.origName)}</p>
     <label>Dokumenttyp</label>
     <select name="dt">${DOCTYPES.map(t => `<option value="${t.id}" ${t.id===d.docType?"selected":""}>
-      ${REG[t.reg].nr} · ${esc(t.label)}${t.ziffer!=="–"?" (Ziff. "+t.ziffer+")":""}</option>`).join("")}</select>
+      ${REG[t.reg].nr} · ${esc(t.label)}${zifferFor(t.id, kt)!=="–"?" (Ziff. "+zifferFor(t.id, kt)+")":""}</option>`).join("")}</select>
     <div style="height:10px"></div>
     <label>Steuerjahr</label><select name="jahr">${yearOptions(d.jahr)}</select>` });
   if(!ok) return;
   const t = DT[dlgVal("dt")] || DT.sonstiges;
   const oldJahr = d.jahr;
-  Object.assign(d, { docType:t.id, register:t.reg, ziffer:t.ziffer, jahr:dlgVal("jahr"), unsicher:false });
+  Object.assign(d, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, clientById(d.clientId)?.kanton),
+                     jahr:dlgVal("jahr"), unsicher:false });
   await dbPut("docs", d);
   const i = S.docs.findIndex(x => x.id === d.id); if(i >= 0) S.docs[i] = d;
   await renumber(d.clientId, d.jahr);
@@ -1257,7 +1371,8 @@ function viewConverter(){
   ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", e => intake([...e.dataTransfer.files], jahr));
   $$(".qtype").forEach(sel => sel.onchange = () => { const t = DT[sel.value];
-    Object.assign(S.queue[+sel.dataset.q], { docType:t.id, register:t.reg, ziffer:t.ziffer, sicher:true }); });
+    Object.assign(S.queue[+sel.dataset.q],
+      { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), sicher:true }); });
   $$(".qyear").forEach(sel => sel.onchange = () => { S.queue[+sel.dataset.qy].jahr = sel.value; });
   $$("[data-qx]").forEach(b => b.onclick = () => { S.queue.splice(+b.dataset.qx,1); render(); });
   $("#clearQ") && ($("#clearQ").onclick = () => { S.queue = []; render(); });
@@ -1298,7 +1413,8 @@ async function intake(files, jahr){
     const text = await pdfText(f);
     const cl = classify(f.name, text);
     const t = DT[cl.docType];
-    S.queue.push({ file:f, name:f.name, size:f.size, docType:t.id, register:t.reg, ziffer:t.ziffer,
+    S.queue.push({ file:f, name:f.name, size:f.size, docType:t.id, register:t.reg,
+                   ziffer:zifferFor(t.id, (clientById(S.clientId) || {}).kanton),
                    jahr: detectYear(f.name) || detectYear(text) || String(jahr),
                    sicher:cl.sicher, hits:cl.hits });
   }
@@ -1535,6 +1651,22 @@ function viewSettings(){
       <div class="row" style="margin-top:10px"><button class="btn-primary" id="encOn">Verschlüsselung aktivieren</button></div>`}
   </div>
 
+  <div class="card"><h3>Kantons-Profile</h3>
+    <p class="small">Die mitgelieferten Ziffern entsprechen der Steuererklärung <b>Kanton Zürich</b>.
+      Für andere Kantone die Ziffern einmalig aus der kantonalen Wegleitung erfassen – Register,
+      Checklisten und Umbenennung übernehmen sie danach automatisch.</p>
+    <div class="row">
+      <select id="ktSel" style="width:auto">${KANTONE.map(([k,n]) =>
+        `<option value="${k}" ${(s.kanton||"ZH")===k?"selected":""}>${k} – ${n}</option>`).join("")}</select>
+      <button id="ktEdit">Ziffern bearbeiten</button>
+      <button id="ktExp">Profil exportieren</button>
+      <button id="ktImp">Profil einlesen</button>
+      <input type="file" id="ktFile" accept=".json" class="hidden">
+      <span class="small">${Object.keys(s.kantone || {}).length
+        ? "Eigene Profile: " + Object.keys(s.kantone).join(", ") : "Bisher nur Zürich hinterlegt."}</span>
+    </div>
+  </div>
+
   <div class="card"><h3>Gmail-Anbindung</h3>
     <p class="small">Mit eigener Google-Client-ID sendet das CRM Mails direkt (inkl. Dossier-ZIP) und liest
       Anhänge aus Kundenmails in den Konverter. Anleitung: <span class="mono">crm/SETUP-GMAIL.md</span></p>
@@ -1649,6 +1781,27 @@ function viewSettings(){
     toast("Entschlüssle …");
     if(await encryptionDisable(dlgVal("pw"))){ await loadAll(); toast("Verschlüsselung aufgehoben"); render(); }
     else toast("Passwort falsch");
+  };
+
+  /* --- Kantons-Profile --- */
+  $("#ktEdit").onclick = () => kantonEditor($("#ktSel").value);
+  $("#ktExp").onclick = () => {
+    const k = $("#ktSel").value;
+    const prof = k === "ZH" ? Object.fromEntries(DOCTYPES.map(t => [t.id, t.ziffer]))
+                            : (S.settings.kantone || {})[k] || {};
+    download(new Blob([JSON.stringify({ app:"steuer-crm-kanton", kanton:k, ziffern:prof }, null, 1)],
+      { type:"application/json" }), `kantonsprofil_${k}.json`);
+  };
+  $("#ktImp").onclick = () => $("#ktFile").click();
+  $("#ktFile").onchange = async e => {
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      const d = JSON.parse(await f.text());
+      if(d.app !== "steuer-crm-kanton") return toast("Kein gültiges Kantonsprofil");
+      S.settings.kantone = S.settings.kantone || {};
+      S.settings.kantone[kantonCode(d.kanton)] = d.ziffern || {};
+      await saveSettings(); toast(`Profil ${d.kanton} eingelesen`); render();
+    }catch(err){ toast("Datei nicht lesbar"); }
   };
 
   /* --- Gmail --- */
@@ -1775,6 +1928,31 @@ async function importBackup(file){
   }
   if(data.settings){ S.settings = Object.assign(S.settings, data.settings); await saveSettings(); }
   await loadAll(); toast("Backup eingelesen"); go("dashboard");
+}
+
+/* Ziffern eines Kantons erfassen – gruppiert nach Register. */
+async function kantonEditor(k){
+  const prof = k === "ZH" ? Object.fromEntries(DOCTYPES.map(t => [t.id, t.ziffer]))
+                          : (S.settings.kantone || {})[k] || {};
+  const body = REGISTERS.filter(r => DOCTYPES.some(t => t.reg === r.id)).map(r => `
+    <div class="reg-head"><b>${r.nr} · ${esc(r.label)}</b></div>
+    ${DOCTYPES.filter(t => t.reg === r.id).map(t => `
+      <div class="row" style="padding:3px 0">
+        <span style="flex:1">${esc(t.label)}</span>
+        <span class="small faint" style="width:70px">ZH: ${esc(t.ziffer)}</span>
+        <input name="z_${t.id}" value="${esc(prof[t.id] || "")}" placeholder="–" style="width:110px">
+      </div>`).join("")}`).join("");
+  const ok = await modal({ title:`Ziffern Kanton ${k} – ${KANTON_NAME[k]}`, ok:"Speichern", wide:true, body:
+    `${k === "ZH" ? '<div class="hint">Zürich ist die mitgelieferte Grundlage. Änderungen hier gelten als eigenes Profil.</div>' : ""}
+     <div class="row no-print" style="margin-bottom:8px">
+       <button type="button" id="ktCopyZH" class="btn-sm">Zürcher Ziffern als Startwert übernehmen</button></div>
+     ${body}` });
+  if(!ok) return;
+  const out = {};
+  DOCTYPES.forEach(t => { const v = dlgVal("z_" + t.id); if(v) out[t.id] = v; });
+  S.settings.kantone = S.settings.kantone || {};
+  S.settings.kantone[k] = out;
+  await saveSettings(); toast(`Ziffern für ${k} gespeichert`); render();
 }
 
 /* ---------- Demo-Daten für Verkaufsgespräche ---------- */

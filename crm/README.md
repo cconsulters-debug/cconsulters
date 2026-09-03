@@ -51,9 +51,10 @@ in `robots.txt` gesperrt; die Daten liegen weiterhin im Browser, nicht auf dem S
 
 Beim Hineinziehen einer Datei passiert dreierlei:
 
-1. **Erkennen** – Dateiname + (bei PDF mit Internetverbindung) die ersten drei Seiten Text werden nach
-   Stichwörtern durchsucht. Lange Stichwörter gewinnen gegen kurze („Lohnausweis" schlägt „Ausweis").
-   Unsichere Treffer bekommen den Hinweis **„bitte prüfen"** – du korrigierst sie mit einem Klick im Dropdown.
+1. **Erkennen** – Dateiname **und PDF-Inhalt** werden nach Stichwörtern durchsucht. Die Textextraktion
+   ist fest eingebaut und läuft **ohne Internet** – ein Beleg namens `Scan_0007.pdf` wird am Inhalt als
+   Lohnausweis erkannt, samt Steuerjahr. Lange Stichwörter gewinnen gegen kurze („Lohnausweis" schlägt
+   „Ausweis"). Unsichere Treffer bekommen den Hinweis **„bitte prüfen"** – ein Klick im Dropdown korrigiert sie.
 2. **Umbenennen** nach festem Schema:
    `Jahr_Register_Ziffer_Dokumenttyp_Kunde_Nr.pdf`
    Beispiel: `2024_02_1.1_Lohnausweis-Haupterwerb_Mueller-Anna_01.pdf`
@@ -77,6 +78,16 @@ Beim Hineinziehen einer Datei passiert dreierlei:
 
 **ZIP-Export** erzeugt genau diese Ordnerstruktur plus `00_Inhaltsverzeichnis.txt`
 (Deckblatt, Dokumentenliste je Register, offene Checklistenpunkte).
+
+### Andere Kantone
+
+Die mitgelieferten **Ziffern** stammen aus der Steuererklärung **Kanton Zürich**. Beim Kunden wird der
+Kanton hinterlegt; für jeden weiteren Kanton erfasst du die Ziffern einmalig unter
+*Einstellungen → Kantons-Profile* („Zürcher Ziffern als Startwert übernehmen" spart Tipparbeit).
+Register, Checklisten und Dateinamen richten sich danach automatisch nach dem Kanton des Kunden.
+Profile lassen sich exportieren und einlesen – so gibst du ein fertiges Kantonspaket an weitere
+Installationen (oder Kunden) weiter. Ohne hinterlegtes Profil erscheint schlicht keine Ziffer;
+es werden **keine Ziffern erfunden**.
 
 ---
 
@@ -156,20 +167,21 @@ Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-St
 
 ## 8. Grenzen und Ausbaustufen
 
-**Enthalten und einsatzbereit:** lokale Verschlüsselung mit Sperrbildschirm und
-Wiederherstellungsschlüssel · verschlüsselte Backups · Gmail-Versand und Beleg-Import ·
-Ende-zu-Ende-verschlüsselte Cloud-Synchronisation · White-Label · Demo-Modus.
+**Enthalten und einsatzbereit:** Inhaltserkennung von PDFs ohne Internet · Kantons-Profile ·
+lokale Verschlüsselung mit Sperrbildschirm und Wiederherstellungsschlüssel · verschlüsselte Backups ·
+Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisation · White-Label · Demo-Modus.
 
 | Nächste Ausbaustufe | Aufwand | Vorteil |
 |---|---|---|
-| Weitere Kantone (Register/Ziffern) | ½–1 Tag pro Kanton | verkaufbar ausserhalb ZH |
-| OCR für reine Bildscans (Texterkennung im Browser) | 1–2 Tage | erkennt auch Fotos ohne Textebene |
+| OCR für reine Bildscans (Texterkennung im Browser) | 1–2 Tage | erkennt auch Fotos und Scans ohne Textebene |
 | Direkter Import in ZHprivateTax / eTax | offen – Schnittstelle prüfen | Doppelerfassung entfällt |
 | Mehrbenutzerbetrieb mit Rollen | 3–5 Tage | Kanzleien ab 3 Personen |
 
 **Bekannte Grenzen heute:**
-- PDF-Inhaltserkennung braucht Internet (lädt pdf.js). Ohne Internet greift die Erkennung über den Dateinamen.
-- Gescannte PDFs ohne Textebene werden nicht inhaltlich gelesen – dort zählt der Dateiname.
+- Gescannte PDFs und Fotos **ohne Textebene** werden nicht inhaltlich gelesen – dort zählt der Dateiname.
+  (Scanner mit Texterkennung/OCR verwenden, dann greift die Inhaltserkennung.)
+- Sehr exotisch eingebettete Schriften können unlesbaren Text liefern; mit Internetverbindung
+  springt automatisch pdf.js als Reserve ein.
 - Gmail und Synchronisation funktionieren nur über `https://` oder `http://localhost`, nicht bei
   lokal geöffneten Dateien (`file://`). Rein lokaler Betrieb bleibt ohne diese beiden Funktionen möglich.
 - Keine Steuerberechnung: Zahlen erfasst du weiterhin in der offiziellen Steuersoftware.
