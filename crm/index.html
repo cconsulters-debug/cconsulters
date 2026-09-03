@@ -1,0 +1,1327 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Steuer-CRM · C Consulters</title>
+<style>
+/* ==================================================================
+   Steuer-CRM – privates CRM für Steuerkunden
+   Farbwelt abgestimmt auf das "Steuerdossier"-E-Book (Navy/Teal).
+   Alles läuft lokal im Browser – keine Serverübertragung.
+   ================================================================== */
+:root{
+  --navy:#1F3864; --navy-700:#2b4a7d; --teal:#0f8fa3; --teal-600:#0c7789;
+  --bg:#f4f6f9; --panel:#ffffff; --panel-2:#f9fafc;
+  --ink:#141b26; --ink-dim:#54617a; --ink-faint:#8a95a8;
+  --line:#dfe4ec; --line-strong:#c6cedd;
+  --ok:#0f8a4d; --ok-bg:#e6f6ed; --warn:#b26a00; --warn-bg:#fdf3e2;
+  --danger:#c02626; --danger-bg:#fdeaea; --info-bg:#eaf2fb;
+  --radius:10px; --shadow:0 1px 2px rgba(16,24,40,.06), 0 6px 20px rgba(16,24,40,.06);
+  --font:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14.5px;line-height:1.55}
+h1,h2,h3,h4{margin:0;font-weight:650;letter-spacing:-.01em}
+h1{font-size:21px} h2{font-size:17px} h3{font-size:15px} h4{font-size:13.5px}
+p{margin:0 0 10px}
+a{color:var(--teal-600)}
+small,.small{font-size:12.5px;color:var(--ink-dim)}
+.muted{color:var(--ink-dim)}
+.faint{color:var(--ink-faint)}
+.mono{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;font-size:12.5px}
+
+/* ---------- Layout ---------- */
+.app{display:grid;grid-template-columns:238px 1fr;min-height:100vh}
+.side{background:var(--navy);color:#e8eef8;padding:18px 14px;display:flex;flex-direction:column;gap:16px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),#4A7DBF);display:grid;place-items:center;font-weight:800;color:#04141a;font-size:14px}
+.brand b{font-size:14.5px;display:block;line-height:1.2}
+.brand span{font-size:11.5px;color:#9fb3d4}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{all:unset;cursor:pointer;padding:9px 11px;border-radius:8px;color:#cfdcf0;font-size:14px;display:flex;align-items:center;gap:9px}
+.nav button:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav button.active{background:#fff;color:var(--navy);font-weight:600}
+.nav .ico{width:18px;text-align:center}
+.side-foot{margin-top:auto;font-size:11.5px;color:#9fb3d4;border-top:1px solid rgba(255,255,255,.14);padding-top:12px}
+.main{padding:22px 26px 60px;max-width:1180px;width:100%}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.page-head p{margin:4px 0 0;color:var(--ink-dim);font-size:13.5px;max-width:70ch}
+
+/* ---------- Bausteine ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
+.card>h3{margin-bottom:4px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}.app{grid-template-columns:1fr}.side{position:static;height:auto}}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+
+button,.btn{font-family:inherit;font-size:13.5px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;color:var(--ink);padding:8px 13px;cursor:pointer;font-weight:550;display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+button:hover,.btn:hover{background:var(--panel-2);border-color:var(--ink-faint)}
+.btn-primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn-primary:hover{background:var(--navy-700);border-color:var(--navy-700)}
+.btn-teal{background:var(--teal);border-color:var(--teal);color:#fff}
+.btn-teal:hover{background:var(--teal-600);border-color:var(--teal-600)}
+.btn-ghost{border-color:transparent;background:transparent;color:var(--ink-dim)}
+.btn-danger{color:var(--danger);border-color:#eccaca}
+.btn-danger:hover{background:var(--danger-bg)}
+.btn-sm{padding:5px 9px;font-size:12.5px}
+button:disabled{opacity:.5;cursor:not-allowed}
+
+label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-dim);margin-bottom:4px}
+input,select,textarea{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:#fff;border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(15,143,163,.35);outline-offset:1px;border-color:var(--teal)}
+textarea{min-height:80px;resize:vertical}
+.check{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;font-weight:500;color:var(--ink);margin:0 0 6px}
+.check input{width:auto;margin-top:2px;accent-color:var(--teal)}
+fieldset{border:1px solid var(--line);border-radius:8px;padding:12px;margin:0 0 12px}
+legend{font-size:12.5px;font-weight:700;color:var(--navy);padding:0 6px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);font-weight:700}
+tbody tr:hover{background:var(--panel-2)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--info-bg);color:var(--navy);white-space:nowrap}
+.badge.ok{background:var(--ok-bg);color:var(--ok)}
+.badge.warn{background:var(--warn-bg);color:var(--warn)}
+.badge.danger{background:var(--danger-bg);color:var(--danger)}
+.badge.grey{background:#eef1f5;color:var(--ink-dim)}
+.pill{border:1px solid var(--line-strong);border-radius:999px;padding:4px 10px;font-size:12.5px;background:#fff;cursor:pointer}
+.pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+.empty{text-align:center;padding:34px 16px;color:var(--ink-dim);border:1px dashed var(--line-strong);border-radius:var(--radius);background:var(--panel-2)}
+.hint{background:var(--info-bg);border-left:3px solid var(--navy);padding:10px 12px;border-radius:6px;font-size:13px;color:var(--ink);margin:0 0 12px}
+.hint.warn{background:var(--warn-bg);border-color:var(--warn)}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px}
+.kpi b{display:block;font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums}
+.kpi span{font-size:12.5px;color:var(--ink-dim)}
+.progress{height:7px;border-radius:999px;background:#e8ecf3;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--teal);transition:width .25s}
+
+.drop{border:2px dashed var(--line-strong);border-radius:var(--radius);padding:28px;text-align:center;background:var(--panel-2);transition:.15s}
+.drop.over{border-color:var(--teal);background:#eefafc}
+.doc-row{display:grid;grid-template-columns:1fr 210px 150px 92px;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-bottom:6px}
+@media(max-width:900px){.doc-row{grid-template-columns:1fr}}
+.doc-row .fn{font-size:13px;overflow-wrap:anywhere}
+.reg-head{display:flex;align-items:center;gap:8px;margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--navy)}
+.reg-head b{font-size:14px} .reg-head .badge{margin-left:auto}
+
+dialog{border:none;border-radius:14px;padding:0;box-shadow:0 20px 60px rgba(16,24,40,.28);width:min(760px,94vw);color:var(--ink)}
+dialog::backdrop{background:rgba(15,22,36,.5)}
+.dlg-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.dlg-body{padding:18px;max-height:70vh;overflow:auto}
+.dlg-foot{padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;background:var(--panel-2);border-radius:0 0 14px 14px}
+.toast{position:fixed;right:18px;bottom:18px;background:var(--navy);color:#fff;padding:11px 16px;border-radius:10px;box-shadow:var(--shadow);font-size:13.5px;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:99}
+.toast.show{opacity:1;transform:none}
+.hidden{display:none !important}
+
+@media print{
+  .side,.no-print,button{display:none !important}
+  .app{display:block} .main{padding:0;max-width:none}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  body{background:#fff;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side no-print">
+    <div class="brand">
+      <div class="logo">CC</div>
+      <div><b id="brandName">Steuer-CRM</b><span id="brandSub">C Consulters</span></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="dashboard" class="active"><span class="ico">◧</span> Übersicht</button>
+      <button data-view="clients"><span class="ico">☺</span> Kunden</button>
+      <button data-view="dossier"><span class="ico">▤</span> Dossier &amp; Checkliste</button>
+      <button data-view="converter"><span class="ico">⇄</span> Dokumenten-Konverter</button>
+      <button data-view="mail"><span class="ico">✉</span> E-Mail-Vorlagen</button>
+      <button data-view="settings"><span class="ico">⚙</span> Einstellungen &amp; Backup</button>
+    </nav>
+    <div class="side-foot">
+      Alle Daten bleiben lokal in diesem Browser.<br>
+      <span id="storageInfo">–</span>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<dialog id="dlg"><form method="dialog" id="dlgForm">
+  <div class="dlg-head"><h2 id="dlgTitle">Titel</h2><button class="btn-ghost btn-sm" value="cancel" type="submit">✕</button></div>
+  <div class="dlg-body" id="dlgBody"></div>
+  <div class="dlg-foot" id="dlgFoot"></div>
+</form></dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==================================================================
+   1) STEUER-KATALOG
+   Register-Struktur exakt nach dem Steuerdossier-Aufbau
+   (Kanton Zürich: Personalien · Ziff. 1–7 · 11–18 · 19–27 · 30–37 ·
+    Hilfsformulare Berufsauslagen / Versicherungsprämien · Wertschriften).
+   ================================================================== */
+const REGISTERS = [
+  { id:"R00", nr:"00", label:"Steuererklärung & Formulare",              hint:"Hauptformular, Wegleitung, Vollmacht, Zugangsdaten" },
+  { id:"R01", nr:"01", label:"Personalien & Familienverhältnisse",       hint:"Seite 1 der Steuererklärung" },
+  { id:"R02", nr:"02", label:"Einkünfte (Ziffern 1–7)",                  hint:"Lohn, Renten, Ersatzeinkünfte, Wertschriftenertrag" },
+  { id:"R03", nr:"03", label:"Abzüge (Ziffern 11–18)",                   hint:"Berufsauslagen, Schuldzinsen, Säule 3a, Prämien" },
+  { id:"R04", nr:"04", label:"Einkommensberechnung (Ziffern 19–27)",     hint:"Spenden, Sozialabzüge, Krankheitskosten" },
+  { id:"R05", nr:"05", label:"Vermögen (Ziffern 30–37)",                 hint:"Konten, Krypto, Fahrzeuge, Schulden per 31.12." },
+  { id:"R06", nr:"06", label:"Wertschriften- & Guthabenverzeichnis",     hint:"Seiten 9–10: Steuerwerte und Erträge" },
+  { id:"R07", nr:"07", label:"Berufsauslagen (Hilfsformular)",           hint:"Seite 7: Fahrkosten, Verpflegung, Pauschale" },
+  { id:"R08", nr:"08", label:"Versicherungsprämien (Hilfsformular)",     hint:"Seite 8: Kranken-, Unfall-, Lebensversicherung" },
+  { id:"R09", nr:"09", label:"Liegenschaften",                           hint:"Eigenmietwert, Unterhalt, Hypotheken" },
+  { id:"R10", nr:"10", label:"Aufstellungen & Bemerkungen",              hint:"Eigene Zusammenstellungen, Bemerkungsblatt" },
+  { id:"R11", nr:"11", label:"Korrespondenz Steueramt",                  hint:"Fristerstreckung, Veranlagung, Schlussrechnung" },
+  { id:"R99", nr:"99", label:"Unklar / manuell zuordnen",                hint:"Automatik war unsicher – bitte prüfen" }
+];
+const REG = Object.fromEntries(REGISTERS.map(r => [r.id, r]));
+
+/* Dokumenttypen = Sortierregeln + Checklistenpunkte in einem.
+   profil: Dokument wird nur verlangt, wenn eines dieser Merkmale gesetzt ist
+           ("*" = immer). keys: Suchbegriffe für die Auto-Erkennung.         */
+const DOCTYPES = [
+  { id:"steuererklaerung", label:"Steuererklärung (Hauptformular)", reg:"R00", ziffer:"–",    profil:["*"],              keys:["steuererklärung","steuererklaerung","hauptformular","private tax"] },
+  { id:"vollmacht",        label:"Vollmacht / Vertretung",          reg:"R00", ziffer:"–",    profil:["*"],              keys:["vollmacht","vertretung","mandat"] },
+  { id:"zugangsdaten",     label:"Zugangsdaten / Code Steueramt",   reg:"R00", ziffer:"–",    profil:["*"],              keys:["zugangsdaten","zugangscode","etax","zh private tax","login steueramt"] },
+  { id:"vorjahr",          label:"Steuererklärung Vorjahr",         reg:"R00", ziffer:"–",    profil:["*"],              keys:["vorjahr","letztes jahr"] },
+
+  { id:"personalien",      label:"Personalienblatt / Ausweiskopie", reg:"R01", ziffer:"–",    profil:["*"],              keys:["personalienblatt","identitätskarte","identitaetskarte","id-karte","reisepass","niederlassungsbewilligung","aufenthaltsbewilligung"] },
+  { id:"zivilstand",       label:"Nachweis Zivilstandsänderung",    reg:"R01", ziffer:"–",    profil:["zivilstand_neu"], keys:["heirat","eheschein","scheidung","trennung","partnerschaft"] },
+  { id:"kinder",           label:"Nachweis Kinder / Ausbildung",    reg:"R01", ziffer:"–",    profil:["kinder"],         keys:["ausbildungsbestätigung","schulbestätigung","studienbestätigung","geburtsschein","familienausweis"] },
+
+  { id:"lohnausweis",      label:"Lohnausweis Haupterwerb",         reg:"R02", ziffer:"1.1",  profil:["unselbstaendig"], keys:["lohnausweis","salärausweis","certificat de salaire","jahreslohnausweis"] },
+  { id:"lohnausweis_neben",label:"Lohnausweis Nebenerwerb",         reg:"R02", ziffer:"1.2",  profil:["nebenerwerb"],    keys:["nebenerwerb","nebenjob","zweitarbeitgeber"] },
+  { id:"lohnausweis_p",    label:"Lohnausweis Partner/in",          reg:"R02", ziffer:"1.1",  profil:["partner_erwerb"], keys:["lohnausweis partner","ehefrau lohn","ehemann lohn"] },
+  { id:"selbst_abschluss", label:"Jahresrechnung selbständig",      reg:"R02", ziffer:"2.1",  profil:["selbstaendig"],   keys:["jahresrechnung","erfolgsrechnung","bilanz","abschluss","buchhaltung"] },
+  { id:"ahv_rente",        label:"AHV-/IV-Rentenbescheinigung",     reg:"R02", ziffer:"3.1",  profil:["rente"],          keys:["ahv-rente","rentenbescheinigung","iv-rente","ausgleichskasse","rentenausweis"] },
+  { id:"pk_rente",         label:"Pensionskassen-Rente (BVG)",      reg:"R02", ziffer:"3.2",  profil:["rente"],          keys:["pensionskasse rente","bvg-rente","vorsorgeeinrichtung rente"] },
+  { id:"taggeld",          label:"Taggelder ALV / KTG / UVG",       reg:"R02", ziffer:"3.4",  profil:["arbeitslos","taggeld"], keys:["taggeld","arbeitslosenkasse","alv","krankentaggeld","unfalltaggeld","suva"] },
+  { id:"wertschriftenertrag",label:"Zinsausweis / Ertragsausweis",  reg:"R02", ziffer:"4.1",  profil:["wertschriften"],  keys:["zinsausweis","ertragsausweis","dividenden","couponausweis","steuerausweis wertschriften"] },
+  { id:"unterhalt_erhalten",label:"Erhaltene Unterhaltsbeiträge",   reg:"R02", ziffer:"5.1",  profil:["alimente_erhaelt"], keys:["alimente erhalten","unterhaltsbeiträge erhalten"] },
+  { id:"uebrige_eink",     label:"Übrige Einkünfte",                reg:"R02", ziffer:"6",    profil:[],                 keys:["übrige einkünfte","nebeneinkünfte","erwerbsersatz"] },
+
+  { id:"fahrkosten",       label:"Fahrkosten (Abo / km-Nachweis)",  reg:"R07", ziffer:"11.1", profil:["fahrkosten"],     keys:["generalabonnement","halbtax","zvv","sbb","abo","fahrkosten","kilometer","arbeitsweg","parkkarte"] },
+  { id:"verpflegung",      label:"Auswärtige Verpflegung",          reg:"R07", ziffer:"11.2", profil:["auswaertige_verpflegung"], keys:["verpflegung","kantine","lunch-check"] },
+  { id:"weiterbildung",    label:"Aus-/Weiterbildungskosten",       reg:"R07", ziffer:"11.4", profil:["weiterbildung"],  keys:["weiterbildung","kursgeld","studiengebühr","seminar","ausbildungskosten"] },
+  { id:"berufsauslagen",   label:"Berufsauslagen (Hilfsformular)",  reg:"R07", ziffer:"11",   profil:["unselbstaendig"], keys:["berufsauslagen","berufskosten"] },
+
+  { id:"schuldzinsen",     label:"Schuldzinsen-Ausweis",            reg:"R03", ziffer:"12.1", profil:["schulden"],       keys:["schuldzinsen","kreditzins","darlehenszins","zinsbescheinigung"] },
+  { id:"unterhalt_bezahlt",label:"Bezahlte Unterhaltsbeiträge",     reg:"R03", ziffer:"13.1", profil:["alimente_zahlt"], keys:["alimente bezahlt","unterhaltsbeiträge bezahlt","unterhaltszahlung"] },
+  { id:"saeule3a",         label:"Bescheinigung Säule 3a",          reg:"R03", ziffer:"14.1", profil:["saeule3a"],       keys:["säule 3a","saeule 3a","säule3a","saeule-3a","säule-3a","3a","vorsorge 3a","freizügigkeit 3a"] },
+  { id:"pk_einkauf",       label:"Einkauf Pensionskasse (2. Säule)",reg:"R03", ziffer:"14.2", profil:["saeule2einkauf"], keys:["einkauf pensionskasse","bvg einkauf","einkaufsbestätigung"] },
+  { id:"praemien_kk",      label:"Krankenkassen-Prämienbescheinigung",reg:"R08",ziffer:"15",  profil:["*"],              keys:["prämienbescheinigung","krankenkasse","krankenversicherung","css","helsana","swica","sanitas","concordia","kpt","assura","prämien"] },
+  { id:"praemien_leben",   label:"Lebensversicherung Prämien",      reg:"R08", ziffer:"15",   profil:["lebensversicherung"], keys:["lebensversicherung","risikoversicherung prämie"] },
+  { id:"praemien_unfall",  label:"Unfallversicherung privat",       reg:"R08", ziffer:"15",   profil:[],                 keys:["unfallversicherung","nbu"] },
+
+  { id:"spenden",          label:"Spendenquittungen",               reg:"R04", ziffer:"22.2", profil:["spenden"],        keys:["spende","zuwendung","donation","gönnerbeitrag"] },
+  { id:"krankheitskosten", label:"Krankheits- & Unfallkosten",      reg:"R04", ziffer:"22.1", profil:["krankheitskosten"], keys:["arztrechnung","zahnarzt","krankheitskosten","apotheke","spitalrechnung","selbstbehalt","franchise"] },
+  { id:"behinderung",      label:"Behinderungsbedingte Kosten",     reg:"R04", ziffer:"22.3", profil:["behinderung"],    keys:["behinderung","pflegekosten","hilflosenentschädigung"] },
+  { id:"kinderbetreuung",  label:"Kinderbetreuungskosten",          reg:"R04", ziffer:"25.1", profil:["kinderbetreuung"], keys:["kinderbetreuung","kita","hort","tagesmutter","krippe"] },
+  { id:"parteispenden",    label:"Parteispenden",                   reg:"R04", ziffer:"22.4", profil:[],                 keys:["parteibeitrag","parteispende"] },
+
+  { id:"bankauszug",       label:"Bank-/Postkonto-Steuerauszug",    reg:"R06", ziffer:"30.1", profil:["*"],              keys:["steuerauszug","kontoauszug","saldobestätigung","zinsabschluss","postfinance","ubs","raiffeisen","zkb","migros bank","yuh","neon","revolut","wir bank"] },
+  { id:"depotauszug",      label:"Depot-/Wertschriftenauszug",      reg:"R06", ziffer:"30.1", profil:["wertschriften"],  keys:["depotauszug","wertschriftenverzeichnis","portfolio","aktien","fonds","etf","swissquote","interactive brokers"] },
+  { id:"krypto",           label:"Krypto-Bestand per 31.12.",       reg:"R06", ziffer:"30.1", profil:["krypto"],         keys:["krypto","bitcoin","ethereum","wallet","binance","kraken","coinbase","bitbox","ledger"] },
+  { id:"darlehen_guthaben",label:"Darlehen / Guthaben",             reg:"R06", ziffer:"30.2", profil:[],                 keys:["darlehensvertrag","guthaben","forderung"] },
+  { id:"rueckkaufswert",   label:"Rückkaufswert Lebensversicherung",reg:"R05", ziffer:"31",   profil:["lebensversicherung"], keys:["rückkaufswert","rueckkaufswert","police wert"] },
+  { id:"fahrzeug",         label:"Fahrzeugwert (Occasionswert)",    reg:"R05", ziffer:"32",   profil:["fahrzeug"],       keys:["fahrzeugausweis","occasionswert","eurotax","motorfahrzeug"] },
+  { id:"schulden",         label:"Schuldenverzeichnis per 31.12.",  reg:"R05", ziffer:"34",   profil:["schulden"],       keys:["schuldenausweis","kreditvertrag","leasing","restschuld","hypothekarschuld"] },
+  { id:"erbschaft",        label:"Erbschaft / Schenkung",           reg:"R05", ziffer:"36",   profil:["erbschaft"],      keys:["erbschaft","erbteilung","schenkung","nachlass"] },
+
+  { id:"eigenmietwert",    label:"Eigenmietwert / Katasterwert",    reg:"R09", ziffer:"30.3", profil:["wohneigentum"],   keys:["eigenmietwert","katasterwert","amtliche schätzung","steuerwert liegenschaft"] },
+  { id:"hypothek",         label:"Hypothekarzins-Ausweis",          reg:"R09", ziffer:"12.1", profil:["wohneigentum"],   keys:["hypothek","hypothekarzins","zinsausweis hypothek"] },
+  { id:"unterhalt_liegen", label:"Liegenschaftsunterhalt (Rechnungen)",reg:"R09",ziffer:"17", profil:["wohneigentum"],   keys:["handwerker","renovation","unterhalt liegenschaft","sanierung","heizung","gebäudeversicherung"] },
+  { id:"mietertrag",       label:"Mietzinseinnahmen",               reg:"R09", ziffer:"7.2",  profil:["vermietung"],     keys:["mietzins","mieteinnahmen","mietvertrag"] },
+  { id:"liegenschaft_aus", label:"Liegenschaft Ausland",            reg:"R09", ziffer:"7.3",  profil:["liegenschaft_ausland"], keys:["ausland liegenschaft","immobilie ausland","ferienhaus"] },
+
+  { id:"quellensteuer",    label:"Quellensteuer-Abrechnung",        reg:"R02", ziffer:"1.1",  profil:["quellensteuer"],  keys:["quellensteuer","impôt à la source"] },
+  { id:"aufstellung",      label:"Eigene Aufstellung / Excel",      reg:"R10", ziffer:"–",    profil:[],                 keys:["aufstellung","zusammenstellung","liste","übersicht"] },
+  { id:"bemerkungen",      label:"Bemerkungsblatt",                 reg:"R10", ziffer:"–",    profil:[],                 keys:["bemerkung","erläuterung","begleitschreiben"] },
+  { id:"fristerstreckung", label:"Fristerstreckung",                reg:"R11", ziffer:"–",    profil:[],                 keys:["fristerstreckung","fristverlängerung","frist"] },
+  { id:"veranlagung",      label:"Veranlagungsverfügung",           reg:"R11", ziffer:"–",    profil:[],                 keys:["veranlagung","einschätzungsentscheid","schlussrechnung","steuerrechnung","akontorechnung"] },
+  { id:"einsprache",       label:"Einsprache / Korrespondenz",      reg:"R11", ziffer:"–",    profil:[],                 keys:["einsprache","rekurs","schreiben steueramt","auflage"] },
+  { id:"sonstiges",        label:"Sonstiges (manuell prüfen)",      reg:"R99", ziffer:"–",    profil:[],                 keys:[] }
+];
+const DT = Object.fromEntries(DOCTYPES.map(d => [d.id, d]));
+
+/* Profil-Merkmale des Kunden – steuern Checkliste und Erkennung. */
+const PROFILE_FIELDS = [
+  { g:"Erwerb",     items:[["unselbstaendig","Unselbständig erwerbstätig"],["nebenerwerb","Nebenerwerb"],["partner_erwerb","Partner/in erwerbstätig"],["selbstaendig","Selbständig erwerbend"],["quellensteuer","Quellenbesteuert"],["arbeitslos","Arbeitslos / Taggelder"],["rente","Rente (AHV/IV/BVG)"]] },
+  { g:"Abzüge",     items:[["fahrkosten","Fahrkosten zum Arbeitsort"],["auswaertige_verpflegung","Auswärtige Verpflegung"],["weiterbildung","Weiterbildung"],["saeule3a","Säule 3a einbezahlt"],["saeule2einkauf","Einkauf Pensionskasse"],["krankheitskosten","Krankheits-/Zahnarztkosten"],["behinderung","Behinderungsbedingte Kosten"],["spenden","Spenden"],["kinderbetreuung","Kinderbetreuung (Kita/Hort)"]] },
+  { g:"Familie",    items:[["kinder","Kinder im Haushalt"],["alimente_zahlt","Zahlt Unterhaltsbeiträge"],["alimente_erhaelt","Erhält Unterhaltsbeiträge"],["zivilstand_neu","Zivilstand geändert"]] },
+  { g:"Vermögen",   items:[["wertschriften","Wertschriften / Depot"],["krypto","Kryptowährungen"],["lebensversicherung","Lebensversicherung"],["fahrzeug","Motorfahrzeug"],["schulden","Schulden / Leasing / Kredit"],["erbschaft","Erbschaft / Schenkung"]] },
+  { g:"Immobilien", items:[["wohneigentum","Wohneigentum"],["vermietung","Vermietete Liegenschaft"],["liegenschaft_ausland","Liegenschaft im Ausland"]] }
+];
+const PROFILE_LABELS = Object.fromEntries(PROFILE_FIELDS.flatMap(g => g.items));
+
+const DOSSIER_STATUS = [
+  { id:"neu",        label:"Neu angelegt",          badge:"grey"  },
+  { id:"angefordert",label:"Unterlagen angefordert",badge:"warn"  },
+  { id:"teilweise",  label:"Teilweise erhalten",    badge:"warn"  },
+  { id:"vollstaendig",label:"Unterlagen vollständig",badge:""     },
+  { id:"bearbeitung",label:"In Bearbeitung",        badge:""      },
+  { id:"freigabe",   label:"Beim Kunden zur Freigabe",badge:"warn"},
+  { id:"eingereicht",label:"Eingereicht",           badge:"ok"    },
+  { id:"veranlagt",  label:"Veranlagt / abgeschlossen",badge:"ok" }
+];
+const ST = Object.fromEntries(DOSSIER_STATUS.map(s => [s.id, s]));
+
+/* ==================================================================
+   2) DATENHALTUNG – IndexedDB (bleibt im Browser, kein Server)
+   ================================================================== */
+const DB_NAME = "steuer-crm", DB_VER = 1;
+let db = null;
+
+function openDB(){
+  return new Promise((res, rej) => {
+    const rq = indexedDB.open(DB_NAME, DB_VER);
+    rq.onupgradeneeded = e => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains("clients"))  d.createObjectStore("clients",  { keyPath:"id" });
+      if(!d.objectStoreNames.contains("dossiers")) d.createObjectStore("dossiers", { keyPath:"id" });
+      if(!d.objectStoreNames.contains("docs"))     d.createObjectStore("docs",     { keyPath:"id" });
+      if(!d.objectStoreNames.contains("kv"))       d.createObjectStore("kv",       { keyPath:"k"  });
+    };
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror   = () => rej(rq.error);
+  });
+}
+const tx = (store, mode="readonly") => db.transaction(store, mode).objectStore(store);
+const dbAll = store => new Promise((res, rej) => { const r = tx(store).getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const dbPut = (store, val) => new Promise((res, rej) => { const r = tx(store,"readwrite").put(val); r.onsuccess = () => res(val); r.onerror = () => rej(r.error); });
+const dbDel = (store, key) => new Promise((res, rej) => { const r = tx(store,"readwrite").delete(key); r.onsuccess = () => res(); r.onerror = () => rej(r.error); });
+const dbGet = (store, key) => new Promise((res, rej) => { const r = tx(store).get(key); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+
+/* Zentraler Zustand – wird beim Start einmal komplett geladen. */
+const S = {
+  clients:[], dossiers:[], docs:[],
+  settings:{ kanzlei:"C Consulters – Treuhand & Steuerberatung", bearbeiter:"", email:"", telefon:"",
+             kanton:"Zürich", jahr:new Date().getFullYear()-1, mailer:"gmail", frist:"30.09." },
+  view:"dashboard", clientId:null, jahr:null, queue:[]
+};
+
+async function loadAll(){
+  S.clients  = (await dbAll("clients")).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  S.dossiers = await dbAll("dossiers");
+  S.docs     = await dbAll("docs");
+  const st = await dbGet("kv","settings");
+  if(st && st.v) S.settings = Object.assign(S.settings, st.v);
+}
+const saveSettings = () => dbPut("kv", { k:"settings", v:S.settings });
+
+/* ---------- Helfer ---------- */
+const uid    = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+const $      = (sel, root=document) => root.querySelector(sel);
+const $$     = (sel, root=document) => [...root.querySelectorAll(sel)];
+const esc    = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const today  = () => new Date().toISOString().slice(0,10);
+const deAt   = iso => iso ? iso.split("-").reverse().join(".") : "–";
+const chf    = n => (Number(n)||0).toLocaleString("de-CH",{ minimumFractionDigits:2, maximumFractionDigits:2 });
+const kb     = n => n > 1048576 ? (n/1048576).toFixed(1)+" MB" : Math.max(1,Math.round(n/1024))+" KB";
+const slug   = s => String(s||"").replace(/\u00e4/g,"ae").replace(/\u00c4/g,"Ae").replace(/\u00f6/g,"oe")
+                    .replace(/\u00d6/g,"Oe").replace(/\u00fc/g,"ue").replace(/\u00dc/g,"Ue").replace(/\u00df/g,"ss")
+                    .normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+const clientName = c => c ? [c.name, c.vorname].filter(Boolean).join(", ") || "(ohne Namen)" : "–";
+const clientById = id => S.clients.find(c => c.id === id);
+
+function toast(msg){
+  const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
+}
+function download(blob, filename){
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click();
+  a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function confirmBox(text){ return window.confirm(text); }
+
+/* Modal-Dialog: gibt true (OK) / false (Abbruch) zurück. */
+function modal({ title, body, ok="Speichern", cancel="Abbrechen", wide=false }){
+  return new Promise(res => {
+    const dlg = $("#dlg");
+    $("#dlgTitle").textContent = title;
+    $("#dlgBody").innerHTML = body;
+    $("#dlgFoot").innerHTML = `<button value="cancel" class="btn-ghost">${esc(cancel)}</button>
+                               <button value="ok" class="btn-primary">${esc(ok)}</button>`;
+    dlg.style.width = wide ? "min(980px,96vw)" : "";
+    const done = () => { dlg.removeEventListener("close", done); res(dlg.returnValue === "ok"); };
+    dlg.addEventListener("close", done);
+    dlg.showModal();
+  });
+}
+const dlgVal = name => { const el = $(`[name="${name}"]`, $("#dlgBody")); return el ? (el.type === "checkbox" ? el.checked : el.value.trim()) : ""; };
+
+/* ==================================================================
+   3) DOSSIER- UND CHECKLISTEN-LOGIK
+   ================================================================== */
+function docsOf(clientId, jahr){
+  return S.docs.filter(d => d.clientId === clientId && String(d.jahr) === String(jahr));
+}
+function dossierOf(clientId, jahr){
+  return S.dossiers.find(d => d.clientId === clientId && String(d.jahr) === String(jahr));
+}
+async function ensureDossier(clientId, jahr){
+  let d = dossierOf(clientId, jahr);
+  if(d) return d;
+  d = { id:uid(), clientId, jahr:String(jahr), status:"neu", frist:"", eingereicht:"",
+        honorar:"", notizen:"", items:[], extra:[], created:today(), updated:today() };
+  S.dossiers.push(d); await dbPut("dossiers", d);
+  return d;
+}
+/* Pflicht-Dokumente aus dem Kundenprofil ableiten. */
+function requiredTypes(client){
+  const p = client.profil || {};
+  return DOCTYPES.filter(d => d.profil.includes("*") || d.profil.some(f => p[f]));
+}
+/* Checkliste = Pflichtdokumente + manuelle Zusatzpunkte, automatisch abgeglichen
+   mit den bereits im Dossier abgelegten Dokumenten.                            */
+function buildChecklist(client, jahr){
+  const dos = dossierOf(client.id, jahr);
+  const have = new Set(docsOf(client.id, jahr).map(d => d.docType));
+  const state = Object.fromEntries((dos?.items || []).map(i => [i.key, i]));
+  const list = requiredTypes(client).map(t => {
+    const st = state[t.id] || {};
+    return { key:t.id, label:t.label, reg:t.reg, ziffer:t.ziffer,
+             auto:have.has(t.id), manual:!!st.manual, na:!!st.na, note:st.note || "" };
+  });
+  (dos?.extra || []).forEach(x => list.push({ key:x.key, label:x.label, reg:x.reg || "R10", ziffer:x.ziffer || "–",
+             auto:have.has(x.key), manual:!!x.manual, na:!!x.na, note:x.note || "", custom:true }));
+  list.forEach(i => i.done = i.auto || i.manual);
+  return list;
+}
+const checklistStats = list => {
+  const rel = list.filter(i => !i.na);
+  return { total:rel.length, done:rel.filter(i => i.done).length, open:rel.filter(i => !i.done) };
+};
+async function setChecklistItem(clientId, jahr, key, patch){
+  const dos = await ensureDossier(clientId, jahr);
+  const arr = dos.items || (dos.items = []);
+  let it = arr.find(i => i.key === key);
+  if(!it){ it = { key }; arr.push(it); }
+  Object.assign(it, patch);
+  const ex = (dos.extra || []).find(e => e.key === key);
+  if(ex) Object.assign(ex, patch);
+  dos.updated = today(); await dbPut("dossiers", dos);
+}
+
+/* ==================================================================
+   4) KONVERTER – Erkennung, Benennung, Sortierung
+   ================================================================== */
+function detectYear(text){
+  const years = String(text).match(/20\d{2}/g);
+  if(!years) return null;
+  const now = new Date().getFullYear();
+  const plausible = years.map(Number).filter(y => y >= 2015 && y <= now);
+  if(!plausible.length) return null;
+  // häufigste Jahreszahl gewinnt, bei Gleichstand die jüngste
+  const cnt = {}; plausible.forEach(y => cnt[y] = (cnt[y]||0)+1);
+  return String(Object.entries(cnt).sort((a,b) => b[1]-a[1] || b[0]-a[0])[0][0]);
+}
+/* Treffersuche: kurze Stichwörter nur als ganzes Wort, damit z.B. "abo"
+   nicht mitten in einem anderen Wort anschlägt.                          */
+function keyHit(hay, k){
+  if(k.length >= 6) return hay.includes(k);
+  const esc0 = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("(^|[^a-z0-9\u00e4\u00f6\u00fc])" + esc0 + "([^a-z0-9\u00e4\u00f6\u00fc]|$)").test(hay);
+}
+/* Score: Treffer im Dateinamen wiegen 3×, Treffer im PDF-Text 1×.
+   Lange Stichwörter schlagen kurze ("lohnausweis" gewinnt gegen "ausweis"). */
+function classify(filename, text){
+  const fn = filename.toLowerCase(), tx = (text || "").toLowerCase().slice(0, 20000);
+  let best = { id:"sonstiges", score:0, hits:[] }, second = 0;
+  for(const d of DOCTYPES){
+    let score = 0; const hits = [];
+    for(const raw of d.keys){
+      const k = raw.trim();
+      if(keyHit(fn, k)){ score += 3 * k.length; hits.push(k); }
+      else if(tx && keyHit(tx, k)){ score += k.length; hits.push(k); }
+    }
+    if(score > best.score){ second = best.score; best = { id:d.id, score, hits }; }
+    else if(score > second) second = score;
+  }
+  // "sicher" = deutlicher Treffer oder klarer Abstand zum zweitbesten Typ
+  const sicher = best.score >= 18 || (best.score >= 6 && best.score >= 2 * second);
+  return { docType:best.id, score:best.score, sicher, hits:best.hits.slice(0,4) };
+}
+/* Dateiname nach Schema:  2025_02_1.1_Lohnausweis_Muster-Anna_01.pdf */
+function buildName(doc, client, index){
+  const t = DT[doc.docType] || DT.sonstiges;
+  const r = REG[doc.register] || REG.R99;
+  const ext = (doc.origName.match(/\.[A-Za-z0-9]{1,5}$/) || [".pdf"])[0].toLowerCase();
+  const zif = (doc.ziffer && doc.ziffer !== "–") ? doc.ziffer + "_" : "";
+  const nr  = String(index).padStart(2,"0");
+  return `${doc.jahr}_${r.nr}_${zif}${slug(t.label)}_${slug(clientName(client).replace(", ","-"))}_${nr}${ext}`;
+}
+function renumber(clientId, jahr){
+  const client = clientById(clientId);
+  const list = docsOf(clientId, jahr).sort((a,b) =>
+    (a.register+a.ziffer).localeCompare(b.register+b.ziffer) || a.added.localeCompare(b.added));
+  const counter = {};
+  list.forEach(d => {
+    const k = d.register + d.docType;
+    counter[k] = (counter[k] || 0) + 1;
+    d.newName = buildName(d, client, counter[k]);
+  });
+  return Promise.all(list.map(d => dbPut("docs", d)));
+}
+
+/* PDF-Text lesen (pdf.js wird nur bei Internetverbindung nachgeladen;
+   ohne Verbindung greift die Erkennung über den Dateinamen).            */
+let pdfjsReady = null;
+function loadPdfJs(){
+  if(pdfjsReady) return pdfjsReady;
+  pdfjsReady = new Promise(res => {
+    if(window.pdfjsLib) return res(window.pdfjsLib);
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.onload = () => {
+      try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; }catch(e){}
+      res(window.pdfjsLib || null);
+    };
+    s.onerror = () => res(null);
+    document.head.appendChild(s);
+  });
+  return pdfjsReady;
+}
+async function pdfText(file, maxPages=3){
+  if(!/\.pdf$/i.test(file.name)) return "";
+  const lib = await loadPdfJs(); if(!lib) return "";
+  try{
+    const buf = await file.arrayBuffer();
+    const pdf = await lib.getDocument({ data:buf }).promise;
+    let out = "";
+    for(let i = 1; i <= Math.min(maxPages, pdf.numPages); i++){
+      const page = await pdf.getPage(i);
+      const c = await page.getTextContent();
+      out += c.items.map(it => it.str).join(" ") + "\n";
+    }
+    return out;
+  }catch(e){ return ""; }
+}
+
+/* ---------- ZIP (Store-Verfahren, ohne Bibliothek) ---------- */
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for(let n = 0; n < 256; n++){ let c = n;
+    for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(u8){ let c = 0xFFFFFFFF; for(let i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipDate(d){ return { t:((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()/2))&0xFFFF,
+                              d:(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF }; }
+async function makeZip(files){   // files: [{name, data:Uint8Array}]
+  const enc = new TextEncoder(), chunks = [], central = [];
+  let offset = 0; const { t, d } = zipDate(new Date());
+  for(const f of files){
+    const name = enc.encode(f.name), crc = crc32(f.data), len = f.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true);
+    lh.setUint16(8, 0, true); lh.setUint16(10, t, true); lh.setUint16(12, d, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, len, true); lh.setUint32(22, len, true);
+    lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    chunks.push(new Uint8Array(lh.buffer), name, f.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+    ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, t, true); ch.setUint16(14, d, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, len, true); ch.setUint32(24, len, true);
+    ch.setUint16(28, name.length, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + len;
+  }
+  const cdStart = offset;
+  let cdSize = 0; central.forEach(c => cdSize += c.length);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, cdStart, true);
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type:"application/zip" });
+}
+
+/* ==================================================================
+   5) OBERFLÄCHE
+   ================================================================== */
+const M = () => $("#main");
+function go(view, opts={}){
+  S.view = view;
+  if(opts.clientId !== undefined) S.clientId = opts.clientId;
+  if(opts.jahr !== undefined) S.jahr = opts.jahr;
+  $$("#nav button").forEach(b => b.classList.toggle("active", b.dataset.view === view ||
+    (view === "client" && b.dataset.view === "clients")));
+  render();
+  window.scrollTo(0,0);
+}
+function render(){
+  const v = { dashboard:viewDashboard, clients:viewClients, client:viewClient, dossier:viewDossier,
+              converter:viewConverter, mail:viewMail, settings:viewSettings }[S.view] || viewDashboard;
+  v();
+  $("#brandSub").textContent = S.settings.kanzlei.split("–")[0].trim() || "Steuer-CRM";
+  $("#storageInfo").textContent = `${S.clients.length} Kunden · ${S.docs.length} Dokumente`;
+}
+const yearOptions = sel => {
+  const now = new Date().getFullYear(), out = [];
+  for(let y = now; y >= now-8; y--) out.push(`<option value="${y}" ${String(sel)===String(y)?"selected":""}>${y}</option>`);
+  return out.join("");
+};
+const statusBadge = st => `<span class="badge ${ST[st]?.badge||""}">${esc(ST[st]?.label||st)}</span>`;
+
+/* ---------- Übersicht ---------- */
+function viewDashboard(){
+  const jahr = S.settings.jahr;
+  const rows = S.clients.map(c => {
+    const dos = dossierOf(c.id, jahr);
+    const list = buildChecklist(c, jahr), st = checklistStats(list);
+    return { c, dos, st, pct: st.total ? Math.round(st.done/st.total*100) : 0 };
+  });
+  const offen = rows.filter(r => r.dos && !["eingereicht","veranlagt"].includes(r.dos.status)).length;
+  const avg = rows.length ? Math.round(rows.reduce((a,r) => a+r.pct, 0)/rows.length) : 0;
+  M().innerHTML = `
+  <div class="page-head">
+    <div><h1>Übersicht Steuerperiode ${jahr}</h1>
+      <p>Alle Mandate auf einen Blick: Status, Vollständigkeit der Unterlagen und nächster Schritt.</p></div>
+    <div class="row no-print">
+      <label style="margin:0">Steuerjahr
+        <select id="dashYear" style="width:auto">${yearOptions(jahr)}</select></label>
+      <button class="btn-primary" id="btnNewClient">+ Neuer Kunde</button>
+    </div>
+  </div>
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="kpi"><b>${S.clients.length}</b><span>Kunden total</span></div>
+    <div class="kpi"><b>${offen}</b><span>Offene Dossiers ${jahr}</span></div>
+    <div class="kpi"><b>${S.docs.filter(d => String(d.jahr) === String(jahr)).length}</b><span>Dokumente ${jahr}</span></div>
+    <div class="kpi"><b>${avg}%</b><span>Ø Unterlagen vollständig</span></div>
+  </div>
+  ${S.clients.length === 0 ? `<div class="empty"><h3>Noch keine Kunden erfasst</h3>
+      <p class="small">Erfasse den ersten Kunden – Checkliste und Dokumentenstruktur entstehen automatisch.</p>
+      <button class="btn-primary" id="btnNewClient2">+ Ersten Kunden anlegen</button></div>` : `
+  <div class="card"><div class="card-head"><h3>Mandate ${jahr}</h3>
+    <span class="small">Klick auf eine Zeile öffnet Dossier &amp; Checkliste</span></div>
+    <table><thead><tr><th>Mandat</th><th>Kunde</th><th>Status</th><th>Unterlagen</th><th>Frist</th><th class="num">Dok.</th></tr></thead>
+    <tbody>${rows.map(r => `
+      <tr style="cursor:pointer" data-client="${r.c.id}">
+        <td class="mono">${esc(r.c.mandat || "–")}</td>
+        <td><b>${esc(clientName(r.c))}</b><br><span class="small">${esc(r.c.ort || "")}</span></td>
+        <td>${r.dos ? statusBadge(r.dos.status) : '<span class="badge grey">kein Dossier</span>'}</td>
+        <td style="min-width:150px"><div class="progress"><i style="width:${r.pct}%"></i></div>
+            <span class="small">${r.st.done}/${r.st.total} erledigt</span></td>
+        <td>${r.dos?.frist ? deAt(r.dos.frist) : "–"}</td>
+        <td class="num">${docsOf(r.c.id, jahr).length}</td>
+      </tr>`).join("")}</tbody></table></div>`}
+  <div class="card no-print"><h3>Schnellstart</h3>
+    <p class="small">1. Kunde erfassen → 2. Profil ankreuzen (Checkliste entsteht automatisch) →
+       3. Unterlagen per E-Mail anfordern → 4. Dokumente in den Konverter ziehen → 5. Dossier als ZIP exportieren.</p>
+    <div class="row">
+      <button id="qsClients">Kunden verwalten</button>
+      <button id="qsConv">Dokumenten-Konverter</button>
+      <button id="qsMail">E-Mail-Vorlagen</button>
+    </div></div>`;
+  $("#dashYear").onchange = e => { S.settings.jahr = +e.target.value; saveSettings(); render(); };
+  const nc = () => newClient();
+  $("#btnNewClient").onclick = nc; if($("#btnNewClient2")) $("#btnNewClient2").onclick = nc;
+  $("#qsClients").onclick = () => go("clients");
+  $("#qsConv").onclick = () => go("converter");
+  $("#qsMail").onclick = () => go("mail");
+  $$("#main tbody tr[data-client]").forEach(tr =>
+    tr.onclick = () => go("dossier", { clientId:tr.dataset.client, jahr:S.settings.jahr }));
+}
+
+/* ---------- Kundenliste ---------- */
+function viewClients(){
+  const q = (S.search || "").toLowerCase();
+  const list = S.clients.filter(c => !q ||
+    [c.name, c.vorname, c.mandat, c.ort, c.email].join(" ").toLowerCase().includes(q));
+  M().innerHTML = `
+  <div class="page-head">
+    <div><h1>Kunden</h1><p>Stammdaten, Familienverhältnisse und Steuerprofil – das Profil steuert die Checkliste.</p></div>
+    <div class="row no-print">
+      <input id="search" placeholder="Suchen…" value="${esc(S.search||"")}" style="width:220px">
+      <button class="btn-primary" id="btnNew">+ Neuer Kunde</button>
+    </div>
+  </div>
+  ${list.length ? `<div class="card"><table>
+    <thead><tr><th>Mandat</th><th>Name</th><th>Ort / Gemeinde</th><th>E-Mail</th><th>Profil</th><th></th></tr></thead>
+    <tbody>${list.map(c => `<tr>
+      <td class="mono">${esc(c.mandat||"–")}</td>
+      <td><b>${esc(clientName(c))}</b><br><span class="small">${esc(c.zivilstand||"")}</span></td>
+      <td>${esc([c.plz,c.ort].filter(Boolean).join(" "))}<br><span class="small">${esc(c.gemeinde||"")}</span></td>
+      <td>${c.email ? `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : "–"}</td>
+      <td><span class="small">${Object.entries(c.profil||{}).filter(([,v])=>v).length} Merkmale</span></td>
+      <td class="num"><button class="btn-sm" data-edit="${c.id}">Bearbeiten</button>
+          <button class="btn-sm btn-teal" data-dos="${c.id}">Dossier</button></td>
+    </tr>`).join("")}</tbody></table></div>`
+   : `<div class="empty">Keine Kunden gefunden.<br><button class="btn-primary" id="btnNew2" style="margin-top:10px">+ Neuer Kunde</button></div>`}`;
+  const s = $("#search");
+  if(s){ s.oninput = e => { S.search = e.target.value; const p = e.target.selectionStart; render();
+          const n = $("#search"); n.focus(); n.setSelectionRange(p,p); }; }
+  $("#btnNew") && ($("#btnNew").onclick = () => newClient());
+  $("#btnNew2") && ($("#btnNew2").onclick = () => newClient());
+  $$("[data-edit]").forEach(b => b.onclick = () => go("client", { clientId:b.dataset.edit }));
+  $$("[data-dos]").forEach(b => b.onclick = () => go("dossier", { clientId:b.dataset.dos, jahr:S.settings.jahr }));
+}
+async function newClient(){
+  const c = { id:uid(), mandat:"", anrede:"Frau", vorname:"", name:"", strasse:"", plz:"", ort:"",
+              gemeinde:"", kanton:S.settings.kanton, email:"", telefon:"", geburtsdatum:"", ahv:"",
+              zivilstand:"ledig", beruf:"", arbeitgeber:"", partner:{}, kinder:[], profil:{ unselbstaendig:true },
+              honorar:"", notizen:"", created:today(), updated:today() };
+  S.clients.push(c); await dbPut("clients", c);
+  go("client", { clientId:c.id });
+}
+
+/* ---------- Kunde bearbeiten ---------- */
+function viewClient(){
+  const c = clientById(S.clientId);
+  if(!c) return go("clients");
+  const f = (name, label, val, type="text", extra="") =>
+    `<div><label>${label}</label><input name="${name}" type="${type}" value="${esc(val||"")}" ${extra}></div>`;
+  M().innerHTML = `
+  <div class="page-head">
+    <div><h1>${esc(clientName(c))}</h1><p>Mandat ${esc(c.mandat||"–")} · angelegt ${deAt(c.created)}</p></div>
+    <div class="row no-print">
+      <button id="toDossier" class="btn-teal">Dossier &amp; Checkliste</button>
+      <button id="del" class="btn-danger">Kunde löschen</button>
+    </div>
+  </div>
+  <form id="cform">
+    <div class="card"><h3>Stammdaten</h3><p class="small">Seite 1 der Steuererklärung: Personalien.</p>
+      <div class="grid g4">
+        ${f("mandat","Mandat-Nr.",c.mandat)}
+        <div><label>Anrede</label><select name="anrede">${["Frau","Herr","Familie","Firma"].map(a=>`<option ${c.anrede===a?"selected":""}>${a}</option>`).join("")}</select></div>
+        ${f("vorname","Vorname",c.vorname)}
+        ${f("name","Name",c.name)}
+        ${f("strasse","Strasse / Nr.",c.strasse)}
+        ${f("plz","PLZ",c.plz)}
+        ${f("ort","Ort",c.ort)}
+        ${f("gemeinde","Steuergemeinde",c.gemeinde)}
+        ${f("kanton","Kanton",c.kanton)}
+        ${f("email","E-Mail",c.email,"email")}
+        ${f("telefon","Telefon",c.telefon,"tel")}
+        ${f("geburtsdatum","Geburtsdatum",c.geburtsdatum,"date")}
+        ${f("ahv","AHV-Nr. (756.…)",c.ahv)}
+        <div><label>Zivilstand</label><select name="zivilstand">${["ledig","verheiratet","eingetragene Partnerschaft","getrennt","geschieden","verwitwet"].map(z=>`<option ${c.zivilstand===z?"selected":""}>${z}</option>`).join("")}</select></div>
+        ${f("beruf","Beruf",c.beruf)}
+        ${f("arbeitgeber","Arbeitgeber",c.arbeitgeber)}
+        ${f("honorar","Honorar CHF",c.honorar)}
+      </div>
+    </div>
+    <div class="card"><h3>Partner/in</h3>
+      <div class="grid g4">
+        ${f("p_vorname","Vorname",c.partner?.vorname)}
+        ${f("p_name","Name",c.partner?.name)}
+        ${f("p_geburtsdatum","Geburtsdatum",c.partner?.geburtsdatum,"date")}
+        ${f("p_ahv","AHV-Nr.",c.partner?.ahv)}
+        ${f("p_beruf","Beruf",c.partner?.beruf)}
+        ${f("p_arbeitgeber","Arbeitgeber",c.partner?.arbeitgeber)}
+      </div>
+    </div>
+    <div class="card"><div class="card-head"><h3>Kinder</h3>
+      <button type="button" class="btn-sm" id="addKid">+ Kind hinzufügen</button></div>
+      <div id="kids">${(c.kinder||[]).map((k,i)=>`
+        <div class="grid g4" data-kid="${i}" style="margin-bottom:8px">
+          <div><label>Vorname</label><input name="k_name_${i}" value="${esc(k.name||"")}"></div>
+          <div><label>Geburtsdatum</label><input type="date" name="k_geb_${i}" value="${esc(k.geburtsdatum||"")}"></div>
+          <div><label>Status</label><select name="k_status_${i}">${["im Haushalt","in Ausbildung","auswärts","volljährig"].map(o=>`<option ${k.status===o?"selected":""}>${o}</option>`).join("")}</select></div>
+          <div><label>&nbsp;</label><button type="button" class="btn-sm btn-danger" data-delkid="${i}">Entfernen</button></div>
+        </div>`).join("") || '<p class="small">Keine Kinder erfasst.</p>'}</div>
+    </div>
+    <div class="card"><h3>Steuerprofil</h3>
+      <p class="small">Jedes angekreuzte Merkmal erzeugt automatisch die passenden Punkte in der Checkliste
+        und die passenden Register im Dossier.</p>
+      <div class="grid g3">
+        ${PROFILE_FIELDS.map(g => `<fieldset><legend>${g.g}</legend>
+          ${g.items.map(([k,l]) => `<label class="check"><input type="checkbox" name="pf_${k}" ${c.profil?.[k]?"checked":""}> ${l}</label>`).join("")}
+        </fieldset>`).join("")}
+      </div>
+    </div>
+    <div class="card"><h3>Notizen</h3>
+      <textarea name="notizen" placeholder="Interne Notizen zum Mandat…">${esc(c.notizen||"")}</textarea>
+    </div>
+    <div class="row no-print" style="position:sticky;bottom:0;background:var(--bg);padding:10px 0">
+      <button class="btn-primary" type="submit">Speichern</button>
+      <button type="button" id="cancel" class="btn-ghost">Zurück zur Liste</button>
+      <span class="small" id="saveHint"></span>
+    </div>
+  </form>`;
+
+  $("#addKid").onclick = async () => { (c.kinder = c.kinder||[]).push({ name:"", geburtsdatum:"", status:"im Haushalt" });
+    await dbPut("clients", c); render(); };
+  $$("[data-delkid]").forEach(b => b.onclick = async () => {
+    c.kinder.splice(+b.dataset.delkid,1); await dbPut("clients", c); render(); });
+  $("#cancel").onclick = () => go("clients");
+  $("#toDossier").onclick = () => go("dossier", { clientId:c.id, jahr:S.settings.jahr });
+  $("#del").onclick = async () => {
+    if(!confirmBox(`Kunde "${clientName(c)}" mit allen Dossiers und Dokumenten löschen?`)) return;
+    for(const d of S.docs.filter(d => d.clientId === c.id)) await dbDel("docs", d.id);
+    for(const d of S.dossiers.filter(d => d.clientId === c.id)) await dbDel("dossiers", d.id);
+    await dbDel("clients", c.id);
+    S.docs = S.docs.filter(d => d.clientId !== c.id);
+    S.dossiers = S.dossiers.filter(d => d.clientId !== c.id);
+    S.clients = S.clients.filter(x => x.id !== c.id);
+    toast("Kunde gelöscht"); go("clients");
+  };
+  $("#cform").onsubmit = async e => {
+    e.preventDefault();
+    const fd = new FormData(e.target), get = n => (fd.get(n) || "").toString().trim();
+    ["mandat","anrede","vorname","name","strasse","plz","ort","gemeinde","kanton","email","telefon",
+     "geburtsdatum","ahv","zivilstand","beruf","arbeitgeber","honorar","notizen"].forEach(k => c[k] = get(k));
+    c.partner = { vorname:get("p_vorname"), name:get("p_name"), geburtsdatum:get("p_geburtsdatum"),
+                  ahv:get("p_ahv"), beruf:get("p_beruf"), arbeitgeber:get("p_arbeitgeber") };
+    (c.kinder||[]).forEach((k,i) => { k.name = get(`k_name_${i}`); k.geburtsdatum = get(`k_geb_${i}`); k.status = get(`k_status_${i}`); });
+    c.profil = {}; Object.keys(PROFILE_LABELS).forEach(k => { if(fd.get("pf_"+k)) c.profil[k] = true; });
+    if(c.partner.vorname || c.partner.name) c.profil.partner_erwerb = c.profil.partner_erwerb || !!fd.get("pf_partner_erwerb");
+    c.updated = today();
+    await dbPut("clients", c);
+    S.clients.sort((a,b) => (a.name||"").localeCompare(b.name||""));
+    toast("Gespeichert");
+    $("#saveHint").textContent = "Zuletzt gespeichert: " + new Date().toLocaleTimeString("de-CH");
+  };
+}
+
+/* ---------- Dossier & Checkliste ---------- */
+function viewDossier(){
+  if(!S.clientId && S.clients.length) S.clientId = S.clients[0].id;
+  const c = clientById(S.clientId);
+  if(!c) { M().innerHTML = `<div class="empty">Bitte zuerst einen Kunden erfassen.
+    <br><button class="btn-primary" id="n" style="margin-top:10px">+ Neuer Kunde</button></div>`;
+    $("#n").onclick = () => newClient(); return; }
+  const jahr = S.jahr || S.settings.jahr;
+  const dos  = dossierOf(c.id, jahr);
+  const list = buildChecklist(c, jahr), st = checklistStats(list);
+  const pct  = st.total ? Math.round(st.done/st.total*100) : 0;
+  const docs = docsOf(c.id, jahr);
+  const byReg = {};
+  list.forEach(i => (byReg[i.reg] = byReg[i.reg] || []).push(i));
+
+  M().innerHTML = `
+  <div class="page-head">
+    <div><h1>Dossier ${esc(clientName(c))} · ${jahr}</h1>
+      <p>Checkliste und Dokumente folgen der Register-Struktur der Steuererklärung
+         (Personalien · Ziff. 1–7 · 11–18 · 19–27 · 30–37 · Hilfsformulare).</p></div>
+    <div class="row no-print">
+      <select id="dosClient" style="width:auto">${S.clients.map(x =>
+        `<option value="${x.id}" ${x.id===c.id?"selected":""}>${esc(clientName(x))}</option>`).join("")}</select>
+      <select id="dosYear" style="width:auto">${yearOptions(jahr)}</select>
+    </div>
+  </div>
+  <div class="card no-print"><div class="grid g4">
+    <div><label>Status</label><select id="dosStatus">${DOSSIER_STATUS.map(s =>
+      `<option value="${s.id}" ${dos?.status===s.id?"selected":""}>${s.label}</option>`).join("")}</select></div>
+    <div><label>Einreichefrist</label><input type="date" id="dosFrist" value="${esc(dos?.frist||"")}"></div>
+    <div><label>Eingereicht am</label><input type="date" id="dosEing" value="${esc(dos?.eingereicht||"")}"></div>
+    <div><label>&nbsp;</label><div class="row">
+      <button class="btn-teal" id="mailReq">✉ Unterlagen anfordern</button>
+      <button id="printCl">Drucken</button></div></div>
+  </div></div>
+
+  <div class="grid g4" style="margin-bottom:16px">
+    <div class="kpi"><b>${pct}%</b><span>Unterlagen vollständig</span>
+      <div class="progress" style="margin-top:8px"><i style="width:${pct}%"></i></div></div>
+    <div class="kpi"><b>${st.open.length}</b><span>Offene Punkte</span></div>
+    <div class="kpi"><b>${docs.length}</b><span>Abgelegte Dokumente</span></div>
+    <div class="kpi"><b>${dos?.frist ? deAt(dos.frist) : "–"}</b><span>Frist</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Checkliste ${jahr}</h3>
+      <div class="row no-print"><button class="btn-sm" id="addItem">+ Eigener Punkt</button>
+        <button class="btn-sm" id="copyOpen">Offene Punkte kopieren</button></div></div>
+    ${st.open.length === 0 ? '<div class="hint">Alle Punkte erledigt – das Dossier kann bearbeitet werden.</div>' :
+      `<div class="hint warn"><b>${st.open.length} offene Unterlagen:</b> ${st.open.map(i => esc(i.label)).join(" · ")}</div>`}
+    ${REGISTERS.filter(r => byReg[r.id]).map(r => `
+      <div class="reg-head"><b>${r.nr} · ${esc(r.label)}</b>
+        <span class="small">${esc(r.hint)}</span>
+        <span class="badge ${byReg[r.id].every(i => i.done || i.na) ? "ok" : "warn"}">
+          ${byReg[r.id].filter(i => i.done).length}/${byReg[r.id].filter(i => !i.na).length}</span></div>
+      ${byReg[r.id].map(i => `
+        <div class="row" style="padding:5px 2px;border-bottom:1px solid var(--line)">
+          <input type="checkbox" class="chk" data-key="${i.key}" ${i.done?"checked":""} ${i.auto?"disabled":""}
+                 style="width:auto;accent-color:var(--teal)">
+          <span style="${i.na?"text-decoration:line-through;color:var(--ink-faint)":""}">
+            ${esc(i.label)} ${i.ziffer !== "–" ? `<span class="badge grey">Ziff. ${esc(i.ziffer)}</span>` : ""}
+            ${i.auto ? '<span class="badge ok">Dokument vorhanden</span>' : ""}
+            ${i.note ? `<span class="small"> – ${esc(i.note)}</span>` : ""}
+          </span>
+          <span class="spacer"></span>
+          <button class="btn-sm btn-ghost no-print" data-na="${i.key}">${i.na ? "wieder aktivieren" : "nicht nötig"}</button>
+          <button class="btn-sm btn-ghost no-print" data-note="${i.key}">Notiz</button>
+        </div>`).join("")}`).join("")}
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>Dokumente im Dossier (${docs.length})</h3>
+      <div class="row no-print">
+        <button id="toConv" class="btn-teal">+ Dokumente hinzufügen</button>
+        <button id="zip" ${docs.length?"":"disabled"}>ZIP-Export</button>
+        <button id="toc" ${docs.length?"":"disabled"}>Inhaltsverzeichnis</button></div></div>
+    ${docs.length ? REGISTERS.filter(r => docs.some(d => d.register === r.id)).map(r => `
+      <div class="reg-head"><b>${r.nr} · ${esc(r.label)}</b></div>
+      ${docs.filter(d => d.register === r.id).sort((a,b) => a.newName.localeCompare(b.newName)).map(d => `
+        <div class="doc-row">
+          <div><div class="fn"><b>${esc(d.newName)}</b></div>
+               <div class="small">Original: ${esc(d.origName)} · ${kb(d.size)}${d.unsicher?' · <span class="badge warn">Zuordnung prüfen</span>':""}</div></div>
+          <div class="small">${esc(DT[d.docType]?.label || d.docType)}${d.ziffer !== "–" ? " · Ziff. " + esc(d.ziffer) : ""}</div>
+          <div class="no-print"><button class="btn-sm" data-redo="${d.id}">Umordnen</button></div>
+          <div class="no-print"><button class="btn-sm" data-dl="${d.id}">Öffnen</button>
+               <button class="btn-sm btn-danger" data-rm="${d.id}">✕</button></div>
+        </div>`).join("")}`).join("")
+      : '<div class="empty">Noch keine Dokumente. Ziehe die Belege in den Dokumenten-Konverter.</div>'}
+  </div>`;
+
+  $("#dosClient").onchange = e => go("dossier", { clientId:e.target.value, jahr });
+  $("#dosYear").onchange   = e => go("dossier", { clientId:c.id, jahr:e.target.value });
+  const patchDos = async patch => { const d = await ensureDossier(c.id, jahr); Object.assign(d, patch, { updated:today() }); await dbPut("dossiers", d); render(); };
+  $("#dosStatus").onchange = e => patchDos({ status:e.target.value });
+  $("#dosFrist").onchange  = e => patchDos({ frist:e.target.value });
+  $("#dosEing").onchange   = e => patchDos({ eingereicht:e.target.value });
+  $("#printCl").onclick    = () => window.print();
+  $("#toConv").onclick     = () => go("converter", { clientId:c.id, jahr });
+  $("#mailReq").onclick    = () => go("mail", { clientId:c.id, jahr });
+  $("#copyOpen").onclick   = () => { navigator.clipboard.writeText(st.open.map(i => "- " + i.label).join("\n"))
+                                     .then(() => toast("Offene Punkte kopiert")); };
+  $$(".chk").forEach(cb => cb.onchange = async () => { await setChecklistItem(c.id, jahr, cb.dataset.key, { manual:cb.checked }); render(); });
+  $$("[data-na]").forEach(b => b.onclick = async () => {
+    const cur = list.find(i => i.key === b.dataset.na);
+    await setChecklistItem(c.id, jahr, b.dataset.na, { na:!cur.na }); render(); });
+  $$("[data-note]").forEach(b => b.onclick = async () => {
+    const cur = list.find(i => i.key === b.dataset.note);
+    const t = prompt("Notiz zu «" + cur.label + "»:", cur.note || "");
+    if(t !== null){ await setChecklistItem(c.id, jahr, b.dataset.note, { note:t }); render(); } });
+  $("#addItem").onclick = async () => {
+    const label = prompt("Bezeichnung des zusätzlichen Punkts:"); if(!label) return;
+    const d = await ensureDossier(c.id, jahr);
+    (d.extra = d.extra || []).push({ key:"x_"+uid(), label, reg:"R10", ziffer:"–" });
+    await dbPut("dossiers", d); render(); };
+  $$("[data-dl]").forEach(b => b.onclick = async () => {
+    const d = await dbGet("docs", b.dataset.dl);
+    if(d?.blob) download(d.blob, d.newName); else toast("Datei nicht gespeichert"); });
+  $$("[data-rm]").forEach(b => b.onclick = async () => {
+    if(!confirmBox("Dokument aus dem Dossier entfernen?")) return;
+    await dbDel("docs", b.dataset.rm); S.docs = S.docs.filter(x => x.id !== b.dataset.rm);
+    await renumber(c.id, jahr); render(); toast("Entfernt"); });
+  $$("[data-redo]").forEach(b => b.onclick = () => reclassifyDialog(b.dataset.redo));
+  $("#zip") && ($("#zip").onclick = () => exportZip(c, jahr));
+  $("#toc") && ($("#toc").onclick = () => printToc(c, jahr));
+}
+
+/* Dokument manuell einem anderen Register / Typ zuordnen. */
+async function reclassifyDialog(docId){
+  const d = await dbGet("docs", docId); if(!d) return;
+  const ok = await modal({ title:"Dokument neu zuordnen", ok:"Übernehmen", body:`
+    <p class="small">${esc(d.origName)}</p>
+    <label>Dokumenttyp</label>
+    <select name="dt">${DOCTYPES.map(t => `<option value="${t.id}" ${t.id===d.docType?"selected":""}>
+      ${REG[t.reg].nr} · ${esc(t.label)}${t.ziffer!=="–"?" (Ziff. "+t.ziffer+")":""}</option>`).join("")}</select>
+    <div style="height:10px"></div>
+    <label>Steuerjahr</label><select name="jahr">${yearOptions(d.jahr)}</select>` });
+  if(!ok) return;
+  const t = DT[dlgVal("dt")] || DT.sonstiges;
+  const oldJahr = d.jahr;
+  Object.assign(d, { docType:t.id, register:t.reg, ziffer:t.ziffer, jahr:dlgVal("jahr"), unsicher:false });
+  await dbPut("docs", d);
+  const i = S.docs.findIndex(x => x.id === d.id); if(i >= 0) S.docs[i] = d;
+  await renumber(d.clientId, d.jahr);
+  if(oldJahr !== d.jahr) await renumber(d.clientId, oldJahr);
+  await ensureDossier(d.clientId, d.jahr);
+  render(); toast("Zuordnung aktualisiert");
+}
+
+/* ZIP-Export: Ordner je Register, Dateien nach Schema benannt. */
+async function exportZip(c, jahr){
+  const docs = docsOf(c.id, jahr);
+  if(!docs.length) return toast("Keine Dokumente");
+  toast("ZIP wird erstellt…");
+  const files = [];
+  for(const d of docs){
+    const full = await dbGet("docs", d.id);
+    if(!full?.blob) continue;
+    const r = REG[d.register] || REG.R99;
+    const buf = new Uint8Array(await full.blob.arrayBuffer());
+    files.push({ name:`${jahr}_${slug(clientName(c).replace(", ","-"))}/${r.nr}_${slug(r.label)}/${d.newName}`, data:buf });
+  }
+  const enc = new TextEncoder();
+  files.push({ name:`${jahr}_${slug(clientName(c).replace(", ","-"))}/00_Inhaltsverzeichnis.txt`, data:enc.encode(tocText(c, jahr)) });
+  const blob = await makeZip(files);
+  download(blob, `Steuerdossier_${jahr}_${slug(clientName(c).replace(", ","-"))}.zip`);
+  toast(files.length - 1 + " Dokumente exportiert");
+}
+function tocText(c, jahr){
+  const docs = docsOf(c.id, jahr), list = buildChecklist(c, jahr), st = checklistStats(list);
+  let out = `STEUERDOSSIER ${jahr}\n${clientName(c)}${c.mandat ? " · Mandat " + c.mandat : ""}\n` +
+            `${S.settings.kanzlei}\nErstellt am ${deAt(today())}\n\nINHALT\n`;
+  REGISTERS.filter(r => docs.some(d => d.register === r.id)).forEach(r => {
+    out += `\n${r.nr} · ${r.label}\n`;
+    docs.filter(d => d.register === r.id).sort((a,b) => a.newName.localeCompare(b.newName))
+        .forEach(d => out += `   ${d.newName}${d.ziffer !== "–" ? "   (Ziff. " + d.ziffer + ")" : ""}\n`);
+  });
+  out += `\n\nCHECKLISTE: ${st.done}/${st.total} erledigt\n`;
+  st.open.forEach(i => out += `   OFFEN: ${i.label}${i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : ""}\n`);
+  return out;
+}
+function printToc(c, jahr){
+  const w = window.open("", "_blank");
+  w.document.write(`<pre style="font:13px ui-monospace,monospace;white-space:pre-wrap">${esc(tocText(c, jahr))}</pre>`);
+  w.document.close(); w.print();
+}
+
+/* ---------- Dokumenten-Konverter ---------- */
+function viewConverter(){
+  if(!S.clientId && S.clients.length) S.clientId = S.clients[0].id;
+  const c = clientById(S.clientId);
+  const jahr = S.jahr || S.settings.jahr;
+  if(!c){ M().innerHTML = `<div class="empty">Bitte zuerst einen Kunden erfassen.
+     <br><button class="btn-primary" id="n" style="margin-top:10px">+ Neuer Kunde</button></div>`;
+     $("#n").onclick = () => newClient(); return; }
+  M().innerHTML = `
+  <div class="page-head">
+    <div><h1>Dokumenten-Konverter</h1>
+      <p>Belege hineinziehen – das CRM erkennt den Dokumenttyp, vergibt Register und Ziffer
+         nach dem Steuerdossier-Aufbau und benennt die Dateien einheitlich um.</p></div>
+    <div class="row no-print">
+      <select id="convClient" style="width:auto">${S.clients.map(x =>
+        `<option value="${x.id}" ${x.id===c.id?"selected":""}>${esc(clientName(x))}</option>`).join("")}</select>
+      <select id="convYear" style="width:auto">${yearOptions(jahr)}</select>
+    </div>
+  </div>
+  <div class="hint">Benennungsschema: <span class="mono">Jahr_Register_Ziffer_Dokumenttyp_Kunde_Nr.pdf</span> –
+    Beispiel <span class="mono">${jahr}_02_1.1_Lohnausweis_${esc(slug(clientName(c).replace(", ","-")))}_01.pdf</span></div>
+  <div class="card">
+    <div class="drop" id="drop">
+      <b>Dateien hierher ziehen</b>
+      <p class="small">PDF, Bilder, Excel – beliebig viele auf einmal. PDFs werden zusätzlich am Inhalt erkannt.</p>
+      <button class="btn-primary" id="pick">Dateien auswählen</button>
+      <input type="file" id="file" multiple class="hidden">
+    </div>
+    <div id="status" class="small" style="margin-top:10px"></div>
+  </div>
+  ${S.queue.length ? `<div class="card">
+    <div class="card-head"><h3>Erkannt (${S.queue.length}) – bitte kurz prüfen</h3>
+      <div class="row"><button class="btn-ghost btn-sm" id="clearQ">Verwerfen</button>
+        <button class="btn-primary" id="apply">In Dossier übernehmen</button></div></div>
+    ${S.queue.map((q,i) => `
+      <div class="doc-row">
+        <div><div class="fn"><b>${esc(q.name)}</b></div>
+          <div class="small">${kb(q.size)} ·
+          ${q.sicher ? '<span class="badge ok">sicher erkannt</span>' : '<span class="badge warn">bitte prüfen</span>'}
+          ${q.hits.length ? " · Treffer: " + esc(q.hits.join(", ")) : " · kein Stichwort gefunden"}</div></div>
+        <div><select data-q="${i}" class="qtype">${DOCTYPES.map(t =>
+          `<option value="${t.id}" ${t.id===q.docType?"selected":""}>${REG[t.reg].nr} · ${esc(t.label)}</option>`).join("")}</select></div>
+        <div><select data-qy="${i}" class="qyear">${yearOptions(q.jahr)}</select></div>
+        <div class="num"><button class="btn-sm btn-danger" data-qx="${i}">✕</button></div>
+      </div>`).join("")}
+    </div>` : ""}
+  <div class="card"><div class="card-head"><h3>Bereits abgelegt: ${docsOf(c.id, jahr).length} Dokumente (${jahr})</h3>
+    <button class="btn-teal btn-sm" id="toDos">Dossier öffnen</button></div>
+    <p class="small">Zuordnung ändern, ZIP exportieren und Checkliste findest du im Dossier.</p></div>`;
+
+  $("#convClient").onchange = e => go("converter", { clientId:e.target.value, jahr });
+  $("#convYear").onchange   = e => go("converter", { clientId:c.id, jahr:e.target.value });
+  $("#toDos").onclick       = () => go("dossier", { clientId:c.id, jahr });
+  $("#pick").onclick        = () => $("#file").click();
+  $("#file").onchange       = e => intake([...e.target.files], jahr);
+  const drop = $("#drop");
+  ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => intake([...e.dataTransfer.files], jahr));
+  $$(".qtype").forEach(sel => sel.onchange = () => { const t = DT[sel.value];
+    Object.assign(S.queue[+sel.dataset.q], { docType:t.id, register:t.reg, ziffer:t.ziffer, sicher:true }); });
+  $$(".qyear").forEach(sel => sel.onchange = () => { S.queue[+sel.dataset.qy].jahr = sel.value; });
+  $$("[data-qx]").forEach(b => b.onclick = () => { S.queue.splice(+b.dataset.qx,1); render(); });
+  $("#clearQ") && ($("#clearQ").onclick = () => { S.queue = []; render(); });
+  $("#apply")  && ($("#apply").onclick  = () => applyQueue(c, jahr));
+}
+
+/* Dateien einlesen, Text extrahieren, klassifizieren. */
+async function intake(files, jahr){
+  if(!files.length) return;
+  const stat = $("#status");
+  for(let i = 0; i < files.length; i++){
+    const f = files[i];
+    if(stat) stat.textContent = `Lese ${i+1}/${files.length}: ${f.name} …`;
+    const text = await pdfText(f);
+    const cl = classify(f.name, text);
+    const t = DT[cl.docType];
+    S.queue.push({ file:f, name:f.name, size:f.size, docType:t.id, register:t.reg, ziffer:t.ziffer,
+                   jahr: detectYear(f.name) || detectYear(text) || String(jahr),
+                   sicher:cl.sicher, hits:cl.hits });
+  }
+  if(stat) stat.textContent = "";
+  render();
+}
+async function applyQueue(c, jahr){
+  const years = new Set();
+  for(const q of S.queue){
+    const doc = { id:uid(), clientId:c.id, jahr:String(q.jahr), origName:q.name, size:q.size,
+                  docType:q.docType, register:q.register, ziffer:q.ziffer, unsicher:!q.sicher,
+                  blob:q.file, newName:q.name, added:new Date().toISOString() };
+    doc.newName = buildName(doc, c, 1);
+    await dbPut("docs", doc);
+    S.docs.push(doc);
+    years.add(String(q.jahr));
+  }
+  for(const y of years){ await ensureDossier(c.id, y); await renumber(c.id, y); }
+  const n = S.queue.length; S.queue = [];
+  toast(n + " Dokumente abgelegt");
+  go("dossier", { clientId:c.id, jahr:[...years][0] || jahr });
+}
+
+/* ---------- E-Mail-Vorlagen ---------- */
+const TEMPLATES = [
+  { id:"anfordern", label:"Unterlagen anfordern",
+    subj:"Steuererklärung {jahr} – benötigte Unterlagen",
+    body:`Guten Tag {anrede_name}
+
+Gerne erstelle ich Ihre Steuererklärung {jahr}. Damit ich starten kann, benötige ich noch folgende Unterlagen:
+
+{offene}
+
+Am einfachsten senden Sie mir alles als PDF oder Foto per Antwort auf diese E-Mail – bis am {frist}.
+
+Bei Fragen bin ich gerne für Sie da.
+
+Freundliche Grüsse
+{bearbeiter}
+{kanzlei}
+{telefon}` },
+  { id:"erinnerung", label:"Erinnerung offene Unterlagen",
+    subj:"Erinnerung: Unterlagen Steuererklärung {jahr}",
+    body:`Guten Tag {anrede_name}
+
+Für Ihre Steuererklärung {jahr} fehlen mir noch:
+
+{offene}
+
+Damit ich die Frist vom {frist} einhalten kann, bitte ich Sie um Zustellung bis Ende dieser Woche.
+
+Freundliche Grüsse
+{bearbeiter}
+{kanzlei}` },
+  { id:"freigabe", label:"Steuererklärung zur Freigabe",
+    subj:"Steuererklärung {jahr} – Entwurf zur Kontrolle",
+    body:`Guten Tag {anrede_name}
+
+Ihre Steuererklärung {jahr} ist fertig erstellt. Im Anhang finden Sie:
+- die vollständige Steuererklärung {jahr}
+- die provisorische Steuerberechnung
+- das Dossier mit allen eingereichten Belegen
+
+Bitte prüfen Sie die Angaben und geben Sie mir kurz Ihr OK per E-Mail. Danach reiche ich die Erklärung elektronisch ein.
+
+Freundliche Grüsse
+{bearbeiter}
+{kanzlei}` },
+  { id:"eingereicht", label:"Bestätigung Einreichung",
+    subj:"Steuererklärung {jahr} eingereicht",
+    body:`Guten Tag {anrede_name}
+
+Ihre Steuererklärung {jahr} wurde heute beim Steueramt eingereicht. Sie erhalten die definitive Veranlagung direkt vom Steueramt – bitte senden Sie mir davon eine Kopie, damit ich sie prüfen kann.
+
+Das vollständige Dossier lege ich Ihnen bei.
+
+Freundliche Grüsse
+{bearbeiter}
+{kanzlei}` },
+  { id:"honorar", label:"Honorarrechnung",
+    subj:"Rechnung Steuererklärung {jahr}",
+    body:`Guten Tag {anrede_name}
+
+Für die Erstellung Ihrer Steuererklärung {jahr} erlaube ich mir, folgendes Honorar in Rechnung zu stellen:
+
+Honorar: CHF {honorar}
+Zahlbar innert 30 Tagen.
+
+Vielen Dank für Ihr Vertrauen.
+
+Freundliche Grüsse
+{bearbeiter}
+{kanzlei}` }
+];
+function fillTemplate(tpl, c, jahr){
+  const dos = dossierOf(c.id, jahr);
+  const open = checklistStats(buildChecklist(c, jahr)).open;
+  const map = {
+    "{anrede_name}": `${c.anrede || ""} ${c.name || ""}`.trim(),
+    "{name}": clientName(c), "{vorname}": c.vorname || "", "{jahr}": jahr,
+    "{offene}": open.length ? open.map(i => "- " + i.label + (i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : "")).join("\n")
+                            : "- (alle Unterlagen liegen vor)",
+    "{frist}": dos?.frist ? deAt(dos.frist) : S.settings.frist,
+    "{kanzlei}": S.settings.kanzlei, "{bearbeiter}": S.settings.bearbeiter || S.settings.kanzlei,
+    "{telefon}": S.settings.telefon || "", "{email}": S.settings.email || "",
+    "{honorar}": c.honorar ? chf(c.honorar) : "___"
+  };
+  const rep = s => Object.entries(map).reduce((a,[k,v]) => a.split(k).join(v), s);
+  return { subj:rep(tpl.subj), body:rep(tpl.body) };
+}
+function viewMail(){
+  if(!S.clientId && S.clients.length) S.clientId = S.clients[0].id;
+  const c = clientById(S.clientId);
+  const jahr = S.jahr || S.settings.jahr;
+  if(!c){ M().innerHTML = '<div class="empty">Bitte zuerst einen Kunden erfassen.</div>'; return; }
+  const tpl = TEMPLATES.find(t => t.id === (S.tpl || "anfordern")) || TEMPLATES[0];
+  const { subj, body } = fillTemplate(tpl, c, jahr);
+  M().innerHTML = `
+  <div class="page-head">
+    <div><h1>E-Mail an ${esc(clientName(c))}</h1>
+      <p>Die Vorlagen ziehen die offenen Checklisten-Punkte automatisch in den Text.</p></div>
+    <div class="row no-print">
+      <select id="mailClient" style="width:auto">${S.clients.map(x =>
+        `<option value="${x.id}" ${x.id===c.id?"selected":""}>${esc(clientName(x))}</option>`).join("")}</select>
+      <select id="mailYear" style="width:auto">${yearOptions(jahr)}</select>
+    </div>
+  </div>
+  <div class="card"><div class="row" style="margin-bottom:12px">
+    ${TEMPLATES.map(t => `<button class="pill ${t.id===tpl.id?"active":""}" data-tpl="${t.id}">${esc(t.label)}</button>`).join("")}
+  </div>
+  <div class="grid g2">
+    <div><label>An</label><input id="mTo" value="${esc(c.email||"")}"></div>
+    <div><label>Betreff</label><input id="mSubj" value="${esc(subj)}"></div>
+  </div>
+  <div style="height:10px"></div>
+  <label>Text</label><textarea id="mBody" style="min-height:320px">${esc(body)}</textarea>
+  <div class="row" style="margin-top:12px">
+    <button class="btn-primary" id="sendGmail">In Gmail öffnen</button>
+    <button id="sendMailto">Mit Mailprogramm öffnen</button>
+    <button id="copyMail">Text kopieren</button>
+    <span class="spacer"></span>
+    <button class="btn-teal" id="markSent">Als «angefordert» markieren</button>
+  </div>
+  ${c.email ? "" : '<div class="hint warn" style="margin-top:10px">Beim Kunden ist keine E-Mail-Adresse hinterlegt.</div>'}
+  </div>
+  <div class="card no-print"><h3>Anhänge</h3>
+    <p class="small">Dossier zuerst als ZIP exportieren, danach im E-Mail-Fenster anhängen –
+      so verlassen die Kundendaten deinen Rechner nur bewusst und kontrolliert.</p>
+    <button id="zipMail">Dossier ${jahr} als ZIP exportieren</button></div>`;
+  $("#mailClient").onchange = e => go("mail", { clientId:e.target.value, jahr });
+  $("#mailYear").onchange   = e => go("mail", { clientId:c.id, jahr:e.target.value });
+  $$("[data-tpl]").forEach(b => b.onclick = () => { S.tpl = b.dataset.tpl; render(); });
+  const get = () => ({ to:$("#mTo").value.trim(), su:$("#mSubj").value, bo:$("#mBody").value });
+  $("#sendGmail").onclick = () => { const { to, su, bo } = get();
+    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(su)}&body=${encodeURIComponent(bo)}`, "_blank"); };
+  $("#sendMailto").onclick = () => { const { to, su, bo } = get();
+    window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(su)}&body=${encodeURIComponent(bo)}`; };
+  $("#copyMail").onclick = () => { const { su, bo } = get();
+    navigator.clipboard.writeText(su + "\n\n" + bo).then(() => toast("In Zwischenablage kopiert")); };
+  $("#markSent").onclick = async () => { const d = await ensureDossier(c.id, jahr);
+    d.status = "angefordert"; d.updated = today(); await dbPut("dossiers", d); toast("Status: Unterlagen angefordert"); };
+  $("#zipMail").onclick = () => exportZip(c, jahr);
+}
+
+/* ---------- Einstellungen & Backup ---------- */
+function viewSettings(){
+  const s = S.settings;
+  M().innerHTML = `
+  <div class="page-head"><div><h1>Einstellungen &amp; Backup</h1>
+    <p>Kanzleidaten für die E-Mail-Vorlagen, Standardwerte und Datensicherung.</p></div></div>
+  <div class="card"><h3>Kanzlei / Absender</h3>
+    <div class="grid g2">
+      <div><label>Kanzlei / Firma</label><input id="sKanzlei" value="${esc(s.kanzlei)}"></div>
+      <div><label>Bearbeiter/in (Unterschrift)</label><input id="sBearb" value="${esc(s.bearbeiter)}"></div>
+      <div><label>E-Mail-Absender</label><input id="sEmail" value="${esc(s.email)}"></div>
+      <div><label>Telefon</label><input id="sTel" value="${esc(s.telefon)}"></div>
+      <div><label>Standard-Kanton</label><input id="sKanton" value="${esc(s.kanton)}"></div>
+      <div><label>Standard-Steuerjahr</label><select id="sJahr">${yearOptions(s.jahr)}</select></div>
+      <div><label>Standard-Frist (Text)</label><input id="sFrist" value="${esc(s.frist)}"></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn-primary" id="saveSet">Speichern</button></div>
+  </div>
+  <div class="card"><h3>Datensicherung</h3>
+    <div class="hint"><b>Wichtig:</b> Alle Daten liegen ausschliesslich in diesem Browser
+      (IndexedDB). Browserdaten löschen = CRM leer. Mach mindestens monatlich ein Backup.</div>
+    <div class="row">
+      <button class="btn-primary" id="expJson">Backup exportieren (Stammdaten)</button>
+      <button id="expFull">Backup inkl. Dateien (gross)</button>
+      <button id="impJson">Backup einlesen</button>
+      <input type="file" id="impFile" accept=".json" class="hidden">
+    </div>
+    <p class="small" style="margin-top:10px">Stammdaten-Backup enthält Kunden, Dossiers, Checklisten und
+      die Dokumentenliste (ohne die Dateien selbst). Das Vollbackup enthält zusätzlich alle abgelegten Dateien.</p>
+  </div>
+  <div class="card"><h3>Statistik</h3>
+    <div class="grid g4">
+      <div class="kpi"><b>${S.clients.length}</b><span>Kunden</span></div>
+      <div class="kpi"><b>${S.dossiers.length}</b><span>Dossiers</span></div>
+      <div class="kpi"><b>${S.docs.length}</b><span>Dokumente</span></div>
+      <div class="kpi"><b>${kb(S.docs.reduce((a,d) => a + (d.size||0), 0))}</b><span>Dateivolumen</span></div>
+    </div>
+  </div>
+  <div class="card"><h3>Zurücksetzen</h3>
+    <p class="small">Löscht alle Kunden, Dossiers und Dokumente in diesem Browser. Nicht umkehrbar.</p>
+    <button class="btn-danger" id="wipe">Alle Daten löschen</button></div>`;
+
+  $("#saveSet").onclick = async () => {
+    Object.assign(S.settings, { kanzlei:$("#sKanzlei").value.trim(), bearbeiter:$("#sBearb").value.trim(),
+      email:$("#sEmail").value.trim(), telefon:$("#sTel").value.trim(), kanton:$("#sKanton").value.trim(),
+      jahr:+$("#sJahr").value, frist:$("#sFrist").value.trim() });
+    await saveSettings(); toast("Einstellungen gespeichert"); render();
+  };
+  $("#expJson").onclick = () => exportBackup(false);
+  $("#expFull").onclick = () => exportBackup(true);
+  $("#impJson").onclick = () => $("#impFile").click();
+  $("#impFile").onchange = e => importBackup(e.target.files[0]);
+  $("#wipe").onclick = async () => {
+    if(!confirmBox("Wirklich ALLE Daten löschen? Vorher ein Backup exportieren!")) return;
+    if(!confirmBox("Letzte Warnung: alle Kunden, Dossiers und Dokumente werden gelöscht.")) return;
+    for(const st of ["clients","dossiers","docs"]) for(const r of await dbAll(st)) await dbDel(st, r.id);
+    S.clients = []; S.dossiers = []; S.docs = [];
+    toast("Alle Daten gelöscht"); go("dashboard");
+  };
+}
+const blobToDataUrl = b => new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(b); });
+async function exportBackup(withFiles){
+  toast("Backup wird erstellt…");
+  const docs = [];
+  for(const d of S.docs){
+    const { blob, ...meta } = d;
+    if(withFiles){ const full = await dbGet("docs", d.id);
+      meta.file = full?.blob ? await blobToDataUrl(full.blob) : null; }
+    docs.push(meta);
+  }
+  const data = { app:"steuer-crm", version:1, exported:new Date().toISOString(), withFiles,
+                 settings:S.settings, clients:S.clients, dossiers:S.dossiers, docs };
+  download(new Blob([JSON.stringify(data, null, 1)], { type:"application/json" }),
+           `steuer-crm-backup_${today()}${withFiles ? "_mit-dateien" : ""}.json`);
+}
+async function importBackup(file){
+  if(!file) return;
+  let data; try{ data = JSON.parse(await file.text()); }catch(e){ return toast("Datei nicht lesbar"); }
+  if(data.app !== "steuer-crm") return toast("Kein gültiges Backup");
+  if(!confirmBox("Backup einlesen? Vorhandene Einträge mit gleicher ID werden überschrieben.")) return;
+  for(const c of data.clients || []) await dbPut("clients", c);
+  for(const d of data.dossiers || []) await dbPut("dossiers", d);
+  for(const d of data.docs || []){
+    const rec = { ...d };
+    if(rec.file){ const r = await fetch(rec.file); rec.blob = await r.blob(); }
+    delete rec.file;
+    await dbPut("docs", rec);
+  }
+  if(data.settings) { S.settings = Object.assign(S.settings, data.settings); await saveSettings(); }
+  await loadAll(); toast("Backup eingelesen"); go("dashboard");
+}
+
+/* ==================================================================
+   6) START
+   ================================================================== */
+(async function boot(){
+  try{ db = await openDB(); }
+  catch(e){
+    M().innerHTML = `<div class="card"><h3>Speicher nicht verfügbar</h3>
+      <p>Dieser Browser erlaubt keine lokale Datenbank (IndexedDB). Bitte Chrome oder Edge verwenden
+         und den privaten Modus verlassen.</p></div>`;
+    return;
+  }
+  await loadAll();
+  $$("#nav button").forEach(b => b.onclick = () => go(b.dataset.view));
+  $("#dlgForm").addEventListener("submit", () => {});
+  window.addEventListener("keydown", e => { if(e.key === "Escape" && $("#dlg").open) $("#dlg").close("cancel"); });
+  go("dashboard");
+})();
+</script>
+</body>
+</html>
