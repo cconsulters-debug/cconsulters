@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231F3864'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='15' font-weight='bold' fill='%230f8fa3' text-anchor='middle'%3E%E2%82%A3%3C/text%3E%3C/svg%3E">
 <title>Steuer-CRM · C Consulters</title>
 <style>
 /* ==================================================================
@@ -211,7 +212,7 @@ const DOCTYPES = [
   { id:"zivilstand",       label:"Nachweis Zivilstandsänderung",    reg:"R01", ziffer:"–",    profil:["zivilstand_neu"], keys:["heirat","eheschein","scheidung","trennung","partnerschaft"] },
   { id:"kinder",           label:"Nachweis Kinder / Ausbildung",    reg:"R01", ziffer:"–",    profil:["kinder"],         keys:["ausbildungsbestätigung","schulbestätigung","studienbestätigung","geburtsschein","familienausweis"] },
 
-  { id:"lohnausweis",      label:"Lohnausweis Haupterwerb",         reg:"R02", ziffer:"1.1",  profil:["unselbstaendig"], keys:["lohnausweis","salärausweis","certificat de salaire","jahreslohnausweis"] },
+  { id:"lohnausweis",      label:"Lohnausweis Haupterwerb",         reg:"R02", ziffer:"1.1",  profil:["unselbstaendig"], keys:["lohnausweis","salärausweis","certificat de salaire","jahreslohnausweis","bruttolohn","nettolohn"] },
   { id:"lohnausweis_neben",label:"Lohnausweis Nebenerwerb",         reg:"R02", ziffer:"1.2",  profil:["nebenerwerb"],    keys:["nebenerwerb","nebenjob","zweitarbeitgeber"] },
   { id:"lohnausweis_p",    label:"Lohnausweis Partner/in",          reg:"R02", ziffer:"1.1",  profil:["partner_erwerb"], keys:["lohnausweis partner","ehefrau lohn","ehemann lohn"] },
   { id:"selbst_abschluss", label:"Jahresrechnung selbständig",      reg:"R02", ziffer:"2.1",  profil:["selbstaendig"],   keys:["jahresrechnung","erfolgsrechnung","bilanz","abschluss","buchhaltung"] },
@@ -231,12 +232,13 @@ const DOCTYPES = [
   { id:"unterhalt_bezahlt",label:"Bezahlte Unterhaltsbeiträge",     reg:"R03", ziffer:"13.1", profil:["alimente_zahlt"], keys:["alimente bezahlt","unterhaltsbeiträge bezahlt","unterhaltszahlung"] },
   { id:"saeule3a",         label:"Bescheinigung Säule 3a",          reg:"R03", ziffer:"14.1", profil:["saeule3a"],       keys:["säule 3a","saeule 3a","säule3a","saeule-3a","säule-3a","3a","vorsorge 3a","freizügigkeit 3a"] },
   { id:"pk_einkauf",       label:"Einkauf Pensionskasse (2. Säule)",reg:"R03", ziffer:"14.2", profil:["saeule2einkauf"], keys:["einkauf pensionskasse","bvg einkauf","einkaufsbestätigung"] },
-  { id:"praemien_kk",      label:"Krankenkassen-Prämienbescheinigung",reg:"R08",ziffer:"15",  profil:["*"],              keys:["prämienbescheinigung","krankenkasse","krankenversicherung","css","helsana","swica","sanitas","concordia","kpt","assura","prämien"] },
+  { id:"praemien_kk",      label:"Krankenkassen-Prämienbescheinigung",reg:"R08",ziffer:"15",  profil:["*"],              keys:["prämienbescheinigung","prämienübersicht","grundversicherung","krankenkasse","krankenversicherung",
+             "kvg","css","helsana","swica","sanitas","concordia","kpt","assura","visana","atupri","sympany","prämien"] },
   { id:"praemien_leben",   label:"Lebensversicherung Prämien",      reg:"R08", ziffer:"15",   profil:["lebensversicherung"], keys:["lebensversicherung","risikoversicherung prämie"] },
   { id:"praemien_unfall",  label:"Unfallversicherung privat",       reg:"R08", ziffer:"15",   profil:[],                 keys:["unfallversicherung","nbu"] },
 
   { id:"spenden",          label:"Spendenquittungen",               reg:"R04", ziffer:"22.2", profil:["spenden"],        keys:["spende","zuwendung","donation","gönnerbeitrag"] },
-  { id:"krankheitskosten", label:"Krankheits- & Unfallkosten",      reg:"R04", ziffer:"22.1", profil:["krankheitskosten"], keys:["arztrechnung","zahnarzt","krankheitskosten","apotheke","spitalrechnung","selbstbehalt","franchise"] },
+  { id:"krankheitskosten", label:"Krankheits- & Unfallkosten",      reg:"R04", ziffer:"22.1", profil:["krankheitskosten"], keys:["arztrechnung","zahnarzt","krankheitskosten","apotheke","spitalrechnung","rechnung arzt","physiotherapie","brille"] },
   { id:"behinderung",      label:"Behinderungsbedingte Kosten",     reg:"R04", ziffer:"22.3", profil:["behinderung"],    keys:["behinderung","pflegekosten","hilflosenentschädigung"] },
   { id:"kinderbetreuung",  label:"Kinderbetreuungskosten",          reg:"R04", ziffer:"25.1", profil:["kinderbetreuung"], keys:["kinderbetreuung","kita","hort","tagesmutter","krippe"] },
   { id:"parteispenden",    label:"Parteispenden",                   reg:"R04", ziffer:"22.4", profil:[],                 keys:["parteibeitrag","parteispende"] },
@@ -542,11 +544,11 @@ const S = {
              kanton:"ZH", jahr:new Date().getFullYear()-1, mailer:"gmail", frist:"30.09.",
              farbe:"#1F3864", akzent:"#0f8fa3", idleMin:15,
              gmailClientId:"", gmailFrom:"", syncCfg:"", syncOn:false, lizenz:"", kantone:{},
-             ocr:false, ocrLang:"deu", iban:"", mwstNr:"", mwstSatz:0, zahlungsziel:30, rechnungKreis:"R-{jahr}-{nr}", naechsteNr:1,
+             ocr:true, ocrLang:"deu", iban:"", mwstNr:"", mwstSatz:0, zahlungsziel:30, rechnungKreis:"R-{jahr}-{nr}", naechsteNr:1,
              tarife:[["Steuererklärung natürliche Person","280"],["Wertschriftenverzeichnis","60"],
                      ["Liegenschaft / Eigenmietwert","90"],["Selbständige Erwerbstätigkeit","250"],
                      ["Fristerstreckung / Korrespondenz","40"],["Beratung (pro Stunde)","140"]] },
-  view:"dashboard", clientId:null, jahr:null, queue:[]
+  view:"dashboard", clientId:null, jahr:null, queue:[], convMsg:""
 };
 
 async function loadAll(){
@@ -672,15 +674,43 @@ async function setChecklistItem(clientId, jahr, key, patch){
 /* ==================================================================
    4) KONVERTER – Erkennung, Benennung, Sortierung
    ================================================================== */
-function detectYear(text){
-  const years = String(text).match(/20\d{2}/g);
-  if(!years) return null;
-  const now = new Date().getFullYear();
-  const plausible = years.map(Number).filter(y => y >= 2015 && y <= now);
-  if(!plausible.length) return null;
-  // häufigste Jahreszahl gewinnt, bei Gleichstand die jüngste
-  const cnt = {}; plausible.forEach(y => cnt[y] = (cnt[y]||0)+1);
-  return String(Object.entries(cnt).sort((a,b) => b[1]-a[1] || b[0]-a[0])[0][0]);
+const JAHR_OK = y => y >= 2015 && y <= new Date().getFullYear();
+/* Isolierte Jahreszahlen – "20250115" aus einem Scanner-Dateinamen ist ein
+   Datum, kein Steuerjahr, und zählt deshalb nicht mit.                    */
+function jahresZahlen(t){
+  return (String(t).match(/\d+/g) || []).filter(n => n.length === 4)
+    .map(Number).filter(JAHR_OK);
+}
+/* Ausdrückliche Periodenangabe auf dem Beleg – sie schlägt jedes Datum,
+   denn ausgestellt wird fast immer erst im Folgejahr.                     */
+function starkesJahr(t){
+  const stark = [
+    /(?:steuerperiode|steuerjahr|bemessungsjahr|beitragsjahr|periode)\D{0,12}(20\d{2})/,
+    /01\.01\.\s?[-\u2013bis ]{1,6}\s?31\.12\.\s?(20\d{2})/,
+    /31\.?\s?12\.?\s?(20\d{2})/,
+    /(?:lohnausweis|jahresrechnung|praemienbescheinigung|zinsausweis|steuerauszug)\D{0,12}(20\d{2})/,
+    /(20\d{2})\s*(?:lohnausweis|jahresrechnung|praemienbescheinigung)/
+  ];
+  for(const re of stark){ const m = String(t).match(re); if(m && JAHR_OK(+m[1])) return m[1]; }
+  return null;
+}
+/* Steuerjahr bestimmen: Belegtext vor Dateiname, Periodenangabe vor Datum. */
+function detectYear(text, filename = ""){
+  const t = normText(text), f = normText(filename);
+  const häufigste = list => {
+    if(!list.length) return null;
+    const cnt = {}; list.forEach(y => cnt[y] = (cnt[y]||0)+1);
+    return String(Object.entries(cnt).sort((a,b) => b[1]-a[1] || a[0]-b[0])[0][0]);
+  };
+  return starkesJahr(t) || starkesJahr(f) || häufigste(jahresZahlen(t)) || häufigste(jahresZahlen(f));
+}
+/* Umlaute und OCR-Verwechslungen entschärfen: "Prämien" == "Praemien",
+   damit auch ein Scan mit ae/oe/ue oder falsch gelesenem Umlaut trifft.  */
+function normText(t){
+  return String(t).toLowerCase()
+    .replace(/\u00e4/g,"ae").replace(/\u00f6/g,"oe").replace(/\u00fc/g,"ue").replace(/\u00df/g,"ss")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/\s+/g," ");
 }
 /* Treffersuche: kurze Stichwörter nur als ganzes Wort, damit z.B. "abo"
    nicht mitten in einem anderen Wort anschlägt.                          */
@@ -692,12 +722,12 @@ function keyHit(hay, k){
 /* Score: Treffer im Dateinamen wiegen 3×, Treffer im PDF-Text 1×.
    Lange Stichwörter schlagen kurze ("lohnausweis" gewinnt gegen "ausweis"). */
 function classify(filename, text){
-  const fn = filename.toLowerCase(), tx = (text || "").toLowerCase().slice(0, 20000);
+  const fn = normText(filename), tx = normText(text || "").slice(0, 20000);
   let best = { id:"sonstiges", score:0, hits:[] }, second = 0;
   for(const d of DOCTYPES){
     let score = 0; const hits = [];
     for(const raw of d.keys){
-      const k = raw.trim();
+      const k = normText(raw.trim());
       if(keyHit(fn, k)){ score += 3 * k.length; hits.push(k); }
       else if(tx && keyHit(tx, k)){ score += k.length; hits.push(k); }
     }
@@ -852,12 +882,31 @@ async function pdfText(file, maxPages=3){
    Braucht Internet: tesseract.js wird beim ersten Mal geladen
    (rund 15 MB inkl. Sprachdaten, danach im Browser-Cache).
    ------------------------------------------------------------------ */
+const OCR_LOCAL = "vendor/tesseract/";      // mitgeliefert – kein fremder Server nötig
 const TESSERACT_URL = "https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js";
+const OCR = { paths:null, failed:false, failedMsg:"" };
 const isBild = name => /\.(png|jpe?g|webp|bmp|gif|tiff?)$/i.test(name);
 async function loadTesseract(){
-  if(window.Tesseract) return window.Tesseract;
-  await loadScript(TESSERACT_URL);
-  if(!window.Tesseract) throw new Error("Texterkennung konnte nicht geladen werden (Internetverbindung?).");
+  if(window.Tesseract && OCR.paths) return window.Tesseract;
+  /* Einmal gescheitert heisst gescheitert – sonst hängt jede weitere Datei
+     erneut im Ladeversuch fest. */
+  if(OCR.failed) throw new Error(OCR.failedMsg);
+  let lokal = false;
+  try{ lokal = (await fetch(OCR_LOCAL + "tesseract.min.js", { method:"HEAD" })).ok; }catch(e){ lokal = false; }
+  try{
+    if(!window.Tesseract) await loadScript(lokal ? OCR_LOCAL + "tesseract.min.js" : TESSERACT_URL);
+  }catch(e){ /* Meldung unten */ }
+  if(!window.Tesseract){
+    OCR.failed = true;
+    OCR.failedMsg = location.protocol === "file:"
+      ? "Scan-Erkennung geht in der lokal geöffneten Datei nicht (Sicherheitsregel des Browsers). "
+        + "Dafür die gehostete Version unter https:// verwenden – dort ist die Erkennung mitgeliefert."
+      : "Texterkennung konnte nicht geladen werden – Ordner vendor/tesseract/ fehlt und es ist keine Internetverbindung da.";
+    throw new Error(OCR.failedMsg);
+  }
+  OCR.paths = lokal ? { workerPath: OCR_LOCAL + "worker.min.js",
+                        corePath:   OCR_LOCAL + "core",
+                        langPath:   OCR_LOCAL + "lang" } : {};
   return window.Tesseract;
 }
 /* Erste Seite eines PDF in ein Bild rendern (dafür wird pdf.js gebraucht). */
@@ -876,6 +925,7 @@ async function ocrFile(file, onProgress = () => {}){
   const T = await loadTesseract();
   const src = isBild(file.name) ? file : await pdfPageToCanvas(file);
   const res = await T.recognize(src, S.settings.ocrLang || "deu", {
+    ...(OCR.paths || {}),
     logger: m => { if(m.status === "recognizing text") onProgress(Math.round((m.progress || 0) * 100)); }
   });
   return res?.data?.text || "";
@@ -1408,6 +1458,8 @@ function viewConverter(){
         : esc(gmailWhyNot())}</p>
     </div>
     <div id="status" class="small" style="margin-top:10px"></div>
+    ${S.convMsg ? `<div class="hint warn" style="margin-top:10px">${esc(S.convMsg)}
+      <button class="btn-sm btn-ghost no-print" id="msgOk">verstanden</button></div>` : ""}
   </div>
   ${S.queue.length ? `<div class="card">
     <div class="card-head"><h3>Erkannt (${S.queue.length}) – bitte kurz prüfen</h3>
@@ -1433,6 +1485,7 @@ function viewConverter(){
   $("#convClient").onchange = e => go("converter", { clientId:e.target.value, jahr });
   $("#convYear").onchange   = e => go("converter", { clientId:c.id, jahr:e.target.value });
   $("#toDos").onclick       = () => go("dossier", { clientId:c.id, jahr });
+  $("#msgOk") && ($("#msgOk").onclick = () => { S.convMsg = ""; render(); });
   $("#pick").onclick        = () => $("#file").click();
   $("#file").onchange       = e => intake([...e.target.files], jahr);
   $("#gmailImport") && ($("#gmailImport").onclick = () => gmailImportDialog(c, jahr));
@@ -1452,10 +1505,10 @@ function viewConverter(){
       const text = await ocrFile(q.file, pct => stat.textContent = `OCR ${q.name}: ${pct}%`);
       const cl = classify(q.name, text), t = DT[cl.docType];
       Object.assign(q, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton),
-                         sicher:cl.sicher, hits:cl.hits, jahr: detectYear(text) || q.jahr });
+                         sicher:cl.sicher, hits:cl.hits, jahr: detectYear(text, q.name) || q.jahr });
       stat.textContent = cl.sicher ? "OCR erfolgreich erkannt." : "OCR gelesen – Zuordnung bitte prüfen.";
       render();
-    }catch(e){ stat.textContent = "OCR nicht möglich: " + e.message; b.disabled = false; }
+    }catch(e){ S.convMsg = e.message; stat.textContent = e.message; b.disabled = false; render(); }
   });
   $("#clearQ") && ($("#clearQ").onclick = () => { S.queue = []; render(); });
   $("#apply")  && ($("#apply").onclick  = () => applyQueue(c, jahr));
@@ -1497,20 +1550,20 @@ async function intake(files, jahr){
       try{
         if(stat) stat.textContent = `Texterkennung (OCR) läuft: ${f.name} …`;
         text = await ocrFile(f, pct => { if(stat) stat.textContent = `OCR ${f.name}: ${pct}%`; });
-      }catch(e){ if(stat) stat.textContent = "OCR nicht möglich: " + e.message; }
+      }catch(e){ S.convMsg = e.message; if(stat) stat.textContent = e.message; }
     }
     const cl = classify(f.name, text);
     const t = DT[cl.docType];
     S.queue.push({ file:f, name:f.name, size:f.size, docType:t.id, register:t.reg,
                    ziffer:zifferFor(t.id, (clientById(S.clientId) || {}).kanton),
-                   jahr: detectYear(f.name) || detectYear(text) || String(jahr),
+                   jahr: detectYear(text, f.name) || String(jahr),
                    sicher:cl.sicher, hits:cl.hits });
   }
   if(stat) stat.textContent = "";
   render();
 }
 async function applyQueue(c, jahr){
-  const years = new Set();
+  const years = new Set(), proJahr = {};
   for(const q of S.queue){
     const doc = { id:uid(), clientId:c.id, jahr:String(q.jahr), origName:q.name, size:q.size,
                   docType:q.docType, register:q.register, ziffer:q.ziffer, unsicher:!q.sicher,
@@ -1520,11 +1573,18 @@ async function applyQueue(c, jahr){
     delete doc.blob;                 // Datei liegt in der Datenbank, nicht im Arbeitsspeicher
     S.docs.push(doc);
     years.add(String(q.jahr));
+    proJahr[q.jahr] = (proJahr[q.jahr] || 0) + 1;
   }
   for(const y of years){ await ensureDossier(c.id, y); await renumber(c.id, y); }
   const n = S.queue.length; S.queue = [];
-  toast(n + " Dokumente abgelegt");
-  go("dossier", { clientId:c.id, jahr:[...years][0] || jahr });
+  const jahre = [...years].sort();
+  /* Angezeigt wird das Jahr, in dem die meisten Belege gelandet sind –
+     das ist das Dossier, an dem gerade gearbeitet wird. */
+  const hauptJahr = Object.entries(proJahr).sort((a,b) => b[1]-a[1] || b[0].localeCompare(a[0]))[0]?.[0];
+  toast(jahre.length > 1
+    ? `${n} Dokumente abgelegt – verteilt auf die Steuerjahre ${jahre.join(" und ")}`
+    : `${n} Dokumente abgelegt`);
+  go("dossier", { clientId:c.id, jahr:hauptJahr || jahr });
 }
 
 /* ==================================================================

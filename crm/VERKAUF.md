@@ -49,9 +49,10 @@ Stundenansatz von CHF 120 sind das CHF 6'000 – das Paket amortisiert sich im e
 
 1. **Frage statt Pitch:** „Wie kommen die Belege heute bei Ihnen an – und wer benennt sie?"
 2. **Demo-Daten laden** (Einstellungen → Demo-Daten) → Übersicht mit drei Mandaten zeigen.
-3. **Der Moment, der verkauft:** 8 zufällige Belege in den Konverter ziehen – am besten mit
-   nichtssagenden Dateinamen, damit sichtbar wird, dass der **Inhalt** gelesen wird – und zusehen,
-   wie sie erkannt, umbenannt und einsortiert werden. Danach ZIP exportieren und den Ordner öffnen.
+3. **Der Moment, der verkauft:** Belege in den Konverter ziehen – am besten **frisch eingescannt**
+   mit Namen wie `IMG_20250115_0001.png`, damit sichtbar wird, dass der **Inhalt** gelesen wird und
+   nicht der Dateiname. Zusehen, wie sie erkannt, umbenannt und einsortiert werden; danach ZIP
+   exportieren und den Ordner öffnen. Das ist der Moment, in dem Treuhänder nicken.
 4. **Checkliste zeigen:** Profil ankreuzen → Checkliste entsteht → „Unterlagen anfordern" → fertige
    E-Mail mit genau den fehlenden Punkten.
 5. **Sicherheit:** Verschlüsselung aktivieren, sperren, entsperren. Ein Satz: „Ihre Daten verlassen
@@ -94,5 +95,7 @@ Das schafft Vertrauen und verhindert Reklamationen:
   ZHprivateTax/eTax erfasst.
 - Mitgeliefert sind die Ziffern des Kantons Zürich. Andere Kantone werden im CRM erfasst
   (Einstellungen → Kantons-Profile) – als Kantonspaket verkaufbar; erfundene Ziffern gibt es nicht.
-- Erkennung reiner Bildscans erfolgt über den Dateinamen – Scanner mit Texterkennung empfehlen.
+- Die Scan-Erkennung ist mitgeliefert und läuft auf dem Server des Kunden, aber nur in der
+  gehosteten Version – bei einer lokal geöffneten Datei erkennt das CRM nur digitale PDF.
+  Deshalb gehört das Hosting in jedes Angebot (Paket Plus).
 - Kein Mehrbenutzerbetrieb mit gleichzeitigem Zugriff auf dasselbe Mandat.

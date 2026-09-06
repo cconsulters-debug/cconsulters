@@ -9,12 +9,12 @@ Synchronisation über mehrere Geräte.
 
 ## 1. In 60 Sekunden starten
 
-**Variante A – lokal (empfohlen für echte Kundendaten)**
+**Variante A – lokal** (für Erfassung und Ablage; ohne Scan-Erkennung, ohne Gmail/Sync)
 1. Datei `crm/index.html` auf den Rechner kopieren (z. B. nach `Dokumente/Steuer-CRM/`).
 2. Doppelklick → öffnet im Browser. **Chrome oder Edge verwenden** (Firefox blockiert die lokale Datenbank bei `file://`).
 3. Lesezeichen setzen.
 
-**Variante B – über die eigene Domain** (nötig für Gmail-Anbindung und Synchronisation)
+**Variante B – über die eigene Domain** (empfohlen: nötig für Scan-Erkennung, Gmail und Synchronisation)
 Nach dem Deploy erreichbar unter `https://<deine-domain>/crm/`. Die Seite ist auf `noindex` gesetzt und
 in `robots.txt` gesperrt; die Daten liegen weiterhin im Browser, nicht auf dem Server.
 
@@ -169,16 +169,35 @@ Verkaufsgespräche (und entfernt sie auf Knopfdruck wieder).
 > als keine. Die Rechnung nennt IBAN und Rechnungsnummer im Text; für Kleinmandate genügt das.
 > Eine echte QR-Rechnung ist eine mögliche Ausbaustufe.
 
-## 6e. Texterkennung für Scans (OCR)
+## 6e. Eingescannte Belege (OCR)
 
-Digitale PDF liest das CRM immer und ohne Internet. Für **eingescannte Belege und Fotos ohne
-Textebene** gibt es zusätzlich OCR (*Einstellungen → Texterkennung*):
+**Ziel: Du scannst, das CRM erkennt und ordnet ein – ohne Handarbeit.**
 
-- Entweder automatisch, sobald ein PDF keinen Text enthält, oder pro Datei über den **OCR-Knopf**
-  in der Warteschlange des Konverters.
-- Beim ersten Mal werden rund 15 MB geladen (danach im Browser-Cache) – **Internet nötig**.
-- Sprachen: Deutsch, Französisch, Italienisch, Englisch.
-- Ohne Internet oder bei einem Fehler bleibt alles bedienbar; der Beleg landet in Register 99 „prüfen".
+- Die Texterkennung ist **mitgeliefert** (`crm/vendor/tesseract/`, rund 5 MB) und läuft von deinem
+  eigenen Server. Kein fremdes CDN, keine Daten an Dritte, kein 15-MB-Download beim ersten Mal.
+- Sie ist **standardmässig eingeschaltet**: Enthält ein PDF keine Textebene oder ist es ein Foto
+  bzw. JPG/PNG, wird es automatisch gelesen, klassifiziert und einsortiert.
+- Mitgelieferte Sprachen: **Deutsch und Französisch**. Italienisch/Englisch werden bei bestehender
+  Internetverbindung nachgeladen.
+- Ein Scan von zwei Belegen dauert wenige Sekunden.
+
+> **Wichtig:** Die Scan-Erkennung funktioniert **nur in der gehosteten Version** (`https://…` oder
+> `http://localhost`). Wird die Datei per Doppelklick geöffnet (`file://`), verbietet der Browser das
+> Laden der Erkennung – das CRM sagt das dann klar an und legt den Beleg in Register 99 ab.
+> **Wer regelmässig scannt, arbeitet mit der gehosteten Version.**
+
+### Wie das Steuerjahr bestimmt wird
+
+Aus dem **Belegtext**, nicht aus dem Dateinamen: Eine Angabe wie „Steuerperiode 2024",
+„31.12.2024" oder „Lohnausweis 2024" schlägt jedes Datum. Erst danach zählen Jahreszahlen im
+Dateinamen – und ein Scanner-Name wie `IMG_20250115_0001.png` wird als Datum erkannt und **nicht**
+als Steuerjahr verwendet. Landen Belege in verschiedenen Jahren, sagt das CRM es und öffnet das
+Dossier mit den meisten Belegen.
+
+### Umlaute und Schreibweisen
+
+Erkennung und Stichwortsuche laufen normalisiert: „Prämienbescheinigung", „Praemienbescheinigung"
+und ein vom Scanner falsch gelesenes „Pramienbescheinigung" führen zum selben Ergebnis.
 
 ## 7. Datensicherung – bitte ernst nehmen
 
@@ -196,7 +215,7 @@ Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-St
 
 ## 8. Grenzen und Ausbaustufen
 
-**Enthalten und einsatzbereit:** Inhaltserkennung von PDFs ohne Internet · OCR für Scans (zuschaltbar) ·
+**Enthalten und einsatzbereit:** Inhaltserkennung von PDFs ohne Internet · mitgelieferte Scan-Erkennung (OCR) ·
 Kantons-Profile · Honorar und Rechnungen ·
 lokale Verschlüsselung mit Sperrbildschirm und Wiederherstellungsschlüssel · verschlüsselte Backups ·
 Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisation · White-Label · Demo-Modus.
@@ -204,12 +223,15 @@ Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisa
 | Nächste Ausbaustufe | Aufwand | Vorteil |
 |---|---|---|
 | Schweizer QR-Rechnung im Rechnungsdruck | 2–3 Tage | Zahlung per Banking-App scannbar |
+| Mehrseitige Scans automatisch in Einzelbelege trennen | 2–3 Tage | ein Stapel-Scan wird zu mehreren Dokumenten |
 | Direkter Import in ZHprivateTax / eTax | offen – Schnittstelle prüfen | Doppelerfassung entfällt |
 | Mehrbenutzerbetrieb mit Rollen | 3–5 Tage | Kanzleien ab 3 Personen |
 
 **Bekannte Grenzen heute:**
-- Gescannte PDFs und Fotos ohne Textebene brauchen die zuschaltbare OCR (und dafür Internet);
-  ohne OCR zählt bei ihnen nur der Dateiname.
+- Die Scan-Erkennung braucht die gehostete Version; bei einer per Doppelklick geöffneten Datei
+  zählt bei Bildern nur der Dateiname (das CRM weist darauf hin).
+- Sehr schlechte Scans (schief, unscharf, unter 200 dpi) werden schlechter gelesen – 300 dpi
+  Graustufen ist die sichere Einstellung am Scanner.
 - Sehr exotisch eingebettete Schriften können unlesbaren Text liefern; mit Internetverbindung
   springt automatisch pdf.js als Reserve ein.
 - Gmail und Synchronisation funktionieren nur über `https://` oder `http://localhost`, nicht bei
