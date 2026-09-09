@@ -1296,7 +1296,7 @@ const KT_TARIF = k => TARIFE.kantone[kantonCode(k)] || null;
 /* Positionen der Steuererklärung – Grundlage der Gegenüberstellung. */
 const VGL_GRUPPEN = [
   { id:"eink", titel:"Einkünfte (Ziff. 1–7)", vz:1, items:[
-    ["e_lohn",         "Unselbständige Erwerbstätigkeit",      "1.1"],
+    ["e_lohn",         "Unselbständige Erwerbstätigkeit (Lohnausweis)", "1.1"],
     ["e_neben",        "Nebenerwerb",                          "1.2"],
     ["e_selbst",       "Selbständige Erwerbstätigkeit",        "2"],
     ["e_renten",       "Renten (AHV / IV / BVG)",              "3"],
@@ -2138,13 +2138,13 @@ function viewVergleich(){
    werden; nichts wird ungeprüft in den Vergleich geschrieben.
    ------------------------------------------------------------------ */
 const VGL_PARSE = {
-  e_lohn:          { ziffer:"1.1",  keys:["einkuenfte aus unselbstaendiger erwerbstaetigkeit","unselbstaendiger erwerbstaetigkeit haupterwerb","haupterwerb","nettolohn total","nettolohn"] },
+  e_lohn:          { ziffer:"1.1",  keys:["einkuenfte aus unselbstaendiger erwerbstaetigkeit","unselbstaendiger erwerbstaetigkeit","lohn gemaess lohnausweis","nettolohn gemaess lohnausweis","nettolohn total","bruttolohn total","nettolohn"] },
   e_neben:         { ziffer:"1.2",  keys:["nebenerwerb"] },
   e_selbst:        { ziffer:"2.1",  keys:["einkuenfte aus selbstaendiger erwerbstaetigkeit","selbstaendiger erwerbstaetigkeit"] },
   e_renten:        { ziffer:"3",    keys:["einkuenfte aus sozial- und anderen versicherungen","renten und pensionen","ahv-rente","iv-rente","pensionskassenrente"] },
   e_wertschriften: { ziffer:"4.1",  keys:["total wertschriftenertrag","wertschriftenertrag","ertraege aus wertschriften","bruttoertrag wertschriften"] },
   e_unterhalt:     { ziffer:"5.1",  keys:["erhaltene unterhaltsbeitraege","unterhaltsbeitraege fuer den steuerpflichtigen"] },
-  e_uebrige:       { ziffer:"6",    keys:["uebrige einkuenfte"] },
+  e_uebrige:       { ziffer:"6",    keys:["uebrige einkuenfte","weitere einkuenfte"] },
   e_liegenschaft:  { ziffer:"7.1",  keys:["einkuenfte aus liegenschaften","eigenmietwert","liegenschaftenertrag","mietertrag","mietzinseinnahmen"] },
 
   a_berufsauslagen:{ ziffer:"11",   keys:["berufsauslagen","berufskosten"] },
@@ -2182,7 +2182,7 @@ function vglFindBetrag(t, ab, fenster = 120){
     const wert = vglNum(roh);
     if(!trenner && !rappen && wert >= 1900 && wert <= 2100) continue;   // Jahreszahl, kein Betrag
     if(!(wert >= 0)) continue;                                         // eine erfasste 0 ist ein Wert
-    return { wert, kontext: seg.slice(0, m.index + roh.length).trim().slice(-70) };
+    return { wert, pos: ab + m.index, kontext: seg.slice(0, m.index + roh.length).trim().slice(-70) };
   }
   return null;
 }
@@ -2217,12 +2217,22 @@ function vglSuchePosition(t, regel){
   }
   return best;
 }
+/* Je stärker der Anker, desto eher gewinnt der Treffer um denselben Betrag. */
+const vglStaerke = h => (h.stufe === "sicher" ? 1000 : 0) + String(h.anker || "").length;
 function vglParseText(text){
   const t = normText(text);
-  const treffer = [];
+  const treffer = [], belegt = new Map();
   for(const [key, regel] of Object.entries(VGL_PARSE)){
     const hit = vglSuchePosition(t, regel);
-    if(hit) treffer.push({ key, label:VGL_LABEL[key], ziffer:VGL_ZIFF[key], use:true, ...hit });
+    if(!hit) continue;
+    /* Ein Betrag gehört zu genau einer Position – sonst landet z.B. der Lohn
+       zusätzlich bei den übrigen Einkünften. */
+    const alt = belegt.get(hit.pos);
+    if(alt && vglStaerke(alt) >= vglStaerke(hit)) continue;
+    if(alt) treffer.splice(treffer.indexOf(alt), 1);
+    const eintrag = { key, label:VGL_LABEL[key], ziffer:VGL_ZIFF[key], use:true, ...hit };
+    belegt.set(hit.pos, eintrag);
+    treffer.push(eintrag);
   }
   const kontroll = {};
   for(const [key, regel] of Object.entries(VGL_KONTROLLE)){
