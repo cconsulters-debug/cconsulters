@@ -71,7 +71,11 @@ Browserprofil verwenden.
 
 - [ ] Ordner `crm/` kopieren, `index.html` bleibt unverändert
 - [ ] Beim Kunden: *Einstellungen* → Kanzlei, Bearbeiter, E-Mail, Telefon, Standardjahr, Frist
-- [ ] *Erscheinungsbild*: Produktname, Haupt-/Akzentfarbe, Lizenzschlüssel `[Kundenkürzel]-[Jahr]-[Nr]`
+- [ ] *Marke & Erscheinungsbild*: Logo des Kunden hochladen, Markenname, Claim, Adresse, Farbpaar,
+      Lizenzschlüssel `[Kundenkürzel]-[Jahr]-[Nr]` → *Marke speichern*
+      – oder in einem Schritt: vorbereitetes **Markenprofil einlesen** (Datei aus deinem eigenen CRM
+      via *Markenprofil exportieren*, enthält nie Kundendaten)
+- [ ] Briefkopf gemeinsam prüfen: Checkliste drucken und einen Steuervergleich als Word + PDF erzeugen
 - [ ] **Verschlüsselung aktivieren**, Wiederherstellungsschlüssel ausdrucken und übergeben lassen
 - [ ] Automatische Sperre auf 15 Minuten
 - [ ] Erstes Backup gemeinsam exportieren – und zeigen, wo es liegt

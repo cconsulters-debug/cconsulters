@@ -26,6 +26,8 @@ in `robots.txt` gesperrt; die Daten liegen weiterhin im Browser, nicht auf dem S
 
 1. **Einstellungen & Backup** öffnen → Kanzlei, Bearbeiter/in, E-Mail, Telefon, Standard-Steuerjahr, Standardfrist eintragen → Speichern.
    → Diese Angaben füllen automatisch alle E-Mail-Vorlagen.
+1a. **Einstellungen → Marke & Erscheinungsbild**: Logo hochladen, Markenname, Claim, Adresse und Farben setzen → *Marke speichern*.
+   → Ab sofort tragen Bildschirm, Checkliste, Rechnung, Steuervergleich (Word **und** PDF) den eigenen Auftritt. Details in Abschnitt 6c.
 2. **Einstellungen → Sicherheit → Verschlüsselung aktivieren** (Passwort vergeben) und den
    **Wiederherstellungsschlüssel ausdrucken**. Bei echten Kundendaten nicht optional.
 3. **Kunden → + Neuer Kunde** → Stammdaten erfassen.
@@ -166,10 +168,35 @@ Einrichtung mit eigenem Firebase-Projekt (Region Zürich): `SETUP-SYNC.md`.
 Zweites Gerät: „Dieses Gerät mit bestehendem Konto verbinden", danach mit dem Passwort des ersten
 Geräts entsperren.
 
-## 6c. White-Label (für den Weiterverkauf)
+## 6c. Eigene Marke (Logo, Name, Farben)
 
-*Einstellungen → Erscheinungsbild*: Produktname, Hauptfarbe, Akzentfarbe und Lizenzschlüssel pro
-Kunde setzen – Titel, Logo-Kürzel, Navigation und Sperrbildschirm übernehmen das sofort.
+*Einstellungen → Marke & Erscheinungsbild.* In drei Minuten trägt das ganze CRM die eigene Marke.
+
+| Feld | Wirkung |
+|---|---|
+| **Logo** (PNG, JPG, SVG – ziehen oder auswählen) | Seitenleiste, Sperrbildschirm, Browser-Tab, Briefkopf von Checkliste, Rechnung und Steuervergleich, eingebettet in Word **und** PDF |
+| **Markenname** | Seitenleiste, Sperrbildschirm, erste Zeile jedes Briefkopfs |
+| **Claim / Untertitel** | Zeile unter dem Markennamen |
+| **Monogramm** | Ersatzkachel, solange kein Logo hinterlegt ist (Standard: erste zwei Buchstaben des Markennamens) |
+| **Hauptfarbe / Akzentfarbe** | Kopfzeilen, Register, Knöpfe, Fortschrittsbalken, Word-Überschrift, Favicon – sechs fertige Farbpaare stehen zur Auswahl |
+| **Adresse, Website, Zusatz** | Fusszeile auf jedem Ausdruck, jeder PDF-Seite und in der Word-Datei |
+
+**Vorschau Briefkopf** in derselben Karte zeigt sofort, wie jedes Kundendokument beginnt.
+
+*Praxis:* Am besten ein Logo mit durchsichtigem Hintergrund verwenden. Grosse Dateien werden
+automatisch auf Dokumentgrösse gerechnet (max. 600 px breit), damit Word- und PDF-Dateien schlank bleiben.
+Für Word und PDF wird das Logo auf weissen Grund gelegt – so steht es sauber auf dem Papier.
+
+### Markenprofil weitergeben (Weiterverkauf)
+
+*Markenprofil exportieren* legt eine kleine JSON-Datei mit Logo, Name, Claim, Farben, Kontaktzeile
+und Lizenzschlüssel ab – **ohne jede Kundendatei**. Beim Käufer genügt *Markenprofil einlesen*,
+und das CRM erscheint fertig gebrandet. So lässt sich dasselbe Produkt an beliebig viele Kanzleien
+ausliefern, jede mit eigenem Auftritt.
+
+> Die Marke liegt in den Einstellungen dieses Browsers. Sie wandert im **Backup** mit, aber nicht
+> über die Cloud-Synchronisation – auf einem zweiten Gerät also einmal das Markenprofil einlesen.
+
 *Einstellungen → Demo & Statistik → Demo-Daten laden* erzeugt drei fiktive Mandate für
 Verkaufsgespräche (und entfernt sie auf Knopfdruck wieder).
 
@@ -268,9 +295,10 @@ Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-St
 ## 8. Grenzen und Ausbaustufen
 
 **Enthalten und einsatzbereit:** Inhaltserkennung von PDFs ohne Internet · mitgelieferte Scan-Erkennung (OCR) ·
-Kantons-Profile · Steuervergleich mit Word-Bericht · Honorar und Rechnungen ·
+Kantons-Profile · Steuervergleich mit Word- und PDF-Bericht · Honorar und Rechnungen ·
 lokale Verschlüsselung mit Sperrbildschirm und Wiederherstellungsschlüssel · verschlüsselte Backups ·
-Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisation · White-Label · Demo-Modus.
+Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisation ·
+eigene Marke mit Logo auf allen Dokumenten und weitergebbarem Markenprofil · Demo-Modus.
 
 | Nächste Ausbaustufe | Aufwand | Vorteil |
 |---|---|---|

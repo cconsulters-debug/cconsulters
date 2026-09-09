@@ -38,7 +38,12 @@ small,.small{font-size:12.5px;color:var(--ink-dim)}
 .app{display:grid;grid-template-columns:238px 1fr;min-height:100vh}
 .side{background:var(--navy);color:#e8eef8;padding:18px 14px;display:flex;flex-direction:column;gap:16px;position:sticky;top:0;height:100vh;overflow:auto}
 .brand{display:flex;align-items:center;gap:10px}
-.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),#4A7DBF);display:grid;place-items:center;font-weight:800;color:#04141a;font-size:14px}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),#4A7DBF);display:grid;place-items:center;font-weight:800;color:#04141a;font-size:14px;overflow:hidden;flex:none}
+.brand .logo img{width:100%;height:100%;object-fit:contain}
+/* Ein Logo mit weissem Hintergrund soll auf der dunklen Leiste wie eine
+   bewusst gesetzte Kachel wirken, nicht wie ein weisser Fleck. */
+.brand .logo.bild{background:#fff;padding:3px}
+.brand.gross .logo{width:52px;height:52px;border-radius:12px;font-size:19px}
 .brand b{font-size:14.5px;display:block;line-height:1.2}
 .brand span{font-size:11.5px;color:#9fb3d4}
 .nav{display:flex;flex-direction:column;gap:2px}
@@ -132,6 +137,30 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
 .keybox{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;letter-spacing:.06em;background:var(--panel-2);
         border:1px dashed var(--line-strong);border-radius:8px;padding:12px;text-align:center;word-break:break-all}
 
+/* Briefkopf der Marke – gleich auf Checkliste, Rechnung und Bericht */
+.brand-head{display:flex;align-items:flex-start;gap:14px;padding-bottom:12px;
+  border-bottom:2px solid var(--navy);margin-bottom:18px}
+.brand-head .bh-logo{max-height:56px;max-width:190px;object-fit:contain;flex:none}
+.brand-head .bh-mono{width:52px;height:52px;border-radius:11px;background:var(--navy);color:#fff;
+  display:grid;place-items:center;font-weight:800;font-size:19px;letter-spacing:.02em;flex:none}
+.brand-head .bh-firma{font-size:16px;font-weight:700;color:var(--navy);line-height:1.25}
+.brand-head .bh-claim{font-size:12.5px;color:var(--ink-dim)}
+.brand-head .bh-right{margin-left:auto;text-align:right;font-size:12.5px;color:var(--ink-dim);white-space:nowrap}
+.brand-foot{margin-top:26px;padding-top:8px;border-top:1px solid var(--line);
+  font-size:11.5px;color:var(--ink-dim);display:flex;gap:10px;flex-wrap:wrap}
+.brand-foot span::after{content:" ·";margin-left:10px;color:var(--line-strong)}
+.brand-foot span:last-child::after{content:""}
+.logo-drop{border:2px dashed var(--line-strong);border-radius:var(--radius);padding:16px;text-align:center;
+  background:var(--panel-2);display:flex;align-items:center;gap:14px;justify-content:center;flex-wrap:wrap}
+.logo-drop.over{border-color:var(--teal);background:#eefafc}
+.logo-vorschau{min-height:60px;display:grid;place-items:center;padding:8px 12px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.logo-vorschau.dunkel{background:var(--navy)}
+.logo-vorschau img{max-height:56px;max-width:200px;object-fit:contain;display:block}
+.farbfeld{width:100%;height:34px;border-radius:8px;border:1px solid var(--line-strong);cursor:pointer;padding:2px}
+.paletten{display:flex;gap:8px;flex-wrap:wrap}
+.palette{border:1px solid var(--line-strong);border-radius:999px;padding:4px 10px 4px 4px;background:#fff;
+  cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-size:12.5px}
+.palette i{width:34px;height:16px;border-radius:999px;display:inline-block}
 .invoice-sheet{padding:26px}
 .vgl-sheet{padding:26px}
 .vgl-sheet h3{margin-top:18px}
@@ -160,6 +189,9 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
   .app{display:block} .main{padding:0;max-width:none}
   .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
   body{background:#fff;font-size:12px}
+  /* Der Briefkopf gehört auf jedes gedruckte Blatt – Farben nicht wegoptimieren. */
+  .brand-head,.brand-foot{-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
+  .brand-head{margin-bottom:14px}
 }
 </style>
 </head>
@@ -595,6 +627,7 @@ const S = {
   settings:{ produkt:"Steuer-CRM", kanzlei:"C Consulters – Treuhand & Steuerberatung", bearbeiter:"", email:"", telefon:"",
              kanton:"ZH", jahr:new Date().getFullYear()-1, mailer:"gmail", frist:"30.09.",
              farbe:"#1F3864", akzent:"#0f8fa3", idleMin:15,
+             marke:{ name:"", claim:"", logo:"", adresse:"", web:"", fusszeile:"", monogramm:"" },
              gmailClientId:"", gmailFrom:"", syncCfg:"", syncOn:false, lizenz:"", kantone:{},
              ocr:true, ocrLang:"deu", iban:"", mwstNr:"", mwstSatz:0, zahlungsziel:30, rechnungKreis:"R-{jahr}-{nr}", naechsteNr:1,
              tarife:[["Steuererklärung natürliche Person","280"],["Wertschriftenverzeichnis","60"],
@@ -629,16 +662,141 @@ const slug   = s => String(s||"").replace(/\u00e4/g,"ae").replace(/\u00c4/g,"Ae"
 const clientName = c => c ? [c.name, c.vorname].filter(Boolean).join(", ") || "(ohne Namen)" : "–";
 const clientById = id => S.clients.find(c => c.id === id);
 
+/* ==================================================================
+   MARKE – ein einziger Ort für Logo, Name, Claim, Farben und
+   Kontaktzeile. Alles, was den Kunden erreicht (Bildschirm, Druck,
+   Rechnung, Word, PDF, E-Mail), holt sich die Angaben hier ab.
+   ================================================================== */
+const MARKE_STD = { name:"", claim:"", logo:"", adresse:"", web:"", fusszeile:"", monogramm:"" };
+/* Fertige Farbpaare zur Auswahl – erspart das Suchen im Farbwähler. */
+const PALETTEN = [
+  ["Navy / Petrol",   "#1F3864", "#0f8fa3"],
+  ["Anthrazit / Gold","#2b2f36", "#b8860b"],
+  ["Bordeaux / Sand", "#6d1f2e", "#b08968"],
+  ["Waldgrün / Salbei","#1f4738","#5f8d6b"],
+  ["Tiefblau / Koralle","#123c69","#d16b52"],
+  ["Schiefer / Türkis","#37474f","#00897b"]
+];
+function marke(){
+  const s = S.settings, m = s.marke || {};
+  const firma = (s.kanzlei || "").trim();
+  const teile = firma.split(/\s[–-]\s/);          // "Firma – Zusatz"
+  const name = (m.name || teile[0] || s.produkt || "Steuer-CRM").trim();
+  const initialen = (m.monogramm || name).replace(/[^A-Za-zÄÖÜäöü0-9]/g,"").slice(0,2).toUpperCase() || "CC";
+  return {
+    name, initialen,
+    firma: firma || name,
+    claim: (m.claim ?? teile[1] ?? "").trim(),
+    logo: m.logo || "",
+    farbe: s.farbe || "#1F3864",
+    akzent: s.akzent || "#0f8fa3",
+    adresse: (m.adresse || "").trim(),
+    web: (m.web || "").trim(),
+    fuss: (m.fusszeile || "").trim(),
+    email: s.email || "", telefon: s.telefon || "",
+    bearbeiter: s.bearbeiter || "", produkt: s.produkt || "Steuer-CRM"
+  };
+}
+/* Logo im Briefkopf, sonst Monogramm in der Markenfarbe. */
+const markeLogoHtml = (m, kl = "bh-logo") => m.logo
+  ? `<img class="${kl}" src="${esc(m.logo)}" alt="${esc(m.name)}">`
+  : `<div class="bh-mono">${esc(m.initialen)}</div>`;
+/* Briefkopf für Checkliste, Rechnung und Bericht – überall derselbe. */
+function brandKopfHtml(rechts = ""){
+  const m = marke();
+  return `<div class="brand-head">
+    ${markeLogoHtml(m)}
+    <div><div class="bh-firma">${esc(m.name)}</div>
+      ${m.claim ? `<div class="bh-claim">${esc(m.claim)}</div>` : ""}
+      ${m.bearbeiter ? `<div class="bh-claim">${esc(m.bearbeiter)}</div>` : ""}</div>
+    ${rechts ? `<div class="bh-right">${rechts}</div>` : ""}
+  </div>`;
+}
+/* Fusszeile mit Adresse und Kontakt – erscheint auf jedem Ausdruck. */
+function brandFussHtml(extra = ""){
+  const m = marke();
+  const teile = [m.firma, m.adresse, m.email, m.telefon, m.web, m.fuss, extra].filter(Boolean);
+  if(!teile.length) return "";
+  return `<div class="brand-foot">${teile.map(t => `<span>${esc(t)}</span>`).join("")}</div>`;
+}
+/* Kontaktzeilen für Textausgaben (E-Mail, Inhaltsverzeichnis, ZIP). */
+function brandZeilen(){
+  const m = marke();
+  return [m.firma, m.claim, m.bearbeiter, m.adresse, m.email, m.telefon, m.web].filter(Boolean);
+}
+/* Browser-Tab: Logo als Favicon, sonst Monogramm auf Markenfarbe. */
+function setFavicon(){
+  const m = marke();
+  let el = $("#favicon");
+  if(!el){ el = document.createElement("link"); el.id = "favicon"; el.rel = "icon"; document.head.appendChild(el); }
+  if(m.logo){ el.href = m.logo; return; }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="14" fill="${m.farbe}"/>
+    <text x="32" y="43" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="700"
+      fill="#fff" text-anchor="middle">${esc(m.initialen)}</text></svg>`;
+  el.href = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+}
 function applyBranding(){
-  const st = S.settings;
-  document.title = `${st.produkt || "Steuer-CRM"}${st.kanzlei ? " · " + st.kanzlei.split("–")[0].trim() : ""}`;
-  $("#brandName").textContent = st.produkt || "Steuer-CRM";
-  $("#brandSub").textContent  = (st.kanzlei || "").split("–")[0].trim();
-  $(".brand .logo").textContent = (st.produkt || "CC").replace(/[^A-Za-z]/g,"").slice(0,2).toUpperCase() || "CC";
+  const st = S.settings, m = marke();
+  document.title = `${m.produkt}${m.name ? " · " + m.name : ""}`;
+  $("#brandName").textContent = m.name;
+  $("#brandSub").textContent  = m.claim || m.produkt;
+  const kachel = $(".brand .logo");
+  kachel.innerHTML = m.logo ? `<img src="${esc(m.logo)}" alt="">` : esc(m.initialen);
+  kachel.classList.toggle("bild", !!m.logo);
   const r = document.documentElement.style;
   if(st.farbe)  r.setProperty("--navy", st.farbe);
   if(st.akzent){ r.setProperty("--teal", st.akzent); r.setProperty("--teal-600", st.akzent); }
+  setFavicon();
   SEC.idleMs = Math.max(0, (+st.idleMin || 0)) * 60000;
+}
+
+/* ---------- Logo einlesen und auf Dokumentgrösse bringen ----------
+   Grosse Handy-Fotos oder 4000-px-PNG blähen jede Datei auf; das Logo
+   wird deshalb auf 600 px Breite gerechnet und als PNG abgelegt.     */
+const ladeBild = src => new Promise((res, rej) => {
+  const img = new Image();
+  img.onload = () => res(img);
+  img.onerror = () => rej(new Error("Bild konnte nicht gelesen werden"));
+  img.src = src;
+});
+const dateiAlsDataUrl = f => new Promise((res, rej) => {
+  const r = new FileReader(); r.onload = () => res(r.result);
+  r.onerror = () => rej(new Error("Datei nicht lesbar")); r.readAsDataURL(f);
+});
+async function logoEinlesen(file, maxW = 600, maxH = 320){
+  if(!file) throw new Error("Keine Datei");
+  if(!/^image\//.test(file.type || "")) throw new Error("Bitte eine Bilddatei wählen (PNG, JPG oder SVG)");
+  const url = await dateiAlsDataUrl(file);
+  if(/^image\/svg/.test(file.type)) return url;         // SVG bleibt scharf, wie es ist
+  const img = await ladeBild(url);
+  const f = Math.min(1, maxW / img.width, maxH / img.height);
+  if(f >= 1 && file.size < 220000) return url;          // klein genug, Original behalten
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(img.width * f); cv.height = Math.round(img.height * f);
+  cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+  return cv.toDataURL("image/png");
+}
+/* Logo als PNG-Bytes samt Grösse – für Word und PDF. Transparenz wird
+   auf Weiss gelegt, damit das Logo auf dem Papier sauber steht.       */
+async function logoBytes(maxW = 480, maxH = 260){
+  const m = marke();
+  if(!m.logo) return null;
+  try{
+    const img = await ladeBild(m.logo);
+    const bw = img.naturalWidth || img.width || maxW, bh = img.naturalHeight || img.height || maxH;
+    const f = Math.min(1, maxW / bw, maxH / bh);
+    const w = Math.max(1, Math.round(bw * f)), h = Math.max(1, Math.round(bh * f));
+    const cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    const ctx = cv.getContext("2d");
+    ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise(res => cv.toBlob(res, "image/png"));
+    if(!blob) return null;
+    return { png:new Uint8Array(await blob.arrayBuffer()), w, h,
+             rgb:new Uint8ClampedArray(ctx.getImageData(0, 0, w, h).data) };
+  }catch(e){ return null; }
 }
 function toast(msg){
   const t = $("#toast"); t.textContent = msg; t.classList.add("show");
@@ -860,6 +1018,15 @@ async function inflate(bytes){
   }
   return null;
 }
+/* Gegenstück zu inflate() – wird zum Einbetten von Bildern in die PDF gebraucht. */
+async function deflate(bytes){
+  if(typeof CompressionStream === "undefined") return null;
+  try{
+    const buf = await new Response(new Blob([bytes]).stream()
+      .pipeThrough(new CompressionStream("deflate"))).arrayBuffer();
+    return new Uint8Array(buf);
+  }catch(e){ return null; }
+}
 /* Textstücke aus einem Inhaltsstrom: (…) Tj / [(…)…] TJ / <hex> Tj */
 function streamText(str){
   const out = [];
@@ -1079,9 +1246,20 @@ const pdfTxt = s => String(s ?? "")
   .replace(/[^\x20-\x7E -ÿ]/g, "");
 const pdfEsc = s => pdfTxt(s).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 
+/* Bild für die PDF vorbereiten: RGB ohne Alpha, zusammengedrückt.
+   Ergebnis passt direkt als /FlateDecode-XObject in die Datei.       */
+async function pdfBildAus(logo){
+  if(!logo || !logo.rgb) return null;
+  const { w, h, rgb } = logo;
+  const roh = new Uint8Array(w * h * 3);
+  for(let i = 0, j = 0; i < rgb.length; i += 4){ roh[j++] = rgb[i]; roh[j++] = rgb[i+1]; roh[j++] = rgb[i+2]; }
+  const data = await deflate(roh);
+  return data ? { w, h, data } : null;
+}
 function pdfDoc({ margin = 42, size = 9.5 } = {}){
   const W = 595.28, H = 841.89;
   const pages = [];                      // je Seite: Liste von Content-Fragmenten
+  const bilder = [];                     // eingebettete Bilder (Logo)
   let cur = null, y = 0;
   const d = {
     W, H, margin, size,
@@ -1121,8 +1299,17 @@ function pdfDoc({ margin = 42, size = 9.5 } = {}){
     flaeche(x, yy, w, h, rgb = [0.92, 0.95, 0.99]){
       cur.push(`${rgb[0]} ${rgb[1]} ${rgb[2]} rg ${x.toFixed(2)} ${yy.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
     },
+    /* Bild setzen (x/yy = linke untere Ecke). Gibt die belegte Höhe zurück. */
+    bild(prep, x, yy, maxW, maxH){
+      if(!prep) return 0;
+      let i = bilder.indexOf(prep);
+      if(i === -1){ bilder.push(prep); i = bilder.length - 1; }
+      const f = Math.min(maxW / prep.w, maxH / prep.h);
+      const w = prep.w * f, h = prep.h * f;
+      cur.push(`q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${yy.toFixed(2)} cm /Im${i+1} Do Q`);
+      return h;
+    },
     async blob(){
-      const enc = new TextEncoder();
       const objs = [];
       const add = str => { objs.push(str); return objs.length; };          // 1-basierte Objektnummer
       const seitenIds = [];
@@ -1133,10 +1320,20 @@ function pdfDoc({ margin = 42, size = 9.5 } = {}){
       add("");                                                            // Platzhalter Pages
       add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
       add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+      /* Bilder (Logo) als XObject – einmal in der Datei, auf jeder Seite nutzbar. */
+      const bildRefs = bilder.map((b, i) => {
+        const id = add(`<< /Type /XObject /Subtype /Image /Width ${b.w} /Height ${b.h} `
+          + `/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode /Length ${b.data.length} >>\n`
+          + `stream\n${latin1(b.data)}\nendstream`);
+        return `/Im${i+1} ${id} 0 R`;
+      });
+      const xobj = bildRefs.length ? ` /XObject << ${bildRefs.join(" ")} >>` : "";
       inhalt.forEach(txt => {
-        const cId = add(`<< /Length ${enc.encode(txt).length} >>\nstream\n${txt}\nendstream`);
+        /* Die Datei wird zeichenweise als Byte geschrieben (WinAnsi), darum
+           ist die Zeichenzahl zugleich die Bytelänge – nicht enc.encode(). */
+        const cId = add(`<< /Length ${txt.length} >>\nstream\n${txt}\nendstream`);
         const pId = add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] `
-          + `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${cId} 0 R >>`);
+          + `/Resources << /Font << /F1 3 0 R /F2 4 0 R >>${xobj} >> /Contents ${cId} 0 R >>`);
         seitenIds.push(pId); kids.push(`${pId} 0 R`);
       });
       objs[1] = `<< /Type /Pages /Kids [${kids.join(" ")}] /Count ${seitenIds.length} >>`;
@@ -1149,6 +1346,17 @@ function pdfDoc({ margin = 42, size = 9.5 } = {}){
       const bytes = new Uint8Array(out.length);
       for(let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 0xFF;
       return new Blob([bytes], { type:"application/pdf" });
+    },
+    /* Kontaktzeile der Marke am Fuss jeder Seite – so lang, dass rechts
+       die Seitenzahl noch Platz hat (sonst überlappen die beiden). */
+    fussZeile(txt){
+      if(!txt) return;
+      const platz = W - 2 * margin - 78;
+      let t = pdfTxt(txt);
+      while(t.length > 4 && pdfW(t, 8) > platz) t = t.slice(0, -2);
+      if(t.length < pdfTxt(txt).length) t = t.replace(/[\s·]+$/, "") + " …";
+      pages.forEach(pg => pg.push(`BT /F1 8 Tf 0.55 0.60 0.67 rg `
+        + `${margin.toFixed(2)} ${(margin - 14).toFixed(2)} Td (${pdfEsc(t)}) Tj ET`));
     },
     /* Seitenzahlen erst am Schluss setzen – vorher ist die Gesamtzahl offen. */
     seitenzahlen(){
@@ -1577,6 +1785,23 @@ function wP(t, o = {}){
        + `<w:spacing w:after="${o.sp ?? 80}"/>${rPr}</w:pPr>`
        + `<w:r>${rPr}<w:t xml:space="preserve">${xesc(t)}</w:t></w:r></w:p>`;
 }
+/* Logo als eingebettetes Bild (Inline-Grafik). px → EMU: 1 px = 9525 EMU. */
+function wBild(logo, maxPx = 150){
+  if(!logo) return "";
+  const f = Math.min(1, maxPx / logo.w);
+  const cx = Math.round(logo.w * f * 9525), cy = Math.round(logo.h * f * 9525);
+  return `<w:p><w:pPr><w:spacing w:after="60"/></w:pPr><w:r><w:drawing>`
+    + `<wp:inline distT="0" distB="0" distL="0" distR="0">`
+    + `<wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="Logo"/>`
+    + `<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">`
+    + `<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">`
+    + `<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">`
+    + `<pic:nvPicPr><pic:cNvPr id="1" name="Logo"/><pic:cNvPicPr/></pic:nvPicPr>`
+    + `<pic:blipFill><a:blip r:embed="rId2"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>`
+    + `<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>`
+    + `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>`
+    + `</a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+}
 function wCell(t, o = {}){
   return `<w:tc><w:tcPr><w:tcW w:w="${o.w || 0}" w:type="dxa"/>`
        + `${o.fill ? `<w:shd w:val="clear" w:fill="${o.fill}"/>` : ""}</w:tcPr>`
@@ -1599,10 +1824,15 @@ async function vglDocxBlob(b){
   const pz = n => (n * 100).toLocaleString("de-CH", { maximumFractionDigits:1 }) + " %";
   const diffTxt = z => z.diff === null ? "–" : (z.diff > 0 ? "+" : "") + chf(z.diff);
 
+  const m = marke();
+  const logo = await logoBytes();
   let body = "";
+  body += wBild(logo);
+  body += wP(m.name, { b:true, sz:26, c:(m.farbe || "#1F3864").replace("#",""), sp:20 });
+  if(m.claim) body += wP(m.claim, { sz:18, c:"54617A", sp:180 });
   body += wP(`Vergleich Steuererklärung ${b.jahrAlt} / ${b.jahrNeu}`, { b:true, sz:32, sp:60 });
   body += wP(`${b.kunde}${b.mandat ? " · Mandat " + b.mandat : ""}${b.ort ? " · " + b.ort : ""}`, { sz:20 });
-  body += wP(`${b.kanzlei}${b.bearbeiter ? " · " + b.bearbeiter : ""} · erstellt am ${b.datum}`, { sz:18, c:"54617A", sp:200 });
+  body += wP(`${b.bearbeiter ? b.bearbeiter + " · " : ""}erstellt am ${b.datum}`, { sz:18, c:"54617A", sp:200 });
 
   body += wP("Grundlagen", { b:true, sz:24, sp:60 });
   body += wTable([
@@ -1655,15 +1885,20 @@ async function vglDocxBlob(b){
   if(b.notiz){ body += wP("Bemerkungen", { b:true, sz:24, sp:60 }); body += wP(b.notiz, { sz:20, sp:160 }); }
   body += wP("Hinweise", { b:true, sz:22, sp:60 });
   b.hinweise.forEach(h => body += wP("• " + h, { sz:17, c:"54617A", sp:40 }));
+  const fuss = [m.firma, m.adresse, m.email, m.telefon, m.web].filter(Boolean).join(" · ");
+  if(fuss) body += wP(fuss, { sz:16, c:"8A95A8", sp:0 });
 
   const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+ xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+ xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body}
 <w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr>
 </w:body></w:document>`;
   const types = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
 <Default Extension="xml" ContentType="application/xml"/>
+<Default Extension="png" ContentType="image/png"/>
 <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
 <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
 </Types>`;
@@ -1673,7 +1908,8 @@ async function vglDocxBlob(b){
 </Relationships>`;
   const drels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>${logo
+? `\n<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.png"/>` : ""}
 </Relationships>`;
   const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -1682,13 +1918,15 @@ async function vglDocxBlob(b){
 <w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
 </w:styles>`;
   const enc = new TextEncoder();
-  const zip = await makeZip([
+  const teile = [
     { name:"[Content_Types].xml",        data:enc.encode(types) },
     { name:"_rels/.rels",                data:enc.encode(rels) },
     { name:"word/_rels/document.xml.rels", data:enc.encode(drels) },
     { name:"word/document.xml",          data:enc.encode(doc) },
     { name:"word/styles.xml",            data:enc.encode(styles) }
-  ]);
+  ];
+  if(logo) teile.push({ name:"word/media/logo.png", data:logo.png });
+  const zip = await makeZip(teile);
   return new Blob([await zip.arrayBuffer()],
     { type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 }
@@ -1698,6 +1936,8 @@ async function vglDocxBlob(b){
    ------------------------------------------------------------------ */
 async function vglPdfBlob(b){
   const d = pdfDoc();
+  const m = marke();
+  const logo = await pdfBildAus(await logoBytes());
   const f = n => n === null || n === undefined ? "–" : chf(n);
   const pz = n => (n * 100).toLocaleString("de-CH", { maximumFractionDigits:1 }) + " %";
   const diffTxt = z => z.diff === null ? "–" : (z.diff > 0 ? "+" : "") + chf(z.diff);
@@ -1708,11 +1948,18 @@ async function vglPdfBlob(b){
     { titel:b.jahrNeu,  w:92, al:"right" },
     { titel:"Differenz",w:92, al:"right" }
   ];
-  /* Kopf- und Fusszeile auf jeder Seite */
+  /* Kopf- und Fusszeile auf jeder Seite – mit Logo, wenn eines hinterlegt ist. */
   const kopf = doc => {
-    doc.text(b.kanzlei || "", doc.margin, { b:true, size:10 });
-    doc.text(`Vergleich ${b.jahrAlt} / ${b.jahrNeu} · ${b.kunde}`, doc.margin, { al:"right", w:W, size:8.5, c:[0.33,0.38,0.48] });
-    doc.y -= 8;
+    let x = doc.margin;
+    if(logo){
+      const h = doc.bild(logo, x, doc.y - 22, 118, 32);
+      x += logo.w * (h / logo.h) + 12;
+    }
+    doc.text(m.name || b.kanzlei || "", x, { b:true, size:10 });
+    if(m.claim) doc.text(m.claim, x, { size:8, c:[0.33,0.38,0.48], y:doc.y - 11 });
+    doc.text(`Vergleich ${b.jahrAlt} / ${b.jahrNeu} · ${b.kunde}`, doc.margin,
+             { al:"right", w:W, size:8.5, c:[0.33,0.38,0.48] });
+    doc.y -= logo ? 30 : 8;
     doc.linie(doc.margin, doc.y, doc.margin + W, doc.y, 0.6);
     doc.y -= 20;
   };
@@ -1798,6 +2045,7 @@ async function vglPdfBlob(b){
   });
 
   /* Seitenzahlen zum Schluss – erst jetzt ist die Gesamtzahl bekannt. */
+  d.fussZeile([m.firma, m.adresse, m.email, m.telefon, m.web].filter(Boolean).join(" · "));
   d.seitenzahlen();
   return d.blob();
 }
@@ -1832,12 +2080,7 @@ function vglSheetHtml(b){
   const kopf = `<tr><th>Position</th><th class="num">${esc(b.jahrAlt)}</th>
                 <th class="num">${esc(b.jahrNeu)}</th><th class="num">Differenz</th></tr>`;
   return `
-  <div class="row" style="align-items:flex-start">
-    <div><b style="font-size:16px">${esc(b.kanzlei || "")}</b><br>
-      <span class="small">${esc(b.bearbeiter || "")}</span></div>
-    <span class="spacer"></span>
-    <div class="small" style="text-align:right">Erstellt am ${esc(b.datum)}</div>
-  </div>
+  ${brandKopfHtml(`Erstellt am ${esc(b.datum)}`)}
   <h2 style="margin:22px 0 4px">Vergleich Steuererklärung ${esc(b.jahrAlt)} / ${esc(b.jahrNeu)}</h2>
   <p class="small">${esc(b.kunde)}${b.mandat ? " · Mandat " + esc(b.mandat) : ""}${b.ort ? " · " + esc(b.ort) : ""}
      · ${esc(b.stat.kanton)}${b.stat.gemeinde ? " / " + esc(b.stat.gemeinde) : ""}
@@ -1883,7 +2126,8 @@ function vglSheetHtml(b){
 
   ${b.notiz ? `<h3 style="margin:18px 0 6px">Bemerkungen</h3><p>${esc(b.notiz).replace(/\n/g,"<br>")}</p>` : ""}
   <h3 style="margin:18px 0 6px">Hinweise</h3>
-  <ul class="small" style="padding-left:18px">${b.hinweise.map(h => `<li>${esc(h)}</li>`).join("")}</ul>`;
+  <ul class="small" style="padding-left:18px">${b.hinweise.map(h => `<li>${esc(h)}</li>`).join("")}</ul>
+  ${brandFussHtml()}`;
 }
 
 /* ---------- Ansicht: Steuervergleich ---------- */
@@ -2744,12 +2988,7 @@ function viewDossier(){
   </div>
 
   <div class="card print-sheet">
-    <div class="row" style="align-items:flex-start">
-      <div><b style="font-size:15px">${esc(S.settings.kanzlei || "")}</b><br>
-        <span class="small">${esc(S.settings.bearbeiter || "")}${S.settings.bearbeiter ? " · " : ""}${esc(S.settings.email || "")}${S.settings.telefon ? " · " + esc(S.settings.telefon) : ""}</span></div>
-      <span class="spacer"></span>
-      <div class="small" style="text-align:right">Stand ${deAt(today())}</div>
-    </div>
+    ${brandKopfHtml(`Stand ${deAt(today())}`)}
     <h2 style="margin:22px 0 4px">Checkliste Steuererklärung ${jahr}</h2>
     <p class="small" style="margin-bottom:16px">
       ${esc(clientName(c))}${c.mandat ? " · Mandat " + esc(c.mandat) : ""}${c.ort ? " · " + esc(c.ort) : ""}
@@ -2766,6 +3005,7 @@ function viewDossier(){
     <p class="small" style="margin-top:22px">
       Bitte die fehlenden Unterlagen${dos?.frist ? " bis " + deAt(dos.frist) : ""} einreichen${S.settings.email
       ? " – als PDF oder Foto an " + esc(S.settings.email) : ""}. Angekreuzte Punkte liegen bereits vor.</p>
+    ${brandFussHtml()}
   </div>`;
 
   $("#dosClient").onchange = e => go("dossier", { clientId:e.target.value, jahr });
@@ -2844,10 +3084,11 @@ async function reclassifyDialog(docId){
    ------------------------------------------------------------------ */
 function checklistText(c, jahr){
   const list = buildChecklist(c, jahr), st = checklistStats(list), dos = dossierOf(c.id, jahr);
+  const m = marke();
   const kopf = [
     `CHECKLISTE STEUERERKLÄRUNG ${jahr}`,
     `${clientName(c)}${c.mandat ? " · Mandat " + c.mandat : ""}`,
-    S.settings.kanzlei,
+    [m.firma, m.claim].filter(Boolean).join(" – "),
     dos?.frist ? `Einreichefrist: ${deAt(dos.frist)}` : null,
     `Stand ${deAt(today())}: ${st.done} von ${st.total} Punkten erledigt`,
     ""
@@ -2867,6 +3108,7 @@ function checklistText(c, jahr){
   } else out += "\nAlle Unterlagen liegen vor.\n";
   if(S.settings.email) out += `\nUnterlagen bitte an ${S.settings.email}`
     + (S.settings.telefon ? ` · Fragen: ${S.settings.telefon}` : "") + "\n";
+  out += "\n" + brandZeilen().join(" · ") + "\n";
   return out;
 }
 function checklistCsv(c, jahr){
@@ -2908,8 +3150,9 @@ async function dossierZipBlob(c, jahr){
 }
 function tocText(c, jahr){
   const docs = docsOf(c.id, jahr), list = buildChecklist(c, jahr), st = checklistStats(list);
+  const m = marke();
   let out = `STEUERDOSSIER ${jahr}\n${clientName(c)}${c.mandat ? " · Mandat " + c.mandat : ""}\n` +
-            `${S.settings.kanzlei}\nErstellt am ${deAt(today())}\n\nINHALT\n`;
+            `${[m.firma, m.claim].filter(Boolean).join(" – ")}\nErstellt am ${deAt(today())}\n\nINHALT\n`;
   REGISTERS.filter(r => docs.some(d => d.register === r.id)).forEach(r => {
     out += `\n${r.nr} · ${r.label}\n`;
     docs.filter(d => d.register === r.id).sort((a,b) => a.newName.localeCompare(b.newName))
@@ -3224,13 +3467,7 @@ function viewInvoice(){
   </div>
 
   <div class="card invoice-sheet">
-    <div class="row" style="align-items:flex-start">
-      <div><b style="font-size:16px">${esc(st.kanzlei || "")}</b><br>
-        <span class="small">${esc(st.bearbeiter||"")}${st.bearbeiter ? "<br>" : ""}${esc(st.email||"")}${st.telefon ? " · " + esc(st.telefon) : ""}
-        ${st.mwstNr ? "<br>MWST-Nr. " + esc(st.mwstNr) : ""}</span></div>
-      <span class="spacer"></span>
-      <div style="text-align:right" class="small">Rechnungsdatum ${deAt(inv.datum)}<br>Rechnung ${esc(inv.nr)}</div>
-    </div>
+    ${brandKopfHtml(`Rechnungsdatum ${deAt(inv.datum)}<br>Rechnung ${esc(inv.nr)}`)}
     <div style="margin:26px 0 20px">
       ${esc([c.anrede, c.vorname, c.name].filter(Boolean).join(" "))}<br>
       ${esc(c.strasse||"")}<br>${esc([c.plz, c.ort].filter(Boolean).join(" "))}
@@ -3249,6 +3486,7 @@ function viewInvoice(){
     ${inv.notiz ? `<p class="small">${esc(inv.notiz)}</p>` : ""}
     ${inv.status === "bezahlt" ? `<p class="badge ok">Bezahlt am ${deAt(inv.bezahltAm)}</p>` : ""}
     <p class="small" style="margin-top:26px">Vielen Dank für Ihr Vertrauen.</p>
+    ${brandFussHtml(st.mwstNr ? "MWST-Nr. " + st.mwstNr : "")}
   </div>`;
 
   const upd = async (patch) => { Object.assign(inv, patch); await invSave(inv); render(); };
@@ -3367,7 +3605,9 @@ function fillTemplate(tpl, c, jahr){
           `${g}:\n` + items.map(i => "- " + i.label).join("\n")).join("\n\n")
       : "- (alle Unterlagen liegen vor)",
     "{frist}": dos?.frist ? deAt(dos.frist) : S.settings.frist,
-    "{kanzlei}": S.settings.kanzlei, "{bearbeiter}": S.settings.bearbeiter || S.settings.kanzlei,
+    "{kanzlei}": marke().firma, "{marke}": marke().name, "{claim}": marke().claim,
+    "{signatur}": brandZeilen().slice(2).join("\n"),
+    "{bearbeiter}": S.settings.bearbeiter || marke().firma,
     "{telefon}": S.settings.telefon || "", "{email}": S.settings.email || "",
     "{honorar}": c.honorar ? chf(c.honorar) : "___"
   };
@@ -3453,6 +3693,162 @@ function viewMail(){
   $("#zipMail").onclick = () => exportZip(c, jahr);
 }
 
+/* ==================================================================
+   MARKE EINRICHTEN – Logo, Name, Claim, Farben, Kontaktzeile.
+   Ein Markenprofil lässt sich als Datei weitergeben; damit ist das
+   CRM in zwei Minuten auf eine andere Kanzlei umgestellt.
+   ================================================================== */
+function markeCardHtml(){
+  const s = S.settings, m = marke(), mk = s.marke || {};
+  return `
+  <div class="card"><div class="card-head"><h3>Marke &amp; Erscheinungsbild</h3>
+    <span class="small">Logo, Name und Farben erscheinen auf Bildschirm, Checkliste, Rechnung und Bericht</span></div>
+
+    <div class="grid g2">
+      <div>
+        <label>Logo (PNG, JPG oder SVG)</label>
+        <div class="logo-drop" id="logoDrop">
+          <div class="logo-vorschau" id="logoVor">${m.logo
+            ? `<img src="${esc(m.logo)}" alt="Logo">`
+            : `<span class="small">Noch kein Logo – es wird das Monogramm <b>${esc(m.initialen)}</b> verwendet</span>`}</div>
+          <div class="row">
+            <button class="btn-primary btn-sm" id="logoPick">Logo wählen</button>
+            <button class="btn-sm" id="logoDel" ${m.logo ? "" : "disabled"}>Entfernen</button>
+            <input type="file" id="logoFile" accept="image/*" class="hidden">
+          </div>
+        </div>
+        <p class="small">Am besten ein Logo mit durchsichtigem Hintergrund. Grosse Dateien werden
+          automatisch auf Dokumentgrösse gerechnet.</p>
+        <div class="logo-vorschau dunkel" style="margin-top:6px">${m.logo
+          ? `<img src="${esc(m.logo)}" alt="">`
+          : `<span class="small" style="color:#cfdcf0">So erscheint die Marke in der dunklen Seitenleiste</span>`}</div>
+      </div>
+      <div>
+        <div><label>Markenname (Seitenleiste, Sperrbildschirm)</label>
+          <input id="mkName" value="${esc(mk.name || "")}" placeholder="${esc(m.name)}"></div>
+        <div style="height:8px"></div>
+        <div><label>Claim / Untertitel</label>
+          <input id="mkClaim" value="${esc(mk.claim ?? "")}" placeholder="${esc(m.claim || "Treuhand & Steuerberatung")}"></div>
+        <div style="height:8px"></div>
+        <div><label>Monogramm (2 Zeichen, falls kein Logo)</label>
+          <input id="mkMono" value="${esc(mk.monogramm || "")}" placeholder="${esc(m.initialen)}" maxlength="2" style="width:110px"></div>
+        <div style="height:8px"></div>
+        <div><label>Produktname (interner Titel im Browser-Tab)</label>
+          <input id="sProdukt" value="${esc(s.produkt || "")}"></div>
+      </div>
+    </div>
+
+    <h4 style="margin:16px 0 6px">Farben</h4>
+    <div class="paletten" style="margin-bottom:10px">${PALETTEN.map(([n,f,a]) =>
+      `<button class="palette" data-pal="${esc(f)}|${esc(a)}">
+         <i style="background:linear-gradient(90deg,${esc(f)} 50%,${esc(a)} 50%)"></i>${esc(n)}</button>`).join("")}</div>
+    <div class="grid g4">
+      <div><label>Hauptfarbe (Kopf, Register, Logo-Kachel)</label>
+        <input type="color" class="farbfeld" id="sFarbe" value="${esc(s.farbe || "#1F3864")}"></div>
+      <div><label>Akzentfarbe (Knöpfe, Fortschritt)</label>
+        <input type="color" class="farbfeld" id="sAkzent" value="${esc(s.akzent || "#0f8fa3")}"></div>
+      <div><label>Lizenz / Kunde (Weiterverkauf)</label><input id="sLizenz" value="${esc(s.lizenz || "")}"></div>
+      <div><label>&nbsp;</label><button id="mkReset">Farben zurücksetzen</button></div>
+    </div>
+
+    <h4 style="margin:16px 0 6px">Kontaktzeile auf Dokumenten</h4>
+    <div class="grid g3">
+      <div><label>Adresse</label><input id="mkAdresse" value="${esc(mk.adresse || "")}" placeholder="Musterstrasse 1, 8400 Winterthur"></div>
+      <div><label>Website</label><input id="mkWeb" value="${esc(mk.web || "")}" placeholder="www.beispiel.ch"></div>
+      <div><label>Zusatz (z.B. «Mitglied TREUHAND|SUISSE»)</label><input id="mkFuss" value="${esc(mk.fusszeile || "")}"></div>
+    </div>
+
+    <h4 style="margin:16px 0 6px">Vorschau Briefkopf</h4>
+    <div class="card" style="margin:0;background:var(--panel-2)" id="mkVorschau">
+      ${brandKopfHtml("Stand " + deAt(today()))}
+      <p class="small" style="margin:0">So beginnt jede Checkliste, jede Rechnung und jeder Steuervergleich.</p>
+      ${brandFussHtml()}
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn-primary" id="mkSave">Marke speichern</button>
+      <span class="spacer"></span>
+      <button id="mkExp">Markenprofil exportieren</button>
+      <button id="mkImp">Markenprofil einlesen</button>
+      <input type="file" id="mkFile" accept=".json" class="hidden">
+    </div>
+    <p class="small">Das Markenprofil enthält Logo, Name, Claim, Farben und Kontaktzeile – nie Kundendaten.
+      Ideal, um das CRM beim Weiterverkauf pro Kanzlei fertig gebrandet auszuliefern.</p>
+  </div>`;
+}
+function markeBind(){
+  if(!$("#mkSave")) return;
+  const s = S.settings;
+  s.marke = s.marke || { ...MARKE_STD };
+
+  /* --- Logo --- */
+  const setzeLogo = async file => {
+    try{
+      s.marke.logo = await logoEinlesen(file);
+      await saveSettings(); applyBranding(); toast("Logo übernommen"); render();
+    }catch(e){ toast(e.message); }
+  };
+  $("#logoPick").onclick = () => $("#logoFile").click();
+  $("#logoFile").onchange = e => e.target.files[0] && setzeLogo(e.target.files[0]);
+  $("#logoDel").onclick = async () => {
+    s.marke.logo = ""; await saveSettings(); applyBranding(); toast("Logo entfernt"); render();
+  };
+  const drop = $("#logoDrop");
+  ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if(f) setzeLogo(f); });
+
+  /* --- Farben: sofort sichtbar, gespeichert wird beim Klick auf Speichern --- */
+  const live = () => {
+    const r = document.documentElement.style;
+    r.setProperty("--navy", $("#sFarbe").value);
+    r.setProperty("--teal", $("#sAkzent").value);
+    r.setProperty("--teal-600", $("#sAkzent").value);
+  };
+  $("#sFarbe").oninput = live;
+  $("#sAkzent").oninput = live;
+  $$("[data-pal]").forEach(b => b.onclick = () => {
+    const [f, a] = b.dataset.pal.split("|");
+    $("#sFarbe").value = f; $("#sAkzent").value = a; live();
+  });
+  $("#mkReset").onclick = () => { $("#sFarbe").value = "#1F3864"; $("#sAkzent").value = "#0f8fa3"; live(); };
+
+  $("#mkSave").onclick = async () => {
+    Object.assign(s.marke, {
+      name: $("#mkName").value.trim(), claim: $("#mkClaim").value.trim(),
+      monogramm: $("#mkMono").value.trim().toUpperCase(),
+      adresse: $("#mkAdresse").value.trim(), web: $("#mkWeb").value.trim(),
+      fusszeile: $("#mkFuss").value.trim()
+    });
+    Object.assign(s, { produkt: $("#sProdukt").value.trim() || "Steuer-CRM",
+      farbe: $("#sFarbe").value, akzent: $("#sAkzent").value, lizenz: $("#sLizenz").value.trim() });
+    await saveSettings(); applyBranding(); toast("Marke gespeichert"); render();
+  };
+
+  /* --- Markenprofil als Datei weitergeben --- */
+  $("#mkExp").onclick = () => {
+    const p = { app:"steuer-crm-marke", version:1, exportiert:new Date().toISOString(),
+      produkt:s.produkt, kanzlei:s.kanzlei, bearbeiter:s.bearbeiter, email:s.email, telefon:s.telefon,
+      farbe:s.farbe, akzent:s.akzent, lizenz:s.lizenz, marke:{ ...s.marke } };
+    download(new Blob([JSON.stringify(p, null, 1)], { type:"application/json" }),
+      `markenprofil_${slug(marke().name) || "crm"}.json`);
+    toast("Markenprofil gespeichert");
+  };
+  $("#mkImp").onclick = () => $("#mkFile").click();
+  $("#mkFile").onchange = async e => {
+    const f = e.target.files[0]; if(!f) return;
+    try{
+      const d = JSON.parse(await f.text());
+      if(d.app !== "steuer-crm-marke") return toast("Kein gültiges Markenprofil");
+      if(!confirmBox("Markenprofil übernehmen? Logo, Name, Farben und Kontaktzeile werden ersetzt.")) return;
+      ["produkt","kanzlei","bearbeiter","email","telefon","farbe","akzent","lizenz"].forEach(k => {
+        if(d[k] !== undefined) s[k] = d[k]; });
+      s.marke = { ...MARKE_STD, ...(d.marke || {}) };
+      await saveSettings(); applyBranding(); toast("Markenprofil übernommen"); render();
+    }catch(err){ toast("Datei nicht lesbar"); }
+  };
+}
+
 /* ---------- Einstellungen & Backup ---------- */
 function viewSettings(){
   const s = S.settings, cfgOk = !!syncCfg();
@@ -3470,16 +3866,10 @@ function viewSettings(){
       <div><label>Standard-Steuerjahr</label><select id="sJahr">${yearOptions(s.jahr)}</select></div>
       <div><label>Standard-Frist (Text)</label><input id="sFrist" value="${esc(s.frist)}"></div>
     </div>
-    <h3 style="margin-top:16px">Erscheinungsbild (White-Label)</h3>
-    <p class="small">Für den Weiterverkauf: Produktname und Farben pro Kunde anpassen.</p>
-    <div class="grid g4">
-      <div><label>Produktname</label><input id="sProdukt" value="${esc(s.produkt||"")}"></div>
-      <div><label>Hauptfarbe</label><input type="color" id="sFarbe" value="${esc(s.farbe||"#1F3864")}"></div>
-      <div><label>Akzentfarbe</label><input type="color" id="sAkzent" value="${esc(s.akzent||"#0f8fa3")}"></div>
-      <div><label>Lizenzschlüssel / Kunde</label><input id="sLizenz" value="${esc(s.lizenz||"")}"></div>
-    </div>
     <div class="row" style="margin-top:12px"><button class="btn-primary" id="saveSet">Speichern</button></div>
   </div>
+
+  ${markeCardHtml()}
 
   <div class="card"><h3>Sicherheit</h3>
     ${SEC.on ? `<div class="hint"><b>Verschlüsselung aktiv</b> – alle Kundendaten und Dateien liegen mit
@@ -3613,10 +4003,10 @@ function viewSettings(){
   $("#saveSet").onclick = async () => {
     Object.assign(S.settings, { kanzlei:$("#sKanzlei").value.trim(), bearbeiter:$("#sBearb").value.trim(),
       email:$("#sEmail").value.trim(), telefon:$("#sTel").value.trim(), kanton:$("#sKanton").value.trim(),
-      jahr:+$("#sJahr").value, frist:$("#sFrist").value.trim(), produkt:$("#sProdukt").value.trim() || "Steuer-CRM",
-      farbe:$("#sFarbe").value, akzent:$("#sAkzent").value, lizenz:$("#sLizenz").value.trim() });
+      jahr:+$("#sJahr").value, frist:$("#sFrist").value.trim() });
     await saveSettings(); toast("Einstellungen gespeichert"); render();
   };
+  markeBind();
 
   /* --- Sicherheit --- */
   if($("#encOn")) $("#encOn").onclick = async () => {
@@ -4140,10 +4530,10 @@ function showLock(msg){
   if(!el){ el = document.createElement("div"); el.id = "lockScreen"; document.body.appendChild(el); }
   el.innerHTML = `
     <div class="lock-card">
-      <div class="brand" style="justify-content:center;margin-bottom:14px">
-        <div class="logo">${esc((S.settings.produkt || "Steuer-CRM").slice(0,2).toUpperCase())}</div>
-        <div style="text-align:left"><b style="color:var(--ink)">${esc(S.settings.produkt || "Steuer-CRM")}</b>
-          <span class="small" style="display:block">${esc(S.settings.kanzlei || "")}</span></div>
+      <div class="brand gross" style="justify-content:center;margin-bottom:14px">
+        <div class="logo">${marke().logo ? `<img src="${esc(marke().logo)}" alt="">` : esc(marke().initialen)}</div>
+        <div style="text-align:left"><b style="color:var(--ink)">${esc(marke().firma)}</b>
+          <span class="small" style="display:block">${esc(marke().claim || marke().produkt)}</span></div>
       </div>
       <div id="lockPane">
         <label>Passwort</label>
