@@ -133,11 +133,21 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
         border:1px dashed var(--line-strong);border-radius:8px;padding:12px;text-align:center;word-break:break-all}
 
 .invoice-sheet{padding:26px}
+.print-sheet{display:none}
+.print-sheet .box{display:inline-block;width:13px;height:13px;border:1.4px solid #444;border-radius:2px;
+  margin-right:8px;vertical-align:-1px;text-align:center;line-height:12px;font-size:11px}
+.print-sheet .zeile{padding:3px 0;border-bottom:1px dotted #ccc}
+.print-sheet .erledigt{color:#555}
+.print-sheet .na{color:#999;text-decoration:line-through}
 @media print{
-  .side,.no-print,button{display:none !important}
+  .side,.no-print,button,.toast,dialog{display:none !important}
   body.view-invoice .page-head,
   body.view-invoice .card:not(.invoice-sheet){display:none !important}
   body.view-invoice .invoice-sheet{border:none;padding:0}
+  body.view-dossier .page-head,
+  body.view-dossier .grid,
+  body.view-dossier .card:not(.print-sheet){display:none !important}
+  body.view-dossier .print-sheet{display:block;border:none;padding:0;box-shadow:none}
   .app{display:block} .main{padding:0;max-width:none}
   .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
   body{background:#fff;font-size:12px}
@@ -990,6 +1000,7 @@ function render(){
               mail:viewMail, settings:viewSettings }[S.view] || viewDashboard;
   v();
   document.body.classList.toggle("view-invoice", S.view === "invoice");
+  document.body.classList.toggle("view-dossier", S.view === "dossier");
   applyBranding();
   $("#storageInfo").textContent = `${S.clients.length} Kunden · ${S.docs.length} Dokumente`
     + (SEC.on ? " · 🔒 verschlüsselt" : "");
@@ -1264,7 +1275,11 @@ function viewDossier(){
   <div class="card">
     <div class="card-head"><h3>Checkliste ${jahr}</h3>
       <div class="row no-print"><button class="btn-sm" id="addItem">+ Eigener Punkt</button>
-        <button class="btn-sm" id="copyOpen">Offene Punkte kopieren</button></div></div>
+        <button class="btn-sm" id="copyOpen">Offene Punkte kopieren</button>
+        <button class="btn-sm" id="clPrint">Drucken / PDF</button>
+        <button class="btn-sm" id="clTxt">Text (.txt)</button>
+        <button class="btn-sm" id="clCsv">Excel (.csv)</button>
+        <button class="btn-sm btn-teal" id="clMail">Per E-Mail</button></div></div>
     ${st.open.length === 0 ? '<div class="hint">Alle Punkte erledigt – das Dossier kann bearbeitet werden.</div>' :
       `<div class="hint warn"><b>${st.open.length} offene Unterlagen:</b> ${st.open.map(i => esc(i.label)).join(" · ")}</div>`}
     ${REGISTERS.filter(r => byReg[r.id]).map(r => `
@@ -1315,6 +1330,31 @@ function viewDossier(){
                <button class="btn-sm btn-danger" data-rm="${d.id}">✕</button></div>
         </div>`).join("")}`).join("")
       : '<div class="empty">Noch keine Dokumente. Ziehe die Belege in den Dokumenten-Konverter.</div>'}
+  </div>
+
+  <div class="card print-sheet">
+    <div class="row" style="align-items:flex-start">
+      <div><b style="font-size:15px">${esc(S.settings.kanzlei || "")}</b><br>
+        <span class="small">${esc(S.settings.bearbeiter || "")}${S.settings.bearbeiter ? " · " : ""}${esc(S.settings.email || "")}${S.settings.telefon ? " · " + esc(S.settings.telefon) : ""}</span></div>
+      <span class="spacer"></span>
+      <div class="small" style="text-align:right">Stand ${deAt(today())}</div>
+    </div>
+    <h2 style="margin:22px 0 4px">Checkliste Steuererklärung ${jahr}</h2>
+    <p class="small" style="margin-bottom:16px">
+      ${esc(clientName(c))}${c.mandat ? " · Mandat " + esc(c.mandat) : ""}${c.ort ? " · " + esc(c.ort) : ""}
+      ${dos?.frist ? " · Einreichefrist " + deAt(dos.frist) : ""}
+      · ${st.done} von ${st.total} Punkten erledigt</p>
+    ${st.open.length ? `<div class="hint warn" style="margin-bottom:14px"><b>Noch benötigt:</b>
+       ${st.open.map(i => esc(i.label)).join(" · ")}</div>` : '<div class="hint">Alle Unterlagen liegen vor.</div>'}
+    ${REGISTERS.filter(r => byReg[r.id]).map(r => `
+      <div class="reg-head" style="margin-top:14px"><b>${r.nr} · ${esc(r.label)}</b></div>
+      ${byReg[r.id].map(i => `<div class="zeile ${i.na ? "na" : (i.done ? "erledigt" : "")}">
+        <span class="box">${i.na ? "–" : (i.done ? "✓" : "")}</span>${esc(i.label)}
+        ${i.ziffer !== "–" ? `<span class="small"> · Ziff. ${esc(i.ziffer)}</span>` : ""}
+        ${i.note ? `<span class="small"> · ${esc(i.note)}</span>` : ""}</div>`).join("")}`).join("")}
+    <p class="small" style="margin-top:22px">
+      Bitte die fehlenden Unterlagen${dos?.frist ? " bis " + deAt(dos.frist) : ""} einreichen${S.settings.email
+      ? " – als PDF oder Foto an " + esc(S.settings.email) : ""}. Angekreuzte Punkte liegen bereits vor.</p>
   </div>`;
 
   $("#dosClient").onchange = e => go("dossier", { clientId:e.target.value, jahr });
@@ -1328,6 +1368,12 @@ function viewDossier(){
   $("#mailReq").onclick    = () => go("mail", { clientId:c.id, jahr });
   $("#copyOpen").onclick   = () => { navigator.clipboard.writeText(st.open.map(i => "- " + i.label).join("\n"))
                                      .then(() => toast("Offene Punkte kopiert")); };
+  $("#clPrint").onclick = () => window.print();
+  $("#clTxt").onclick = () => { download(new Blob([checklistText(c, jahr)], { type:"text/plain;charset=utf-8" }),
+                                checklistFile(c, jahr) + ".txt"); toast("Checkliste als Text gespeichert"); };
+  $("#clCsv").onclick = () => { download(new Blob([checklistCsv(c, jahr)], { type:"text/csv;charset=utf-8" }),
+                                checklistFile(c, jahr) + ".csv"); toast("Checkliste als CSV gespeichert"); };
+  $("#clMail").onclick = () => { S.tpl = "anfordern"; go("mail", { clientId:c.id, jahr }); };
   $$(".chk").forEach(cb => cb.onchange = async () => { await setChecklistItem(c.id, jahr, cb.dataset.key, { manual:cb.checked }); render(); });
   $$("[data-na]").forEach(b => b.onclick = async () => {
     const cur = list.find(i => i.key === b.dataset.na);
@@ -1379,6 +1425,48 @@ async function reclassifyDialog(docId){
   render(); toast("Zuordnung aktualisiert");
 }
 
+/* ------------------------------------------------------------------
+   CHECKLISTE EXPORTIEREN – als Text für E-Mail/WhatsApp, als CSV für
+   Excel, als PDF über die Druckansicht (unten .checklist-sheet).
+   ------------------------------------------------------------------ */
+function checklistText(c, jahr){
+  const list = buildChecklist(c, jahr), st = checklistStats(list), dos = dossierOf(c.id, jahr);
+  const kopf = [
+    `CHECKLISTE STEUERERKLÄRUNG ${jahr}`,
+    `${clientName(c)}${c.mandat ? " · Mandat " + c.mandat : ""}`,
+    S.settings.kanzlei,
+    dos?.frist ? `Einreichefrist: ${deAt(dos.frist)}` : null,
+    `Stand ${deAt(today())}: ${st.done} von ${st.total} Punkten erledigt`,
+    ""
+  ].filter(Boolean).join("\n");
+  let out = kopf;
+  REGISTERS.filter(r => list.some(i => i.reg === r.id)).forEach(r => {
+    out += `\n${r.nr} · ${r.label}\n`;
+    list.filter(i => i.reg === r.id).forEach(i => {
+      const box = i.na ? "[–]" : (i.done ? "[x]" : "[ ]");
+      out += `  ${box} ${i.label}${i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : ""}`
+           + (i.na ? " – nicht nötig" : "") + (i.note ? " – " + i.note : "") + "\n";
+    });
+  });
+  if(st.open.length){
+    out += `\nNOCH BENÖTIGT (${st.open.length}):\n`;
+    st.open.forEach(i => out += `  - ${i.label}${i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : ""}\n`);
+  } else out += "\nAlle Unterlagen liegen vor.\n";
+  if(S.settings.email) out += `\nUnterlagen bitte an ${S.settings.email}`
+    + (S.settings.telefon ? ` · Fragen: ${S.settings.telefon}` : "") + "\n";
+  return out;
+}
+function checklistCsv(c, jahr){
+  const list = buildChecklist(c, jahr);
+  const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+  const zeilen = [["Register","Register-Nr","Ziffer","Unterlage","Status","Notiz","Kunde","Steuerjahr"]
+    .map(q).join(";")];
+  list.forEach(i => zeilen.push([REG[i.reg]?.label || i.reg, REG[i.reg]?.nr || "", i.ziffer, i.label,
+    i.na ? "nicht nötig" : (i.done ? "erhalten" : "offen"), i.note, clientName(c), jahr].map(q).join(";")));
+  return "\uFEFF" + zeilen.join("\r\n");   // BOM, damit Excel die Umlaute richtig liest
+}
+const checklistFile = (c, jahr) => `Checkliste_${jahr}_${slug(clientName(c).replace(", ","-"))}`;
+
 /* ZIP-Export: Ordner je Register, Dateien nach Schema benannt. */
 async function exportZip(c, jahr){
   const blob = await dossierZipBlob(c, jahr);
@@ -1399,7 +1487,9 @@ async function dossierZipBlob(c, jahr){
     files.push({ name:`${jahr}_${slug(clientName(c).replace(", ","-"))}/${r.nr}_${slug(r.label)}/${d.newName}`, data:buf });
   }
   const enc = new TextEncoder();
-  files.push({ name:`${jahr}_${slug(clientName(c).replace(", ","-"))}/00_Inhaltsverzeichnis.txt`, data:enc.encode(tocText(c, jahr)) });
+  const ordner = `${jahr}_${slug(clientName(c).replace(", ","-"))}`;
+  files.push({ name:`${ordner}/00_Inhaltsverzeichnis.txt`, data:enc.encode(tocText(c, jahr)) });
+  files.push({ name:`${ordner}/00_Checkliste.txt`, data:enc.encode(checklistText(c, jahr)) });
   return makeZip(files);
 }
 function tocText(c, jahr){

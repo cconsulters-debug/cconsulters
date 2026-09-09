@@ -97,8 +97,20 @@ es werden **keine Ziffern erfunden**.
 - Ein Punkt hakt sich **automatisch** ab, sobald ein passendes Dokument im Dossier liegt.
 - Zusätzlich pro Punkt möglich: manuell abhaken, „nicht nötig" setzen, Notiz hinterlegen.
 - „+ Eigener Punkt" für Sonderfälle.
-- Button **Offene Punkte kopieren** – für WhatsApp oder ein Telefonat.
-- **Drucken** erzeugt eine saubere Checkliste ohne Bedienelemente.
+
+### Checkliste weitergeben – vier Wege
+
+| Knopf | Ergebnis | Wofür |
+|---|---|---|
+| **Drucken / PDF** | eigenständiges A4-Blatt mit Kanzleikopf, Kundendaten, Frist, Kästchen zum Ankreuzen | dem Kunden mitgeben oder als PDF anhängen |
+| **Text (.txt)** | dieselbe Liste als Datei mit `[x] / [ ] / [–]` | E-Mail-Anhang, Ablage, Weiterverarbeitung |
+| **Excel (.csv)** | eine Zeile je Unterlage mit Register, Ziffer, Status, Notiz | Auswertung über alle Mandate, Excel-Filter |
+| **Offene Punkte kopieren** | nur die fehlenden Punkte in der Zwischenablage | WhatsApp, Telefonnotiz |
+
+Zusätzlich: **Per E-Mail** springt direkt in die Vorlage „Unterlagen anfordern" mit den offenen
+Punkten im Text, und jeder **ZIP-Export** des Dossiers enthält die Checkliste als `00_Checkliste.txt`.
+
+Im Druck erscheint nur das Checklistenblatt – keine Knöpfe, keine Navigation, keine Dokumentenliste.
 
 ---
 
