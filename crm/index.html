@@ -318,6 +318,31 @@ function zifferFor(typeId, kanton){
   return prof[typeId] || "–";
 }
 
+/* Zweite Sicht auf dieselben Unterlagen: die Gliederung, die Kundinnen und
+   Kunden aus der Master-Checkliste kennen (Einkommen · Vermögen · Abzüge ·
+   Schulden · Liegenschaften · Weiteres). Das Dossier selbst bleibt nach den
+   Registern der Steuererklärung geordnet.                                   */
+const KUNDEN_GRUPPEN = [
+  ["Einkommen", ["lohnausweis","lohnausweis_neben","lohnausweis_p","vr_honorar","selbst_abschluss",
+                 "ahv_rente","pk_rente","taggeld","unterhalt_erhalten","uebrige_eink","quellensteuer"]],
+  ["Wertschriften & Vermögen", ["bankauszug","wertschriftenertrag","depotauszug","krypto","beteiligung",
+                 "darlehen_guthaben","rueckkaufswert","fahrzeug","erbschaft"]],
+  ["Abzüge", ["saeule3a","pk_einkauf","praemien_kk","praemien_leben","praemien_unfall","krankheitskosten",
+                 "behinderung","berufsauslagen","fahrkosten","verpflegung","weiterbildung","spenden",
+                 "parteispenden","kinderbetreuung","unterhalt_bezahlt"]],
+  ["Schulden", ["schulden","schuldzinsen"]],
+  ["Liegenschaften", ["eigenmietwert","hypothek","unterhalt_liegen","mietertrag","liegenschaft_aus","liegenschaftssteuer"]],
+  ["Weiteres", ["steuererklaerung","vollmacht","zugangsdaten","vorjahr","veranlagung","personalien",
+                 "zivilstand","kinder","aufstellung","bemerkungen","fristerstreckung","einsprache","sonstiges"]]
+];
+const GRUPPE_VON = Object.fromEntries(KUNDEN_GRUPPEN.flatMap(([g, ids]) => ids.map(id => [id, g])));
+const gruppeFor = key => GRUPPE_VON[key] || "Weiteres";
+/* Checkliste in der Kundensicht gruppieren – leere Gruppen fallen weg. */
+function nachGruppen(list){
+  return KUNDEN_GRUPPEN.map(([g]) => [g, list.filter(i => gruppeFor(i.key) === g)])
+                       .filter(([, items]) => items.length);
+}
+
 const DOSSIER_STATUS = [
   { id:"neu",        label:"Neu angelegt",          badge:"grey"  },
   { id:"angefordert",label:"Unterlagen angefordert",badge:"warn"  },
@@ -563,7 +588,7 @@ const S = {
              tarife:[["Steuererklärung natürliche Person","280"],["Wertschriftenverzeichnis","60"],
                      ["Liegenschaft / Eigenmietwert","90"],["Selbständige Erwerbstätigkeit","250"],
                      ["Fristerstreckung / Korrespondenz","40"],["Beratung (pro Stunde)","140"]] },
-  view:"dashboard", clientId:null, jahr:null, queue:[], convMsg:""
+  view:"dashboard", clientId:null, jahr:null, queue:[], convMsg:"", clView:"register"
 };
 
 async function loadAll(){
@@ -1281,18 +1306,23 @@ function viewDossier(){
     <div class="card-head"><h3>Checkliste ${jahr}</h3>
       <div class="row no-print"><button class="btn-sm" id="addItem">+ Eigener Punkt</button>
         <button class="btn-sm" id="copyOpen">Offene Punkte kopieren</button>
+        <button class="btn-sm ${S.clView === "kunde" ? "btn-teal" : ""}" id="clView">Ansicht: ${
+          S.clView === "kunde" ? "Kundensicht" : "Register"}</button>
         <button class="btn-sm" id="clPrint">Drucken / PDF</button>
         <button class="btn-sm" id="clTxt">Text (.txt)</button>
         <button class="btn-sm" id="clCsv">Excel (.csv)</button>
         <button class="btn-sm btn-teal" id="clMail">Per E-Mail</button></div></div>
     ${st.open.length === 0 ? '<div class="hint">Alle Punkte erledigt – das Dossier kann bearbeitet werden.</div>' :
       `<div class="hint warn"><b>${st.open.length} offene Unterlagen:</b> ${st.open.map(i => esc(i.label)).join(" · ")}</div>`}
-    ${REGISTERS.filter(r => byReg[r.id]).map(r => `
-      <div class="reg-head"><b>${r.nr} · ${esc(r.label)}</b>
-        <span class="small">${esc(r.hint)}</span>
-        <span class="badge ${byReg[r.id].every(i => i.done || i.na) ? "ok" : "warn"}">
-          ${byReg[r.id].filter(i => i.done).length}/${byReg[r.id].filter(i => !i.na).length}</span></div>
-      ${byReg[r.id].map(i => `
+    ${(S.clView === "kunde"
+        ? nachGruppen(list).map(([g, items]) => [g, "", items])
+        : REGISTERS.filter(r => byReg[r.id]).map(r => [`${r.nr} · ${r.label}`, r.hint, byReg[r.id]])
+      ).map(([titel, hint, items]) => `
+      <div class="reg-head"><b>${esc(titel)}</b>
+        <span class="small">${esc(hint)}</span>
+        <span class="badge ${items.every(i => i.done || i.na) ? "ok" : "warn"}">
+          ${items.filter(i => i.done).length}/${items.filter(i => !i.na).length}</span></div>
+      ${items.map(i => `
         <div class="row" style="padding:5px 2px;border-bottom:1px solid var(--line)">
           <input type="checkbox" class="chk" data-key="${i.key}" ${i.done?"checked":""} ${i.auto?"disabled":""}
                  style="width:auto;accent-color:var(--teal)">
@@ -1351,9 +1381,9 @@ function viewDossier(){
       · ${st.done} von ${st.total} Punkten erledigt</p>
     ${st.open.length ? `<div class="hint warn" style="margin-bottom:14px"><b>Noch benötigt:</b>
        ${st.open.map(i => esc(i.label)).join(" · ")}</div>` : '<div class="hint">Alle Unterlagen liegen vor.</div>'}
-    ${REGISTERS.filter(r => byReg[r.id]).map(r => `
-      <div class="reg-head" style="margin-top:14px"><b>${r.nr} · ${esc(r.label)}</b></div>
-      ${byReg[r.id].map(i => `<div class="zeile ${i.na ? "na" : (i.done ? "erledigt" : "")}">
+    ${nachGruppen(list).map(([g, items]) => `
+      <div class="reg-head" style="margin-top:14px"><b>${esc(g)}</b></div>
+      ${items.map(i => `<div class="zeile ${i.na ? "na" : (i.done ? "erledigt" : "")}">
         <span class="box">${i.na ? "–" : (i.done ? "✓" : "")}</span>${esc(i.label)}
         ${i.ziffer !== "–" ? `<span class="small"> · Ziff. ${esc(i.ziffer)}</span>` : ""}
         ${i.note ? `<span class="small"> · ${esc(i.note)}</span>` : ""}</div>`).join("")}`).join("")}
@@ -1373,6 +1403,7 @@ function viewDossier(){
   $("#mailReq").onclick    = () => go("mail", { clientId:c.id, jahr });
   $("#copyOpen").onclick   = () => { navigator.clipboard.writeText(st.open.map(i => "- " + i.label).join("\n"))
                                      .then(() => toast("Offene Punkte kopiert")); };
+  $("#clView").onclick = () => { S.clView = S.clView === "kunde" ? "register" : "kunde"; render(); };
   $("#clPrint").onclick = () => window.print();
   $("#clTxt").onclick = () => { download(new Blob([checklistText(c, jahr)], { type:"text/plain;charset=utf-8" }),
                                 checklistFile(c, jahr) + ".txt"); toast("Checkliste als Text gespeichert"); };
@@ -1445,9 +1476,9 @@ function checklistText(c, jahr){
     ""
   ].filter(Boolean).join("\n");
   let out = kopf;
-  REGISTERS.filter(r => list.some(i => i.reg === r.id)).forEach(r => {
-    out += `\n${r.nr} · ${r.label}\n`;
-    list.filter(i => i.reg === r.id).forEach(i => {
+  nachGruppen(list).forEach(([g, items]) => {
+    out += `\n${g.toUpperCase()}\n`;
+    items.forEach(i => {
       const box = i.na ? "[–]" : (i.done ? "[x]" : "[ ]");
       out += `  ${box} ${i.label}${i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : ""}`
            + (i.na ? " – nicht nötig" : "") + (i.note ? " – " + i.note : "") + "\n";
@@ -1464,10 +1495,11 @@ function checklistText(c, jahr){
 function checklistCsv(c, jahr){
   const list = buildChecklist(c, jahr);
   const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
-  const zeilen = [["Register","Register-Nr","Ziffer","Unterlage","Status","Notiz","Kunde","Steuerjahr"]
+  const zeilen = [["Gruppe","Unterlage","Status","Ziffer","Register-Nr","Register","Notiz","Kunde","Steuerjahr"]
     .map(q).join(";")];
-  list.forEach(i => zeilen.push([REG[i.reg]?.label || i.reg, REG[i.reg]?.nr || "", i.ziffer, i.label,
-    i.na ? "nicht nötig" : (i.done ? "erhalten" : "offen"), i.note, clientName(c), jahr].map(q).join(";")));
+  nachGruppen(list).forEach(([g, items]) => items.forEach(i => zeilen.push([g, i.label,
+    i.na ? "nicht nötig" : (i.done ? "erhalten" : "offen"), i.ziffer, REG[i.reg]?.nr || "",
+    REG[i.reg]?.label || i.reg, i.note, clientName(c), jahr].map(q).join(";"))));
   return "\uFEFF" + zeilen.join("\r\n");   // BOM, damit Excel die Umlaute richtig liest
 }
 const checklistFile = (c, jahr) => `Checkliste_${jahr}_${slug(clientName(c).replace(", ","-"))}`;
@@ -1953,8 +1985,10 @@ function fillTemplate(tpl, c, jahr){
   const map = {
     "{anrede_name}": `${c.anrede || ""} ${c.name || ""}`.trim(),
     "{name}": clientName(c), "{vorname}": c.vorname || "", "{jahr}": jahr,
-    "{offene}": open.length ? open.map(i => "- " + i.label + (i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : "")).join("\n")
-                            : "- (alle Unterlagen liegen vor)",
+    "{offene}": open.length
+      ? nachGruppen(open).map(([g, items]) =>
+          `${g}:\n` + items.map(i => "- " + i.label).join("\n")).join("\n\n")
+      : "- (alle Unterlagen liegen vor)",
     "{frist}": dos?.frist ? deAt(dos.frist) : S.settings.frist,
     "{kanzlei}": S.settings.kanzlei, "{bearbeiter}": S.settings.bearbeiter || S.settings.kanzlei,
     "{telefon}": S.settings.telefon || "", "{email}": S.settings.email || "",

@@ -103,12 +103,22 @@ es werden **keine Ziffern erfunden**.
 | Knopf | Ergebnis | Wofür |
 |---|---|---|
 | **Drucken / PDF** | eigenständiges A4-Blatt mit Kanzleikopf, Kundendaten, Frist, Kästchen zum Ankreuzen | dem Kunden mitgeben oder als PDF anhängen |
+| **Ansicht: Register / Kundensicht** | schaltet die Checkliste am Bildschirm um | intern nach Registern arbeiten, Kundensicht kontrollieren |
 | **Text (.txt)** | dieselbe Liste als Datei mit `[x] / [ ] / [–]` | E-Mail-Anhang, Ablage, Weiterverarbeitung |
 | **Excel (.csv)** | eine Zeile je Unterlage mit Register, Ziffer, Status, Notiz | Auswertung über alle Mandate, Excel-Filter |
 | **Offene Punkte kopieren** | nur die fehlenden Punkte in der Zwischenablage | WhatsApp, Telefonnotiz |
 
 Zusätzlich: **Per E-Mail** springt direkt in die Vorlage „Unterlagen anfordern" mit den offenen
 Punkten im Text, und jeder **ZIP-Export** des Dossiers enthält die Checkliste als `00_Checkliste.txt`.
+
+**Zwei Sichten auf dieselbe Liste:**
+
+- **Register 00–11** (Standard am Bildschirm) folgen dem Aufbau der Steuererklärung und steuern die
+  Dokumentenablage sowie die Ordner im ZIP.
+- **Kundensicht** – Einkommen · Wertschriften & Vermögen · Abzüge · Schulden · Liegenschaften ·
+  Weiteres – ist die Gliederung, die Kundinnen und Kunden von einer Unterlagenliste kennen.
+  **Alles, was den Kunden erreicht** (Ausdruck/PDF, Text, CSV, E-Mail), ist so gegliedert;
+  am Bildschirm schaltest du mit einem Klick um.
 
 Im Druck erscheint nur das Checklistenblatt – keine Knöpfe, keine Navigation, keine Dokumentenliste.
 
