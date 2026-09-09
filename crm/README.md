@@ -173,6 +173,31 @@ Kunde setzen – Titel, Logo-Kürzel, Navigation und Sperrbildschirm übernehmen
 *Einstellungen → Demo & Statistik → Demo-Daten laden* erzeugt drei fiktive Mandate für
 Verkaufsgespräche (und entfernt sie auf Knopfdruck wieder).
 
+## 6c1. Steuervergleich (Vorjahr / neues Jahr)
+
+*Steuervergleich* im Menü, oder im Dossier über den Knopf „⇅ Steuervergleich".
+
+- Stellt die Positionen beider Steuererklärungen **nebeneinander** (Ziff. 1–7, 11–18, 19–27, 30–37)
+  und rechnet daraus steuerbares Einkommen, Vermögen und – im Tarifmodus – die Steuerbelastung
+  in Bund, Kanton, Gemeinde und Kirche.
+- **Zwei Rechenarten:** *Tarifberechnung* mit hinterlegten Tarifen (Bund und Kanton Zürich, Steuerfüsse
+  je Gemeinde) oder *Grenzsatz-Schätzung*, wenn für einen Kanton kein Tarif hinterlegt ist – dort genügt
+  der geschätzte Grenzsteuersatz.
+- **Einzahlungen durchrechnen:** je Variante Säule 3a, PK-Einkauf oder weitere Abzüge eintragen; das CRM
+  zeigt Steuerersparnis und wie viel Prozent jedes einbezahlten Frankens zurückkommen.
+- **Einkauf staffeln:** vergleicht einmaligen Einkauf mit der Verteilung über mehrere Jahre und weist den
+  Vorteil aus dem Progressionsbruch aus – inklusive Hinweis auf die dreijährige Sperrfrist (Art. 79b BVG).
+- **Steuererklärung oder Veranlagung einlesen:** PDF hineinziehen, das CRM liest die Positionen (Scans per
+  OCR), zeigt **jeden Wert mit Fundstelle im Beleg** zur Kontrolle und übernimmt nur, was du bestätigst.
+  Summenzeilen werden bewusst nicht als Position gelesen. Kontrollwerte aus einer Veranlagung
+  (steuerbares Einkommen/Vermögen) dienen dem **Abgleich**: Weicht die eigene Rechnung ab, steht das im Bericht.
+- **Ausgabe:** Word-Datei (.docx, echtes Office-Format) oder Druck/PDF – mit Kanzleikopf, Grundlagen,
+  allen Tabellen und den Pflichthinweisen.
+
+> **Vor der ersten Mandantenauswertung die Tarifwerte prüfen** (im Code unter `TARIFE`, Stand 2024).
+> Tarife und Sozialabzüge ändern jährlich; die Berechnung bleibt provisorisch – massgebend ist die
+> Veranlagung des Steueramts. Wer nichts pflegen will, arbeitet im Grenzsatz-Modus.
+
 ## 6d. Honorar & Rechnungen
 
 *Honorar & Rechnungen* im Menü, oder direkt im Dossier über „+ Rechnung für <Jahr>".
@@ -238,7 +263,7 @@ Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-St
 ## 8. Grenzen und Ausbaustufen
 
 **Enthalten und einsatzbereit:** Inhaltserkennung von PDFs ohne Internet · mitgelieferte Scan-Erkennung (OCR) ·
-Kantons-Profile · Honorar und Rechnungen ·
+Kantons-Profile · Steuervergleich mit Word-Bericht · Honorar und Rechnungen ·
 lokale Verschlüsselung mit Sperrbildschirm und Wiederherstellungsschlüssel · verschlüsselte Backups ·
 Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisation · White-Label · Demo-Modus.
 
@@ -248,6 +273,7 @@ Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisa
 | Mehrseitige Scans automatisch in Einzelbelege trennen | 2–3 Tage | ein Stapel-Scan wird zu mehreren Dokumenten |
 | Direkter Import in ZHprivateTax / eTax | offen – Schnittstelle prüfen | Doppelerfassung entfällt |
 | Mehrbenutzerbetrieb mit Rollen | 3–5 Tage | Kanzleien ab 3 Personen |
+| Tarife weiterer Kantone im Steuervergleich | ½ Tag pro Kanton | Tarifberechnung ausserhalb ZH |
 
 **Bekannte Grenzen heute:**
 - Die Scan-Erkennung braucht die gehostete Version; bei einer per Doppelklick geöffneten Datei

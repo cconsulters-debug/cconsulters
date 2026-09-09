@@ -57,7 +57,10 @@ Stundenansatz von CHF 120 sind das CHF 6'000 – das Paket amortisiert sich im e
    E-Mail mit genau den fehlenden Punkten.
 5. **Sicherheit:** Verschlüsselung aktivieren, sperren, entsperren. Ein Satz: „Ihre Daten verlassen
    dieses Gerät nur, wenn Sie es wollen."
-6. **Abrechnung zeigen:** aus dem Dossier heraus eine Rechnung erzeugen, Position aus der Tarifliste
+6. **Steuervergleich zeigen:** Beim Demo-Mandat D-101 ist ein Vergleich hinterlegt. Zeige, wie ein
+   PK-Einkauf von CHF 45'000 gestaffelt über drei Jahre CHF 1'277 mehr spart als einmalig – das ist
+   Beratungsleistung, die der Kunde direkt verrechnen kann.
+7. **Abrechnung zeigen:** aus dem Dossier heraus eine Rechnung erzeugen, Position aus der Tarifliste
    wählen, drucken. Treuhänder erkennen dort sofort, dass die Saison damit vollständig abgedeckt ist.
 6. **Abschluss:** „Soll ich es Ihnen bis Freitag mit Ihrem Logo und Ihren Farben einrichten?"
 
