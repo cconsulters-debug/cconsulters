@@ -1047,6 +1047,148 @@ async function makeZip(files){   // files: [{name, data:Uint8Array}]
   return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type:"application/zip" });
 }
 
+/* ------------------------------------------------------------------
+   PDF SCHREIBEN – echte PDF-Datei ohne fremde Bibliothek.
+   Erzeugt A4-Seiten mit Helvetica (in jedem Reader vorhanden, daher
+   keine Schrifteinbettung nötig), Tabellen, Seitenumbruch und
+   Seitenzahlen. Damit lässt sich ein Bericht direkt speichern,
+   statt den Umweg über den Druckdialog zu nehmen.
+   ------------------------------------------------------------------ */
+/* Zeichenbreiten Helvetica (1/1000 pt) – genug für Umbruch und
+   rechtsbündige Zahlen (Ziffern sind alle 556 breit).               */
+const HELV_W = (() => {
+  const w = {}; const set = (chars, val) => [...chars].forEach(c => w[c] = val);
+  set(" !", 278); set("\"", 355); set("#$", 556); set("%", 889); set("&", 667);
+  set("'", 191); set("()", 333); set("*", 389); set("+", 584); set(",.", 278);
+  set("/", 278); set("0123456789", 556); set(":;", 278); set("<=>", 584); set("?", 556);
+  set("@", 1015); set("ABDEHKNPRSUVXY", 667); set("C", 722); set("G", 778); set("F", 611);
+  set("I", 278); set("J", 500); set("LZ", 611); set("M", 833); set("O", 778); set("Q", 778);
+  set("T", 611); set("W", 944); set("[]", 278); set("\\", 278); set("^", 469); set("_", 556);
+  set("`", 333); set("abcdeghnopqsuvy", 556); set("f", 278); set("ij", 222); set("k", 500);
+  set("l", 222); set("m", 833); set("rt", 333); set("wxz", 500); set("{}", 334); set("|", 260);
+  set("äöüÄÖÜéèàçÉÈÀ", 556); set("ß", 611);
+  return w;
+})();
+const pdfW = (s, size) => [...String(s)].reduce((a,c) => a + (HELV_W[c] ?? 556), 0) * size / 1000;
+/* Sonderzeichen auf Latin-1 abbilden – sonst zeigt der Reader Kästchen. */
+const pdfTxt = s => String(s ?? "")
+  .replace(/[–—]/g, "-").replace(/[‘’′]/g, "'")
+  .replace(/[“”]/g, '"').replace(/…/g, "...").replace(/ /g, " ")
+  .replace(/✓/g, "x").replace(/⚠️?/g, "!").replace(/→/g, "->")
+  .replace(/[•·]/g, "·")
+  .replace(/[^\x20-\x7E -ÿ]/g, "");
+const pdfEsc = s => pdfTxt(s).replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+
+function pdfDoc({ margin = 42, size = 9.5 } = {}){
+  const W = 595.28, H = 841.89;
+  const pages = [];                      // je Seite: Liste von Content-Fragmenten
+  let cur = null, y = 0;
+  const d = {
+    W, H, margin, size,
+    get y(){ return y; }, set y(v){ y = v; },
+    breite: W - 2 * margin,
+    neueSeite(kopf){
+      cur = []; pages.push(cur); y = H - margin;
+      if(kopf) kopf(d);
+      return d;
+    },
+    /* Text setzen. al: "left" | "right" | "center", bezogen auf x bzw. x+w */
+    text(str, x, opt = {}){
+      const s = opt.size || size, font = opt.b ? "F2" : "F1";
+      let tx = x;
+      const breite = pdfW(pdfTxt(str), s);
+      if(opt.al === "right")  tx = x + (opt.w || 0) - breite;
+      if(opt.al === "center") tx = x + ((opt.w || 0) - breite) / 2;
+      const c = opt.c || [0.08, 0.11, 0.15];
+      cur.push(`BT /${font} ${s} Tf ${c[0]} ${c[1]} ${c[2]} rg ${tx.toFixed(2)} ${(opt.y ?? y).toFixed(2)} Td (${pdfEsc(str)}) Tj ET`);
+      return breite;
+    },
+    /* Text im Kasten umbrechen, gibt die benötigte Höhe zurück. */
+    textBox(str, x, w, opt = {}){
+      const s = opt.size || size, zeilen = [];
+      let zeile = "";
+      for(const wort of pdfTxt(str).split(/\s+/)){
+        const test = zeile ? zeile + " " + wort : wort;
+        if(pdfW(test, s) > w && zeile){ zeilen.push(zeile); zeile = wort; } else zeile = test;
+      }
+      if(zeile) zeilen.push(zeile);
+      zeilen.forEach((z,i) => d.text(z, x, { ...opt, y:(opt.y ?? y) - i * s * 1.25 }));
+      return zeilen.length * s * 1.25;
+    },
+    linie(x1, y1, x2, y2, grau = 0.78){
+      cur.push(`${grau} G 0.5 w ${x1.toFixed(2)} ${y1.toFixed(2)} m ${x2.toFixed(2)} ${y2.toFixed(2)} l S`);
+    },
+    flaeche(x, yy, w, h, rgb = [0.92, 0.95, 0.99]){
+      cur.push(`${rgb[0]} ${rgb[1]} ${rgb[2]} rg ${x.toFixed(2)} ${yy.toFixed(2)} ${w.toFixed(2)} ${h.toFixed(2)} re f`);
+    },
+    async blob(){
+      const enc = new TextEncoder();
+      const objs = [];
+      const add = str => { objs.push(str); return objs.length; };          // 1-basierte Objektnummer
+      const seitenIds = [];
+      const kids = [];
+      const inhalt = pages.map(pg => pg.join("\n"));
+      /* Objekte: 1 Catalog, 2 Pages, 3 Font F1, 4 Font F2, danach je Seite Content + Page */
+      add("<< /Type /Catalog /Pages 2 0 R >>");
+      add("");                                                            // Platzhalter Pages
+      add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+      add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+      inhalt.forEach(txt => {
+        const cId = add(`<< /Length ${enc.encode(txt).length} >>\nstream\n${txt}\nendstream`);
+        const pId = add(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] `
+          + `/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${cId} 0 R >>`);
+        seitenIds.push(pId); kids.push(`${pId} 0 R`);
+      });
+      objs[1] = `<< /Type /Pages /Kids [${kids.join(" ")}] /Count ${seitenIds.length} >>`;
+      let out = "%PDF-1.4\n", offsets = [];
+      objs.forEach((o, i) => { offsets.push(out.length); out += `${i+1} 0 obj\n${o}\nendobj\n`; });
+      const xref = out.length;
+      out += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`
+           + offsets.map(o => String(o).padStart(10, "0") + " 00000 n \n").join("")
+           + `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+      const bytes = new Uint8Array(out.length);
+      for(let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 0xFF;
+      return new Blob([bytes], { type:"application/pdf" });
+    },
+    /* Seitenzahlen erst am Schluss setzen – vorher ist die Gesamtzahl offen. */
+    seitenzahlen(){
+      const n = pages.length;
+      pages.forEach((pg, i) => {
+        const txt = `Seite ${i + 1} von ${n}`, s = 8;
+        pg.push(`BT /F1 ${s} Tf 0.55 0.60 0.67 rg `
+              + `${(W - margin - pdfW(txt, s)).toFixed(2)} ${(margin - 14).toFixed(2)} Td (${pdfEsc(txt)}) Tj ET`);
+      });
+    },
+    seiten(){ return pages.length; }
+  };
+  return d;
+}
+/* Tabelle setzen – bricht selbständig auf die nächste Seite um.
+   spalten: [{ titel, w, al }] · zeilen: [{ cells:[…], b, fill }]        */
+function pdfTabelle(d, spalten, zeilen, kopf){
+  const zh = d.size * 1.9;
+  const kopfZeile = () => {
+    d.flaeche(d.margin, d.y - zh + 6, d.breite, zh);
+    let x = d.margin;
+    spalten.forEach(sp => { d.text(sp.titel, x + 4, { b:true, w:sp.w - 8, al:sp.al, size:d.size - 0.5 }); x += sp.w; });
+    d.y -= zh;
+  };
+  kopfZeile();
+  zeilen.forEach(z => {
+    if(d.y < d.margin + 60){ d.neueSeite(kopf); kopfZeile(); }
+    if(z.fill) d.flaeche(d.margin, d.y - zh + 6, d.breite, zh, z.fill);
+    let x = d.margin;
+    z.cells.forEach((c, i) => {
+      const sp = spalten[i];
+      d.text(c, x + 4, { b:z.b, w:sp.w - 8, al:sp.al });
+      x += sp.w;
+    });
+    d.linie(d.margin, d.y - 5, d.margin + d.breite, d.y - 5);
+    d.y -= zh;
+  });
+  d.y -= 6;
+}
+
 /* ==================================================================
    4b) STEUERVERGLEICH – Gegenüberstellung Vorjahr / neues Jahr
         inkl. Wirkung von Säule 3a und Einkauf Pensionskasse.
@@ -1550,11 +1692,136 @@ async function vglDocxBlob(b){
   return new Blob([await zip.arrayBuffer()],
     { type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 }
+/* ------------------------------------------------------------------
+   PDF-BERICHT – gleicher Aufbau wie die Word-Datei, als echte PDF
+   gespeichert (kein Umweg über den Druckdialog).
+   ------------------------------------------------------------------ */
+async function vglPdfBlob(b){
+  const d = pdfDoc();
+  const f = n => n === null || n === undefined ? "–" : chf(n);
+  const pz = n => (n * 100).toLocaleString("de-CH", { maximumFractionDigits:1 }) + " %";
+  const diffTxt = z => z.diff === null ? "–" : (z.diff > 0 ? "+" : "") + chf(z.diff);
+  const W = d.breite;
+  const spaltenZahl = [
+    { titel:"Position", w:W - 3 * 92, al:"left" },
+    { titel:b.jahrAlt,  w:92, al:"right" },
+    { titel:b.jahrNeu,  w:92, al:"right" },
+    { titel:"Differenz",w:92, al:"right" }
+  ];
+  /* Kopf- und Fusszeile auf jeder Seite */
+  const kopf = doc => {
+    doc.text(b.kanzlei || "", doc.margin, { b:true, size:10 });
+    doc.text(`Vergleich ${b.jahrAlt} / ${b.jahrNeu} · ${b.kunde}`, doc.margin, { al:"right", w:W, size:8.5, c:[0.33,0.38,0.48] });
+    doc.y -= 8;
+    doc.linie(doc.margin, doc.y, doc.margin + W, doc.y, 0.6);
+    doc.y -= 20;
+  };
+  d.neueSeite(kopf);
+
+  d.text(`Vergleich Steuererklärung ${b.jahrAlt} / ${b.jahrNeu}`, d.margin, { b:true, size:16 });
+  d.y -= 20;
+  d.text(`${b.kunde}${b.mandat ? " · Mandat " + b.mandat : ""}${b.ort ? " · " + b.ort : ""}`, d.margin, { size:10 });
+  d.y -= 13;
+  d.text(`${b.kanzlei}${b.bearbeiter ? " · " + b.bearbeiter : ""} · erstellt am ${b.datum}`, d.margin,
+         { size:8.5, c:[0.33,0.38,0.48] });
+  d.y -= 24;
+
+  d.text("Grundlagen", d.margin, { b:true, size:12 }); d.y -= 16;
+  pdfTabelle(d, [{ titel:"Merkmal", w:W * 0.45, al:"left" }, { titel:"Wert", w:W * 0.55, al:"left" }], [
+    { cells:["Kanton / Gemeinde", `${b.stat.kanton}${b.stat.gemeinde ? " · " + b.stat.gemeinde : ""}`] },
+    { cells:["Tarif", b.stat.verheiratet ? "Verheiratetentarif" : "Grundtarif"] },
+    { cells:["Kinder", String(b.stat.kinder || 0)] },
+    { cells:["Steuerfüsse (Kanton / Gemeinde / Kirche)",
+             `${vglNum(b.stat.fussKanton)} % / ${vglNum(b.stat.fussGemeinde)} % / ${vglNum(b.stat.fussKirche)} %`] },
+    { cells:["Berechnungsart", b.rNeu.modus === "tarif" ? "Tarifberechnung"
+             : `Grenzsatz-Schätzung (${vglNum(b.stat.grenzsatz)} %)`] }
+  ], kopf);
+
+  b.zeilen.forEach(g => {
+    if(d.y < d.margin + 120) d.neueSeite(kopf);
+    d.text(g.gruppe, d.margin, { b:true, size:12 }); d.y -= 16;
+    pdfTabelle(d, spaltenZahl, g.items.map(z => ({
+      cells:[`${z.ziffer !== "–" ? "Ziff. " + z.ziffer + " · " : ""}${z.label}`,
+             chf(z.alt), chf(z.neu), diffTxt(z)] })), kopf);
+  });
+
+  if(d.y < d.margin + 140) d.neueSeite(kopf);
+  d.text("Steuerbares Einkommen und Vermögen", d.margin, { b:true, size:12 }); d.y -= 16;
+  pdfTabelle(d, [{ titel:"", w:W - 3 * 92, al:"left" }, ...spaltenZahl.slice(1)],
+    b.ergebnis.map(z => ({ cells:[z.label, f(z.alt), f(z.neu), diffTxt(z)], b:z.stark,
+                           fill:z.stark ? [0.96,0.97,0.99] : null })), kopf);
+
+  if(b.steuern.length){
+    if(d.y < d.margin + 140) d.neueSeite(kopf);
+    d.text("Steuerbelastung", d.margin, { b:true, size:12 }); d.y -= 16;
+    pdfTabelle(d, [{ titel:"", w:W - 3 * 92, al:"left" }, ...spaltenZahl.slice(1)],
+      b.steuern.map(z => ({ cells:[z.label, f(z.alt), f(z.neu), diffTxt(z)], b:z.stark,
+                            fill:z.stark ? [0.96,0.97,0.99] : null })), kopf);
+    d.text(`Grenzsteuersatz ${b.jahrNeu}: ${pz(b.rNeu.grenzsatz)} · Durchschnittssatz: ${pz(b.rNeu.durchschnitt || 0)}`,
+           d.margin, { size:8.5, c:[0.33,0.38,0.48] });
+    d.y -= 22;
+  }
+
+  if(b.szenarien.length){
+    if(d.y < d.margin + 140) d.neueSeite(kopf);
+    d.text(`Wirkung zusätzlicher Einzahlungen ${b.jahrNeu}`, d.margin, { b:true, size:12 }); d.y -= 16;
+    const sw = [W - 5 * 78, 78, 78, 78, 78, 78];
+    pdfTabelle(d, ["Variante","Säule 3a","PK-Einkauf","Einsatz","Ersparnis","in %"]
+      .map((t,i) => ({ titel:t, w:sw[i], al:i ? "right" : "left" })),
+      b.szenarien.map(s => ({ cells:[s.label || "Variante", chf(vglNum(s.s3a)), chf(vglNum(s.pk)),
+        chf(s.einsatz), chf(s.ersparnis), pz(s.quote)] })), kopf);
+  }
+  if(b.staffel){
+    if(d.y < d.margin + 120) d.neueSeite(kopf);
+    d.text("Einkauf Pensionskasse: einmalig oder gestaffelt", d.margin, { b:true, size:12 }); d.y -= 16;
+    pdfTabelle(d, [{ titel:"Variante", w:W * 0.5, al:"left" },
+                   { titel:"Betrag pro Jahr", w:W * 0.25, al:"right" },
+                   { titel:"Steuerersparnis total", w:W * 0.25, al:"right" }], [
+      { cells:[`Einmalig im Jahr ${b.jahrNeu}`, chf(b.staffel.betrag), chf(b.staffel.einmalig)] },
+      { cells:[`Gestaffelt über ${b.staffel.jahre} Jahre`, chf(b.staffel.proJahr), chf(b.staffel.gestaffelt)] },
+      { cells:["Vorteil der Staffelung", "–", chf(b.staffel.vorteil)], b:true, fill:[0.96,0.97,0.99] }
+    ], kopf);
+  }
+
+  if(b.notiz){
+    if(d.y < d.margin + 100) d.neueSeite(kopf);
+    d.text("Bemerkungen", d.margin, { b:true, size:12 }); d.y -= 16;
+    d.y -= d.textBox(b.notiz, d.margin, W, { size:10 }) + 10;
+  }
+
+  if(d.y < d.margin + 110) d.neueSeite(kopf);
+  d.text("Hinweise", d.margin, { b:true, size:11 }); d.y -= 14;
+  b.hinweise.forEach(h => {
+    if(d.y < d.margin + 40) d.neueSeite(kopf);
+    d.text("·", d.margin, { size:8.5, c:[0.33,0.38,0.48] });
+    d.y -= d.textBox(h, d.margin + 10, W - 10, { size:8.5, c:[0.33,0.38,0.48] }) + 3;
+  });
+
+  /* Seitenzahlen zum Schluss – erst jetzt ist die Gesamtzahl bekannt. */
+  d.seitenzahlen();
+  return d.blob();
+}
+
 async function vglExportWord(v){
   const b = vglBericht(v);
   toast("Word-Datei wird erstellt …");
   const blob = await vglDocxBlob(b);
-  download(blob, `Steuervergleich_${b.jahrAlt}-${b.jahrNeu}_${slug(b.kunde.replace(", ","-"))}.docx`);
+  await download(blob, `Steuervergleich_${b.jahrAlt}-${b.jahrNeu}_${slug(b.kunde.replace(", ","-"))}.docx`);
+}
+async function vglExportPdf(v){
+  const b = vglBericht(v);
+  toast("PDF wird erstellt …");
+  const blob = await vglPdfBlob(b);
+  await download(blob, `Steuervergleich_${b.jahrAlt}-${b.jahrNeu}_${slug(b.kunde.replace(", ","-"))}.pdf`);
+}
+/* Standardausgabe: beide Formate nacheinander. */
+async function vglExportBeide(v){
+  const b = vglBericht(v);
+  const name = `Steuervergleich_${b.jahrAlt}-${b.jahrNeu}_${slug(b.kunde.replace(", ","-"))}`;
+  toast("Bericht wird erstellt – Word und PDF …");
+  await download(await vglDocxBlob(b), name + ".docx");
+  await download(await vglPdfBlob(b), name + ".pdf");
+  toast("Bericht als Word und PDF gespeichert");
 }
 
 /* ---------- Druckbogen (= PDF über «Drucken → Als PDF sichern») ---------- */
@@ -1672,8 +1939,10 @@ function viewVergleich(){
       <select id="vglClient" style="width:auto">${S.clients.map(x =>
         `<option value="${x.id}" ${x.id===c.id?"selected":""}>${esc(clientName(x))}</option>`).join("")}</select>
       <select id="vglYear" style="width:auto">${yearOptions(jahr)}</select>
-      <button class="btn-teal" id="vglWord">Word (.docx)</button>
-      <button class="btn-primary" id="vglPrint">Drucken / als PDF</button>
+      <button class="btn-primary" id="vglBeide">Bericht erstellen (Word + PDF)</button>
+      <button class="btn-teal btn-sm" id="vglWord">nur Word</button>
+      <button class="btn-teal btn-sm" id="vglPdf">nur PDF</button>
+      <button class="btn-sm" id="vglPrint">Drucken</button>
     </div>
   </div>
 
@@ -1850,7 +2119,9 @@ function viewVergleich(){
 
   vglBindDrop(c, jahr);
   vglBindScan(v, c);
+  $("#vglBeide").onclick = () => vglExportBeide(v);
   $("#vglWord").onclick = () => vglExportWord(v);
+  $("#vglPdf").onclick  = () => vglExportPdf(v);
   $("#vglPrint").onclick = () => {
     document.body.classList.add("view-vergleich");
     window.addEventListener("afterprint", () => document.body.classList.remove("view-vergleich"), { once:true });

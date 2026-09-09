@@ -191,8 +191,13 @@ Verkaufsgespräche (und entfernt sie auf Knopfdruck wieder).
   OCR), zeigt **jeden Wert mit Fundstelle im Beleg** zur Kontrolle und übernimmt nur, was du bestätigst.
   Summenzeilen werden bewusst nicht als Position gelesen. Kontrollwerte aus einer Veranlagung
   (steuerbares Einkommen/Vermögen) dienen dem **Abgleich**: Weicht die eigene Rechnung ab, steht das im Bericht.
-- **Ausgabe:** Word-Datei (.docx, echtes Office-Format) oder Druck/PDF – mit Kanzleikopf, Grundlagen,
-  allen Tabellen und den Pflichthinweisen.
+- **Ausgabe – Standard ist beides:** Der Knopf **„Bericht erstellen (Word + PDF)"** speichert den
+  Bericht in einem Durchgang als `.docx` **und** als `.pdf`. Beide Dateien haben denselben Aufbau:
+  Kanzleikopf, Grundlagen, alle Tabellen, Szenarien, Staffelung, Bemerkungen und Pflichthinweise.
+  Daneben gibt es „nur Word", „nur PDF" und den normalen Druck.
+- Die PDF wird **direkt erzeugt** – kein Umweg über den Druckdialog, keine fremde Bibliothek, auch
+  offline. Sie bringt Kopfzeile auf jeder Seite, rechtsbündige Beträge, automatischen Seitenumbruch
+  und Seitenzahlen mit.
 
 > **Vor der ersten Mandantenauswertung die Tarifwerte prüfen** (im Code unter `TARIFE`, Stand 2024).
 > Tarife und Sozialabzüge ändern jährlich; die Berechnung bleibt provisorisch – massgebend ist die
