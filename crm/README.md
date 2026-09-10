@@ -44,7 +44,7 @@ in `robots.txt` gesperrt; die Daten liegen weiterhin im Browser, nicht auf dem S
 | 2. Unterlagen anfordern | E-Mail-Vorlagen → „Unterlagen anfordern" | E-Mail mit den offenen Punkten, in Gmail geöffnet |
 | 3. Belege ablegen | Dokumenten-Konverter (Drag & Drop) | Erkennung, Umbenennung, Register-Zuordnung |
 | 4. Fortschritt prüfen | Dossier & Checkliste | erledigte Punkte haken sich selbst ab |
-| 5. Dossier abgeben | Dossier → ZIP-Export | sortierter Ordner + Inhaltsverzeichnis |
+| 5. Dossier abgeben | Dossier → ZIP-Export | alle Belege sortiert benannt in einer Ebene + Inhaltsverzeichnis |
 | 6. Status pflegen | Dossier → Status | Übersicht zeigt alle Mandate im Blick |
 
 ---
@@ -78,8 +78,11 @@ Beim Hineinziehen einer Datei passiert dreierlei:
 | 11 | Korrespondenz Steueramt (Fristerstreckung, Veranlagung) | – |
 | 99 | Unklar – manuell zuordnen | – |
 
-**ZIP-Export** erzeugt genau diese Ordnerstruktur plus `00_Inhaltsverzeichnis.txt`
-(Deckblatt, Dokumentenliste je Register, offene Checklistenpunkte).
+**ZIP-Export** legt alle Belege **flach in eine Ebene** – keine Unterordner. Weil jeder Dateiname mit
+Jahr, Register und Ziffer beginnt, stehen sie im Ordner bereits in der Reihenfolge des Steuerdossiers
+und lassen sich in einem Zug ausdrucken oder weiterreichen. Dazu kommen `00_Inhaltsverzeichnis.txt`
+(Deckblatt, Dokumentenliste je Register, offene Punkte) und `00_Checkliste.txt`.
+Trägt ein Beleg denselben Namen wie ein bereits enthaltener, erhält er automatisch eine Zählnummer.
 
 ### Andere Kantone
 
@@ -100,15 +103,20 @@ es werden **keine Ziffern erfunden**.
 - Zusätzlich pro Punkt möglich: manuell abhaken, „nicht nötig" setzen, Notiz hinterlegen.
 - „+ Eigener Punkt" für Sonderfälle.
 
-### Checkliste weitergeben – vier Wege
+### Checkliste weitergeben
 
 | Knopf | Ergebnis | Wofür |
 |---|---|---|
-| **Drucken / PDF** | eigenständiges A4-Blatt mit Kanzleikopf, Kundendaten, Frist, Kästchen zum Ankreuzen | dem Kunden mitgeben oder als PDF anhängen |
+| **Checkliste (Word + PDF)** | erzeugt **beide** Dateien in einem Durchgang: Briefkopf mit Logo, Kundendaten, Frist, Ankreuzkästchen, Beschreibung unter jeder Unterlage | der Standardweg – anhängen oder ausdrucken |
+| **nur Word** / **nur PDF** | dasselbe als einzelne Datei | wenn der Kunde ein bestimmtes Format wünscht oder du im Word noch etwas ergänzt |
+| **Drucken** | Druckansicht desselben Blattes | direkt aus dem Browser drucken |
 | **Ansicht: Register / Kundensicht** | schaltet die Checkliste am Bildschirm um | intern nach Registern arbeiten, Kundensicht kontrollieren |
-| **Text (.txt)** | dieselbe Liste als Datei mit `[x] / [ ] / [–]` | E-Mail-Anhang, Ablage, Weiterverarbeitung |
-| **Excel (.csv)** | eine Zeile je Unterlage mit Register, Ziffer, Status, Notiz | Auswertung über alle Mandate, Excel-Filter |
+| **Text (.txt)** | dieselbe Liste als Datei mit `[x] / [ ] / [–]` | E-Mail-Text, Ablage, Weiterverarbeitung |
+| **Excel (.csv)** | eine Zeile je Unterlage mit Beschreibung, Register, Ziffer, Status, Notiz | Auswertung über alle Mandate, Excel-Filter |
 | **Offene Punkte kopieren** | nur die fehlenden Punkte in der Zwischenablage | WhatsApp, Telefonnotiz |
+
+Die Word-Datei ist ein echtes `.docx` und die PDF eine echte PDF – beide entstehen im CRM selbst,
+ohne Druckdialog und ohne fremden Dienst. Das Logo ist in beiden Dateien eingebettet.
 
 Zusätzlich: **Per E-Mail** springt direkt in die Vorlage „Unterlagen anfordern" mit den offenen
 Punkten im Text, und jeder **ZIP-Export** des Dossiers enthält die Checkliste als `00_Checkliste.txt`.
@@ -116,11 +124,22 @@ Punkten im Text, und jeder **ZIP-Export** des Dossiers enthält die Checkliste a
 **Zwei Sichten auf dieselbe Liste:**
 
 - **Register 00–11** (Standard am Bildschirm) folgen dem Aufbau der Steuererklärung und steuern die
-  Dokumentenablage sowie die Ordner im ZIP.
+  Dokumentenablage sowie die Sortierung der Dateinamen im ZIP.
 - **Kundensicht** – Einkommen · Wertschriften & Vermögen · Abzüge · Schulden · Liegenschaften ·
   Weiteres – ist die Gliederung, die Kundinnen und Kunden von einer Unterlagenliste kennen.
-  **Alles, was den Kunden erreicht** (Ausdruck/PDF, Text, CSV, E-Mail), ist so gegliedert;
+  **Alles, was den Kunden erreicht** (Word, PDF, Ausdruck, Text, CSV, E-Mail), ist so gegliedert;
   am Bildschirm schaltest du mit einem Klick um.
+
+### Beschreibung unter jeder Unterlage
+
+Unter jedem Punkt steht ein Satz, der erklärt, was genau gemeint ist, wer das Dokument ausstellt
+und worauf zu achten ist – zum Beispiel bei den Krankheitskosten der Hinweis auf den Selbstbehalt
+von 5 % oder bei der Säule 3a, dass ohne Bescheinigung kein Abzug möglich ist. Diese Sätze
+erscheinen am Bildschirm, im Ausdruck und in **allen** Exporten (Word, PDF, Text, CSV) und
+ersparen die Rückfrage „was meinen Sie damit genau?".
+
+**Anpassen:** Alle Texte stehen gesammelt in `index.html` im Block `DOC_INFO` – ein Eintrag pro
+Dokument. Text ändern, speichern, fertig; die Änderung wirkt sofort in allen Ausgaben.
 
 Im Druck erscheint nur das Checklistenblatt – keine Knöpfe, keine Navigation, keine Dokumentenliste.
 

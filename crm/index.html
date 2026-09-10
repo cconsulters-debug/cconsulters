@@ -172,6 +172,7 @@ body.locked .app{filter:blur(7px);pointer-events:none;user-select:none}
   margin-right:8px;vertical-align:-1px;text-align:center;line-height:12px;font-size:11px}
 .print-sheet .zeile{padding:3px 0;border-bottom:1px dotted #ccc}
 .print-sheet .erledigt{color:#555}
+.print-sheet .erklaerung{margin:1px 0 0 21px;font-size:10.5px;color:#666;line-height:1.4}
 .print-sheet .na{color:#999;text-decoration:line-through}
 @media print{
   .side,.no-print,button,.toast,dialog{display:none !important}
@@ -324,6 +325,79 @@ const DOCTYPES = [
   { id:"sonstiges",        label:"Sonstiges (manuell prüfen)",      reg:"R99", ziffer:"–",    profil:[],                 keys:[] }
 ];
 const DT = Object.fromEntries(DOCTYPES.map(d => [d.id, d]));
+
+/* Beschreibung jedes Dokuments – was genau gemeint ist, wer es ausstellt
+   und worauf zu achten ist. Sie erscheint in der Checkliste am Bildschirm,
+   im Ausdruck und in den Exporten (Word, PDF, Text, CSV) und erspart die
+   Rückfrage "was meinen Sie damit genau?".
+   Anpassen: hier den Text ändern – er wirkt sofort überall. */
+const DOC_INFO = {
+  steuererklaerung: "Das vom Steueramt zugestellte Hauptformular bzw. die Freigabe für ZHprivateTax. Ohne dieses Formular fehlt die Steuernummer.",
+  vollmacht:        "Einmalig unterschriebene Vertretungsvollmacht, damit wir beim Steueramt für Sie handeln dürfen (Fristen, Auskünfte, Einsprachen).",
+  zugangsdaten:     "Der Zugangscode auf dem Begleitschreiben des Steueramts für die elektronische Steuererklärung ZHprivateTax.",
+  vorjahr:          "Die Steuererklärung des Vorjahres als Vergleichsbasis – daraus übernehmen wir Vermögensstände, Abzüge und wiederkehrende Positionen.",
+
+  personalien:      "Aktuelle Angaben zu Adresse, Zivilstand, Konfession und AHV-Nummer; bei ausländischer Staatsangehörigkeit die Kopie der Bewilligung.",
+  zivilstand:       "Nachweis, wenn sich der Zivilstand geändert hat (Heirat, Trennung, Scheidung, Verwitwung) – er bestimmt Tarif und Sozialabzüge.",
+  kinder:           "Geburtsdaten aller Kinder; bei volljährigen Kindern zusätzlich die Ausbildungsbestätigung der Schule oder Hochschule.",
+
+  lohnausweis:      "Lohnausweis jedes Arbeitgebers für das ganze Jahr – auch bei Stellenwechsel und bei Anstellungen von nur wenigen Monaten.",
+  lohnausweis_neben:"Lohnausweis für jede Nebenbeschäftigung, auch bei kleinen Beträgen und Einsätzen auf Abruf.",
+  lohnausweis_p:    "Lohnausweis der Partnerin oder des Partners bei gemeinsamer Veranlagung.",
+  selbst_abschluss: "Jahresrechnung der selbständigen Tätigkeit (Bilanz und Erfolgsrechnung) sowie die AHV-Abrechnung der Ausgleichskasse.",
+  ahv_rente:        "Jahresbescheinigung der Ausgleichskasse über AHV- oder IV-Renten. Renten sind zu 100 % steuerbar.",
+  pk_rente:         "Rentenbescheinigung der Pensionskasse (BVG). Bei Kapitalbezug zusätzlich die Abrechnung – dieser wird gesondert besteuert.",
+  taggeld:          "Abrechnungen über Taggelder der Arbeitslosenkasse, der Krankentaggeld- oder der Unfallversicherung (SUVA); sie ersetzen Lohn und sind steuerbar.",
+  wertschriftenertrag:"Steuer- oder Zinsausweis der Bank über die Erträge des Jahres – Grundlage für die Rückforderung der Verrechnungssteuer.",
+  unterhalt_erhalten:"Nachweis über erhaltene Unterhaltsbeiträge für Sie selbst und für minderjährige Kinder (Vereinbarung oder Kontoauszug).",
+  vr_honorar:       "Bescheinigung über Verwaltungsrats- oder Behördenhonorare, auch wenn sie nicht über einen Lohnausweis abgerechnet wurden.",
+  uebrige_eink:     "Alle weiteren Einkünfte: Erwerbsersatz, Lotteriegewinne über CHF 1'000, Entschädigungen, Einnahmen aus Nebentätigkeiten.",
+
+  fahrkosten:       "Nachweis des Arbeitswegs: ÖV-Abonnement mit Preis oder – bei Autofahrt – Anzahl Arbeitstage und Distanz. Beim Bund gilt ein tieferer Höchstabzug.",
+  verpflegung:      "Nachweis, dass die Hauptmahlzeit auswärts eingenommen wurde, sowie allfällige Verbilligung durch den Arbeitgeber (Kantine, Lunch-Check).",
+  weiterbildung:    "Rechnungen für berufliche Aus- und Weiterbildung samt Kursbestätigung; abzüglich der Beiträge, die der Arbeitgeber übernommen hat.",
+  berufsauslagen:   "Übrige Berufskosten: Arbeitszimmer, Fachliteratur, Werkzeuge, Berufskleidung – soweit sie über die Pauschale hinausgehen.",
+
+  schuldzinsen:     "Zinsbescheinigung für Privatkredite, Darlehen und Leasing per 31.12. Nur Zinsen sind abziehbar, nicht die Amortisation.",
+  unterhalt_bezahlt:"Nachweis über bezahlte Unterhaltsbeiträge samt Name und Adresse der empfangenden Person; Beiträge an volljährige Kinder sind nicht abziehbar.",
+  saeule3a:         "Bescheinigung der Bank oder Versicherung über die Einzahlung in die Säule 3a. Ohne diesen Beleg akzeptiert das Steueramt den Abzug nicht.",
+  pk_einkauf:       "Bestätigung der Pensionskasse über einen freiwilligen Einkauf. Achtung: Kapitalbezug innert drei Jahren macht den Abzug rückgängig.",
+  praemien_kk:      "Jahresbescheinigung der Krankenkasse über die bezahlten Prämien für alle Familienmitglieder – nicht die Police, sondern die Prämienbescheinigung.",
+  praemien_leben:   "Prämienabrechnung der Lebens- oder Risikoversicherung des abgelaufenen Jahres.",
+  praemien_unfall:  "Prämienabrechnung einer privaten Unfallversicherung (ausserhalb des Arbeitgebers).",
+
+  spenden:          "Spendenquittungen gemeinnütziger Organisationen. Abziehbar ab total CHF 100 pro Jahr, höchstens 20 % des Nettoeinkommens.",
+  krankheitskosten: "Selbst getragene Arzt-, Zahnarzt-, Spital- und Medikamentenkosten sowie Brillen; abzüglich Rückerstattungen der Krankenkasse. Abziehbar erst über 5 % des Nettoeinkommens – deshalb bitte alles einreichen.",
+  behinderung:      "Behinderungsbedingte Kosten (Pflege, Hilfsmittel, Heim) bei Bezug einer Hilflosenentschädigung oder einer IV-Rente; sie sind ohne Selbstbehalt abziehbar.",
+  kinderbetreuung:  "Rechnungen von Kita, Hort, Tagesmutter oder Tagesfamilie für Kinder unter 14 Jahren, ausgestellt auf die Eltern.",
+  parteispenden:    "Mitgliederbeiträge und Zuwendungen an politische Parteien, die im Kanton oder im Bund vertreten sind.",
+
+  bankauszug:       "Steuerauszug jeder Bank- und Postverbindung per 31.12. – auch von Konten mit kleinem Saldo, von Sparkonten der Kinder und von Konten im Ausland.",
+  depotauszug:      "Steuerauszug des Wertschriftendepots mit Steuerwerten und Erträgen per 31.12. Der normale Depotauszug genügt nicht.",
+  krypto:           "Bestand jeder Kryptowährung per 31.12. mit Wallet-Adresse oder Kontoauszug der Börse. Kursgewinne im Privatvermögen bleiben steuerfrei, der Bestand ist zu deklarieren.",
+  darlehen_guthaben:"Darlehensverträge und offene Guthaben gegenüber Dritten mit Saldo und Zins per 31.12.",
+  beteiligung:      "Nachweis über Beteiligungen an nicht kotierten Gesellschaften (Aktien, Stammanteile) mit dem Steuerwert der Gesellschaft.",
+  rueckkaufswert:   "Bescheinigung der Versicherung über den Rückkaufswert der Lebensversicherung per 31.12. – dieser gehört zum steuerbaren Vermögen.",
+  fahrzeug:         "Marke, Typ, Jahrgang und geschätzter Occasionswert (z.B. Eurotax) jedes Motorfahrzeugs per 31.12.",
+  schulden:         "Alle Schulden per 31.12. mit Restsaldo: Hypotheken, Kredite, Leasing, private Darlehen – inklusive Gläubigername und Adresse.",
+  erbschaft:        "Unterlagen zu Erbschaft, Erbvorbezug oder Schenkung im Steuerjahr (Teilungsvertrag, Bestätigung, Datum und Betrag).",
+
+  eigenmietwert:    "Amtliche Schätzung der Liegenschaft mit Eigenmietwert und Steuerwert. Der Eigenmietwert wird als Einkommen besteuert.",
+  hypothek:         "Zinsausweis der Bank über die bezahlten Hypothekarzinsen per 31.12. – nur Zinsen, nicht Amortisationen.",
+  unterhalt_liegen: "Handwerkerrechnungen für werterhaltenden Unterhalt, die Gebäudeversicherungsprämie und Beiträge an Wasser oder Abwasser. Wertvermehrende Investitionen sind nicht abziehbar, senken aber später die Grundstückgewinnsteuer – bitte trotzdem einreichen.",
+  mietertrag:       "Mietzinseinnahmen des Jahres je Objekt, inklusive Nebenkostenabrechnung und Leerstände.",
+  liegenschaft_aus: "Angaben zu Liegenschaften im Ausland: Lage, Wert und Mieterträge. Sie sind in der Schweiz satzbestimmend, auch wenn sie hier nicht besteuert werden.",
+  liegenschaftssteuer:"Rechnungen der Gemeinde für Liegenschaftssteuer und weitere objektbezogene Abgaben.",
+
+  quellensteuer:    "Abrechnung über die vom Lohn abgezogene Quellensteuer – Grundlage für die nachträgliche ordentliche Veranlagung.",
+  aufstellung:      "Eigene Zusammenstellungen (Excel, Liste) zu Positionen mit vielen Einzelbelegen, etwa Arztkosten oder Spenden.",
+  bemerkungen:      "Hinweise, die dem Steueramt mitgeteilt werden sollen – etwa aussergewöhnliche Ereignisse oder Abweichungen zum Vorjahr.",
+  fristerstreckung: "Das Gesuch bzw. die Bestätigung der verlängerten Einreichefrist.",
+  veranlagung:      "Die letzte definitive Veranlagungsverfügung des Steueramts – sie zeigt, was akzeptiert wurde, und dient dem Vergleich.",
+  einsprache:       "Schriftverkehr mit dem Steueramt: Auflagen, Einsprachen, Entscheide.",
+  sonstiges:        "Beleg ohne eindeutige Zuordnung – bitte kurz beschreiben, worum es sich handelt."
+};
+DOCTYPES.forEach(t => { t.info = DOC_INFO[t.id] || ""; });
 
 /* Profil-Merkmale des Kunden – steuern Checkliste und Erkennung. */
 const PROFILE_FIELDS = [
@@ -885,6 +959,7 @@ function buildChecklist(client, jahr){
   const list = requiredTypes(client).map(t => {
     const st = state[t.id] || {};
     return { key:t.id, label:t.label, reg:t.reg, ziffer:zifferFor(t.id, client.kanton),
+             info:t.info || "",
              auto:have.has(t.id), manual:!!st.manual, na:!!st.na, note:st.note || "" };
   });
   (dos?.extra || []).forEach(x => list.push({ key:x.key, label:x.label, reg:x.reg || "R10", ziffer:x.ziffer || "–",
@@ -1888,6 +1963,12 @@ async function vglDocxBlob(b){
   const fuss = [m.firma, m.adresse, m.email, m.telefon, m.web].filter(Boolean).join(" · ");
   if(fuss) body += wP(fuss, { sz:16, c:"8A95A8", sp:0 });
 
+  return docxPaket(body, logo);
+}
+
+/* Word-Paket schnüren – gemeinsam für Steuervergleich und Checkliste.
+   body = fertige Absätze, logo = Ergebnis von logoBytes() oder null.      */
+async function docxPaket(body, logo){
   const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -2928,7 +3009,10 @@ function viewDossier(){
         <button class="btn-sm" id="copyOpen">Offene Punkte kopieren</button>
         <button class="btn-sm ${S.clView === "kunde" ? "btn-teal" : ""}" id="clView">Ansicht: ${
           S.clView === "kunde" ? "Kundensicht" : "Register"}</button>
-        <button class="btn-sm" id="clPrint">Drucken / PDF</button>
+        <button class="btn-sm btn-primary" id="clBeide">Checkliste (Word + PDF)</button>
+        <button class="btn-sm" id="clWord">nur Word</button>
+        <button class="btn-sm" id="clPdf">nur PDF</button>
+        <button class="btn-sm" id="clPrint">Drucken</button>
         <button class="btn-sm" id="clTxt">Text (.txt)</button>
         <button class="btn-sm" id="clCsv">Excel (.csv)</button>
         <button class="btn-sm btn-teal" id="clMail">Per E-Mail</button></div></div>
@@ -2946,10 +3030,11 @@ function viewDossier(){
         <div class="row" style="padding:5px 2px;border-bottom:1px solid var(--line)">
           <input type="checkbox" class="chk" data-key="${i.key}" ${i.done?"checked":""} ${i.auto?"disabled":""}
                  style="width:auto;accent-color:var(--teal)">
-          <span style="${i.na?"text-decoration:line-through;color:var(--ink-faint)":""}">
+          <span style="${i.na?"text-decoration:line-through;color:var(--ink-faint)":""};max-width:74ch">
             ${esc(i.label)} ${i.ziffer !== "–" ? `<span class="badge grey">Ziff. ${esc(i.ziffer)}</span>` : ""}
             ${i.auto ? '<span class="badge ok">Dokument vorhanden</span>' : ""}
             ${i.note ? `<span class="small"> – ${esc(i.note)}</span>` : ""}
+            ${i.info ? `<span class="small" style="display:block">${esc(i.info)}</span>` : ""}
           </span>
           <span class="spacer"></span>
           <button class="btn-sm btn-ghost no-print" data-na="${i.key}">${i.na ? "wieder aktivieren" : "nicht nötig"}</button>
@@ -3001,7 +3086,8 @@ function viewDossier(){
       ${items.map(i => `<div class="zeile ${i.na ? "na" : (i.done ? "erledigt" : "")}">
         <span class="box">${i.na ? "–" : (i.done ? "✓" : "")}</span>${esc(i.label)}
         ${i.ziffer !== "–" ? `<span class="small"> · Ziff. ${esc(i.ziffer)}</span>` : ""}
-        ${i.note ? `<span class="small"> · ${esc(i.note)}</span>` : ""}</div>`).join("")}`).join("")}
+        ${i.note ? `<span class="small"> · ${esc(i.note)}</span>` : ""}
+        ${i.info ? `<div class="erklaerung">${esc(i.info)}</div>` : ""}</div>`).join("")}`).join("")}
     <p class="small" style="margin-top:22px">
       Bitte die fehlenden Unterlagen${dos?.frist ? " bis " + deAt(dos.frist) : ""} einreichen${S.settings.email
       ? " – als PDF oder Foto an " + esc(S.settings.email) : ""}. Angekreuzte Punkte liegen bereits vor.</p>
@@ -3021,6 +3107,11 @@ function viewDossier(){
   $("#copyOpen").onclick   = () => { navigator.clipboard.writeText(st.open.map(i => "- " + i.label).join("\n"))
                                      .then(() => toast("Offene Punkte kopiert")); };
   $("#clView").onclick = () => { S.clView = S.clView === "kunde" ? "register" : "kunde"; render(); };
+  $("#clBeide").onclick = () => checklistExportBeide(c, jahr);
+  $("#clWord").onclick = async () => { toast("Word-Datei wird erstellt …");
+    await download(await checklistDocxBlob(checklistModell(c, jahr)), checklistFile(c, jahr) + ".docx"); };
+  $("#clPdf").onclick = async () => { toast("PDF wird erstellt …");
+    await download(await checklistPdfBlob(checklistModell(c, jahr)), checklistFile(c, jahr) + ".pdf"); };
   $("#clPrint").onclick = () => window.print();
   $("#clTxt").onclick = () => { download(new Blob([checklistText(c, jahr)], { type:"text/plain;charset=utf-8" }),
                                 checklistFile(c, jahr) + ".txt"); toast("Checkliste als Text gespeichert"); };
@@ -3082,6 +3173,17 @@ async function reclassifyDialog(docId){
    CHECKLISTE EXPORTIEREN – als Text für E-Mail/WhatsApp, als CSV für
    Excel, als PDF über die Druckansicht (unten .checklist-sheet).
    ------------------------------------------------------------------ */
+/* Fliesstext für die Textdatei auf eine feste Breite umbrechen. */
+function umbruchText(s, breite, einzug = ""){
+  const worte = String(s).split(/\s+/);
+  let zeile = "", out = "";
+  for(const w of worte){
+    if((zeile + " " + w).trim().length > breite && zeile){ out += einzug + zeile + "\n"; zeile = w; }
+    else zeile = (zeile + " " + w).trim();
+  }
+  if(zeile) out += einzug + zeile + "\n";
+  return out;
+}
 function checklistText(c, jahr){
   const list = buildChecklist(c, jahr), st = checklistStats(list), dos = dossierOf(c.id, jahr);
   const m = marke();
@@ -3100,6 +3202,7 @@ function checklistText(c, jahr){
       const box = i.na ? "[–]" : (i.done ? "[x]" : "[ ]");
       out += `  ${box} ${i.label}${i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : ""}`
            + (i.na ? " – nicht nötig" : "") + (i.note ? " – " + i.note : "") + "\n";
+      if(i.info) out += umbruchText(i.info, 74, "        ");
     });
   });
   if(st.open.length){
@@ -3114,16 +3217,162 @@ function checklistText(c, jahr){
 function checklistCsv(c, jahr){
   const list = buildChecklist(c, jahr);
   const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
-  const zeilen = [["Gruppe","Unterlage","Status","Ziffer","Register-Nr","Register","Notiz","Kunde","Steuerjahr"]
+  const zeilen = [["Gruppe","Unterlage","Beschreibung","Status","Ziffer","Register-Nr","Register","Notiz","Kunde","Steuerjahr"]
     .map(q).join(";")];
-  nachGruppen(list).forEach(([g, items]) => items.forEach(i => zeilen.push([g, i.label,
+  nachGruppen(list).forEach(([g, items]) => items.forEach(i => zeilen.push([g, i.label, i.info,
     i.na ? "nicht nötig" : (i.done ? "erhalten" : "offen"), i.ziffer, REG[i.reg]?.nr || "",
     REG[i.reg]?.label || i.reg, i.note, clientName(c), jahr].map(q).join(";"))));
   return "\uFEFF" + zeilen.join("\r\n");   // BOM, damit Excel die Umlaute richtig liest
 }
 const checklistFile = (c, jahr) => `Checkliste_${jahr}_${slug(clientName(c).replace(", ","-"))}`;
 
-/* ZIP-Export: Ordner je Register, Dateien nach Schema benannt. */
+/* ------------------------------------------------------------------
+   CHECKLISTE ALS WORD UND PDF
+   Dieselbe Quelle wie Bildschirm und Ausdruck, dieselbe Marke im Kopf
+   wie beim Steuervergleich – nur eben als Datei zum Versenden.
+   ------------------------------------------------------------------ */
+function checklistModell(c, jahr){
+  const list = buildChecklist(c, jahr), st = checklistStats(list), dos = dossierOf(c.id, jahr);
+  const m = marke();
+  return {
+    marke:m, kunde:clientName(c), mandat:c.mandat || "",
+    ort:[c.plz, c.ort].filter(Boolean).join(" "),
+    jahr:String(jahr), datum:deAt(today()),
+    frist:dos?.frist ? deAt(dos.frist) : "",
+    gruppen:nachGruppen(list), offen:st.open, done:st.done, total:st.total,
+    fuss:[m.firma, m.adresse, m.email, m.telefon, m.web].filter(Boolean).join(" · ")
+  };
+}
+async function checklistDocxBlob(b){
+  const logo = await logoBytes();
+  const kasten = i => i.na ? "[–]" : (i.done ? "[x]" : "[  ]");
+  let body = "";
+  body += wBild(logo);
+  body += wP(b.marke.name, { b:true, sz:26, c:(b.marke.farbe || "#1F3864").replace("#",""), sp:20 });
+  if(b.marke.claim) body += wP(b.marke.claim, { sz:18, c:"54617A", sp:160 });
+  body += wP(`Checkliste Steuererklärung ${b.jahr}`, { b:true, sz:32, sp:60 });
+  body += wP(`${b.kunde}${b.mandat ? " · Mandat " + b.mandat : ""}${b.ort ? " · " + b.ort : ""}`, { sz:20 });
+  body += wP(`Stand ${b.datum}: ${b.done} von ${b.total} Punkten erledigt`
+           + (b.frist ? ` · Einreichefrist ${b.frist}` : ""), { sz:18, c:"54617A", sp:160 });
+
+  if(b.offen.length){
+    body += wP(`Noch benötigt (${b.offen.length}):`, { b:true, sz:20, sp:40 });
+    b.offen.forEach(i => body += wP("• " + i.label, { sz:18, sp:20 }));
+    body += wP("", { sz:12, sp:120 });
+  } else {
+    body += wP("Alle Unterlagen liegen vor.", { b:true, sz:20, sp:160 });
+  }
+
+  b.gruppen.forEach(([g, items]) => {
+    body += wP(g, { b:true, sz:24, sp:60 });
+    items.forEach(i => {
+      body += wP(`${kasten(i)}  ${i.label}${i.ziffer !== "–" ? "  (Ziff. " + i.ziffer + ")" : ""}`
+                 + (i.na ? "  – nicht nötig" : ""), { sz:19, sp:i.info ? 0 : 40 });
+      if(i.info) body += wP("        " + i.info, { sz:16, c:"54617A", sp:30 });
+      if(i.note) body += wP("        Notiz: " + i.note, { sz:16, c:"B26A00", sp:30 });
+    });
+    body += wP("", { sz:10, sp:60 });
+  });
+
+  if(b.marke.email)
+    body += wP(`Bitte die fehlenden Unterlagen als PDF oder Foto an ${b.marke.email} senden.`, { sz:18, sp:80 });
+  if(b.fuss) body += wP(b.fuss, { sz:16, c:"8A95A8", sp:0 });
+  return docxPaket(body, logo);
+}
+async function checklistPdfBlob(b){
+  const d = pdfDoc();
+  const logo = await pdfBildAus(await logoBytes());
+  const W = d.breite;
+  const kopf = doc => {
+    let x = doc.margin;
+    if(logo){
+      const h = doc.bild(logo, x, doc.y - 22, 118, 32);
+      x += logo.w * (h / logo.h) + 12;
+    }
+    doc.text(b.marke.name || "", x, { b:true, size:10 });
+    if(b.marke.claim) doc.text(b.marke.claim, x, { size:8, c:[0.33,0.38,0.48], y:doc.y - 11 });
+    doc.text(`Checkliste ${b.jahr} · ${b.kunde}`, doc.margin,
+             { al:"right", w:W, size:8.5, c:[0.33,0.38,0.48] });
+    doc.y -= logo ? 30 : 8;
+    doc.linie(doc.margin, doc.y, doc.margin + W, doc.y, 0.6);
+    doc.y -= 20;
+  };
+  /* Vor jedem Eintrag prüfen, ob er noch auf die Seite passt. */
+  const platz = hoehe => { if(d.y - hoehe < d.margin + 24){ d.neueSeite(kopf); } };
+  d.neueSeite(kopf);
+
+  d.text(`Checkliste Steuererklärung ${b.jahr}`, d.margin, { b:true, size:16 });
+  d.y -= 20;
+  d.text(`${b.kunde}${b.mandat ? " · Mandat " + b.mandat : ""}${b.ort ? " · " + b.ort : ""}`, d.margin, { size:10 });
+  d.y -= 13;
+  d.text(`Stand ${b.datum}: ${b.done} von ${b.total} Punkten erledigt`
+         + (b.frist ? ` · Einreichefrist ${b.frist}` : ""), d.margin, { size:8.5, c:[0.33,0.38,0.48] });
+  d.y -= 22;
+
+  if(b.offen.length){
+    const txt = b.offen.map(i => i.label).join(" · ");
+    const h = 26 + Math.ceil(pdfW(pdfTxt(txt), 8.5) / (W - 24)) * 11;
+    platz(h);
+    d.flaeche(d.margin, d.y - h + 14, W, h, [0.99, 0.95, 0.89]);
+    d.text(`Noch benötigt (${b.offen.length}):`, d.margin + 10, { b:true, size:9, c:[0.70,0.42,0.00] });
+    d.y -= 13;
+    d.y -= d.textBox(txt, d.margin + 10, W - 24, { size:8.5, c:[0.42,0.33,0.16] }) + 14;
+  } else {
+    platz(24);
+    d.flaeche(d.margin, d.y - 8, W, 22, [0.90, 0.96, 0.92]);
+    d.text("Alle Unterlagen liegen vor.", d.margin + 10, { b:true, size:9, c:[0.06,0.54,0.30] });
+    d.y -= 30;
+  }
+  d.y -= 6;
+
+  b.gruppen.forEach(([g, items]) => {
+    platz(40);
+    d.text(g, d.margin, { b:true, size:11.5, c:[0.12,0.22,0.39] });
+    d.y -= 5;
+    d.linie(d.margin, d.y, d.margin + W, d.y, 0.55);
+    d.y -= 15;
+    items.forEach(i => {
+      const infoH = i.info ? Math.ceil(pdfW(pdfTxt(i.info), 8) / (W - 26)) * 10.5 : 0;
+      platz(16 + infoH + (i.note ? 11 : 0));
+      /* Ankreuzkästchen */
+      const bx = d.margin, by = d.y - 1.5;
+      d.linie(bx, by, bx + 9, by, 0.45); d.linie(bx, by + 9, bx + 9, by + 9, 0.45);
+      d.linie(bx, by, bx, by + 9, 0.45); d.linie(bx + 9, by, bx + 9, by + 9, 0.45);
+      if(i.done) d.text("x", bx + 2.4, { size:8.5, b:true, y:by + 1.5 });
+      if(i.na)   d.text("-", bx + 3.2, { size:8.5, y:by + 2.5 });
+      const grau = i.na ? [0.60,0.64,0.70] : [0.08,0.11,0.15];
+      const breite = d.text(i.label, d.margin + 15, { size:9.5, c:grau });
+      if(i.ziffer !== "–")
+        d.text(`  Ziff. ${i.ziffer}`, d.margin + 15 + breite, { size:8, c:[0.54,0.59,0.66] });
+      d.y -= 11;
+      if(i.info) d.y -= d.textBox(i.info, d.margin + 15, W - 26, { size:8, c:[0.33,0.38,0.48] }) + 1;
+      if(i.note){ d.text("Notiz: " + i.note, d.margin + 15, { size:8, c:[0.70,0.42,0.00] }); d.y -= 11; }
+      d.y -= 3;
+    });
+    d.y -= 8;
+  });
+
+  if(b.marke.email){
+    platz(24);
+    d.text(`Bitte die fehlenden Unterlagen als PDF oder Foto an ${b.marke.email} senden.`,
+           d.margin, { size:9, c:[0.33,0.38,0.48] });
+  }
+  d.fussZeile(b.fuss);
+  d.seitenzahlen();
+  return d.blob();
+}
+async function checklistExportBeide(c, jahr){
+  const b = checklistModell(c, jahr);
+  const name = checklistFile(c, jahr);
+  toast("Checkliste wird erstellt – Word und PDF …");
+  await download(await checklistDocxBlob(b), name + ".docx");
+  await download(await checklistPdfBlob(b), name + ".pdf");
+  toast("Checkliste als Word und PDF gespeichert");
+}
+
+/* ZIP-Export: alle Belege flach in einer Ebene. Die Dateinamen beginnen
+   mit Jahr, Register und Ziffer – dadurch stehen sie im Ordner bereits in
+   der Reihenfolge des Steuerdossiers, ohne dass man Ordner aufklappen muss. */
 async function exportZip(c, jahr){
   const blob = await dossierZipBlob(c, jahr);
   if(!blob) return toast("Keine Dokumente");
@@ -3134,18 +3383,26 @@ async function dossierZipBlob(c, jahr){
   const docs = docsOf(c.id, jahr);
   if(!docs.length) return null;
   toast("ZIP wird erstellt…");
-  const files = [];
-  for(const d of docs){
+  const files = [], vergeben = new Set();
+  /* Gleicher Dateiname zweimal ginge im flachen ZIP verloren – deshalb
+     erhält der zweite Beleg eine Zählnummer. */
+  const eindeutig = name => {
+    if(!vergeben.has(name)){ vergeben.add(name); return name; }
+    const p = name.lastIndexOf(".");
+    const stamm = p > 0 ? name.slice(0, p) : name, ext = p > 0 ? name.slice(p) : "";
+    let i = 2, kandidat;
+    do { kandidat = `${stamm}_${i++}${ext}`; } while(vergeben.has(kandidat));
+    vergeben.add(kandidat); return kandidat;
+  };
+  for(const d of [...docs].sort((a,b) => a.newName.localeCompare(b.newName))){
     const full = await dbGet("docs", d.id);
     if(!full?.blob) continue;
-    const r = REG[d.register] || REG.R99;
     const buf = new Uint8Array(await full.blob.arrayBuffer());
-    files.push({ name:`${jahr}_${slug(clientName(c).replace(", ","-"))}/${r.nr}_${slug(r.label)}/${d.newName}`, data:buf });
+    files.push({ name:eindeutig(d.newName), data:buf });
   }
   const enc = new TextEncoder();
-  const ordner = `${jahr}_${slug(clientName(c).replace(", ","-"))}`;
-  files.push({ name:`${ordner}/00_Inhaltsverzeichnis.txt`, data:enc.encode(tocText(c, jahr)) });
-  files.push({ name:`${ordner}/00_Checkliste.txt`, data:enc.encode(checklistText(c, jahr)) });
+  files.push({ name:eindeutig("00_Inhaltsverzeichnis.txt"), data:enc.encode(tocText(c, jahr)) });
+  files.push({ name:eindeutig("00_Checkliste.txt"), data:enc.encode(checklistText(c, jahr)) });
   return makeZip(files);
 }
 function tocText(c, jahr){
