@@ -79,6 +79,7 @@ Browserprofil verwenden.
 - [ ] **Verschlüsselung aktivieren**, Wiederherstellungsschlüssel ausdrucken und übergeben lassen
 - [ ] Automatische Sperre auf 15 Minuten
 - [ ] Erstes Backup gemeinsam exportieren – und zeigen, wo es liegt
+- [ ] `Notfall-Anleitung.pdf` ausdrucken, gemeinsam ausfüllen (CRM-Adresse, Ablageorte) und übergeben
 - [ ] Optional: Gmail (`SETUP-GMAIL.md`) und Sync (`SETUP-SYNC.md`) einrichten
 - [ ] `README.md` ausgedruckt oder als PDF übergeben
 - [ ] Lizenzvertrag (`LIZENZ.md`) unterschrieben, Rechnung gestellt

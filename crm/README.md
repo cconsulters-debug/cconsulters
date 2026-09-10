@@ -290,6 +290,16 @@ Ohne Synchronisation liegen die Daten nur in diesem Browser. **Browserdaten lös
 
 Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-Stick ablegen – sie enthalten Kundendaten.
 
+### Notfall-Anleitung ausdrucken
+
+**`Notfall-Anleitung.pdf`** (eine Seite A4) beantwortet den Ernstfall ohne Nachdenken: was wo liegt,
+fünf Schritte zur Wiederherstellung, die monatliche Vorbeugung, Platz für die eigenen Angaben
+(CRM-Adresse, Ablageort von Backup, Backup-Passwort und Wiederherstellungsschlüssel) und was
+im Ernstfall **nicht** hilft. Ausdrucken, ausfüllen, zum Backup legen.
+
+> Die Wiederherstellung gelingt nur mit einem Backup. Weder Netlify noch sonst ein Anbieter hat
+> jemals eine Kopie der Kundendaten – sie liegen ausschliesslich im Browser.
+
 ---
 
 ## 8. Grenzen und Ausbaustufen
