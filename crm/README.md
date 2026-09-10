@@ -57,9 +57,9 @@ Beim Hineinziehen einer Datei passiert dreierlei:
    ist fest eingebaut und läuft **ohne Internet** – ein Beleg namens `Scan_0007.pdf` wird am Inhalt als
    Lohnausweis erkannt, samt Steuerjahr. Lange Stichwörter gewinnen gegen kurze („Lohnausweis" schlägt
    „Ausweis"). Unsichere Treffer bekommen den Hinweis **„bitte prüfen"** – ein Klick im Dropdown korrigiert sie.
-2. **Umbenennen** nach festem Schema:
-   `Jahr_Register_Ziffer_Dokumenttyp_Kunde_Nr.pdf`
-   Beispiel: `2024_02_1.1_Lohnausweis-Haupterwerb_Mueller-Anna_01.pdf`
+2. **Umbenennen** nach der Anleitung „Steuerdokumente sortieren" (Details gleich unten):
+   `Jahr_Register_Ziffer_Dokumenttyp_<Angaben zum Beleg>_Nr.pdf`
+   Beispiel: `2024_02_1.1_Lohnausweis_Muster-Anna_Migros-AG_1_01.01.-30.09.2024_CHF-52340_01.pdf`
 3. **Einsortieren** in die Register des Steuerdossiers (Aufbau der Steuererklärung Kanton Zürich):
 
 | Reg. | Inhalt | Ziffern |
@@ -78,11 +78,61 @@ Beim Hineinziehen einer Datei passiert dreierlei:
 | 11 | Korrespondenz Steueramt (Fristerstreckung, Veranlagung) | – |
 | 99 | Unklar – manuell zuordnen | – |
 
-**ZIP-Export** legt alle Belege **flach in eine Ebene** – keine Unterordner. Weil jeder Dateiname mit
+**ZIP-Export** legt alle Belege **als einzelne PDF flach in eine Ebene** – keine Unterordner.
+Fotos und Bildscans werden dabei automatisch in eine PDF-Seite gelegt, damit im ZIP wirklich nur
+PDF liegen; die ZIP selbst trägt den Namen des Kunden. Weil jeder Dateiname mit
 Jahr, Register und Ziffer beginnt, stehen sie im Ordner bereits in der Reihenfolge des Steuerdossiers
 und lassen sich in einem Zug ausdrucken oder weiterreichen. Dazu kommen `00_Inhaltsverzeichnis.txt`
 (Deckblatt, Dokumentenliste je Register, offene Punkte) und `00_Checkliste.txt`.
 Trägt ein Beleg denselben Namen wie ein bereits enthaltener, erhält er automatisch eine Zählnummer.
+
+### Bezeichnung der Belege – Anleitung „Steuerdokumente sortieren"
+
+Der Dateiname trägt nicht nur den Dokumenttyp, sondern die Angaben, die zum jeweiligen Beleg gehören.
+Das CRM fragt sie im Konverter ab, füllt aus, was es im Belegtext findet, und baut den Namen daraus:
+
+```
+Jahr_Register_Ziffer_Dokumenttyp_<Angaben>_Nr.pdf
+
+2024_02_1.1_Lohnausweis_Muster-Anna_Migros-AG_1_01.01.-30.09.2024_CHF-52340_01.pdf
+2024_06_30.1_Bank-Postkonto-Steuerauszug_Muster-Anna_PostFinance_CH9300762011623852957_CHF-12500_Zins-12_01.pdf
+2024_09_30.3_Eigenmietwert-Katasterwert_01.pdf          ← «Neutral»: nur der Über-Titel
+```
+
+| Gruppe | Beleg | Anzugeben |
+|---|---|---|
+| **1 Einkommen** | Lohnausweis | Person, Arbeitgeber, laufende Nummer bei mehreren, Zeitraum (z.B. 01.01.–30.09.), Nettolohn |
+| | Ersatzeinkünfte (IV/ALV/Unfall/Krankheit/Mutterschaft) | Person |
+| | AHV-/IV-/PK-Rente | Person |
+| | Nebenerwerb, VR-Honorar, Erwerbsausfall | Person |
+| **2 Wertschriften & Vermögen** | Zins-/Saldobescheinigung Bank & Post per 31.12. | Person, Institut, IBAN, Saldo, Zinsen, Kosten |
+| | Krypto-Bestände per 31.12. | Person |
+| | Darlehen, Beteiligungen, Lebensversicherung | Person, Institut/Versicherer, Schuld per 31.12., bezahlte Zinsen |
+| **3 Abzüge** | Säule 3a | Person, Versicherer, Höhe |
+| | Einkauf Pensionskasse | Person, Versicherer, Höhe |
+| | Krankenkassenprämien & Police | Person, Jahresbeiträge |
+| | Krankheits- & Unfallkosten | Person, Höhe (unklare Belege als «Krankheitskosten» bezeichnen) |
+| | Berufsauslagen / Fahrtkosten | Person, als «Fahrtkosten» bezeichnen wenn vorhanden |
+| | Weiterbildung | Person, Höhe (unklare Belege als «Weiterbildung» bezeichnen) |
+| | Spenden | Gesamtbetrag |
+| | Mitgliederbeiträge Parteien | Gesamtbetrag |
+| | Kinderbetreuung | als «Kita» bezeichnen, Höhe |
+| | Alimente / Unterhaltsbeiträge | Höhe |
+| **4 Schulden** | Schuldenverzeichnis & Schuldzinsen per 31.12. | Institut, Restschuld, Zinsen |
+| **5 Liegenschaften** | Eigenmietwert / Mieteinnahmen | **Neutral** – nur Über-Titel |
+| | Hypothekarzinsbescheinigung | Institut, IBAN, Schuld per 31.12., bezahlte Zinsen |
+| | Unterhalts- & Renovationskosten | **Neutral** – nur Über-Titel |
+| | Liegenschaftssteuer / Nebenkosten | Institut, IBAN |
+
+**Automatisch gefüllt** wird, was sich sicher erkennen lässt: IBAN, bekannte Institute und
+Versicherer (PostFinance, ZKB, CSS, AXA …), Zeiträume der Form `01.01.–31.12.` und Beträge, die
+direkt hinter einem eindeutigen Stichwort stehen (Nettolohn, Saldo, Total Prämien …).
+Alles Übrige trägst du im Konverter nach – die Felder stehen direkt unter jeder Datei, der
+fertige Dateiname wird darunter live angezeigt. Fehlt eine Pflichtangabe, erscheint der Beleg im
+Dossier mit dem Hinweis **„Bezeichnung ergänzen"**; über *Umordnen* lässt sich alles nachtragen.
+
+**Regeln anpassen:** die Tabelle `BEZ` in `index.html` – ein Eintrag pro Dokumenttyp mit
+`felder` (Reihenfolge im Namen), `pflicht` (was verlangt wird) und `neutral` (ohne Personenname).
 
 ### Andere Kantone
 

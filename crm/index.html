@@ -118,6 +118,14 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .doc-row{display:grid;grid-template-columns:1fr 210px 150px 92px;gap:8px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;margin-bottom:6px}
 @media(max-width:900px){.doc-row{grid-template-columns:1fr}}
 .doc-row .fn{font-size:13px;overflow-wrap:anywhere}
+/* Angaben für die Bezeichnung des Belegs (Anleitung "Steuerdokumente sortieren") */
+.bez-zeile{grid-column:1/-1;border-top:1px dashed var(--line-strong);margin-top:6px;padding-top:8px}
+.bez-felder{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.bez-feld{display:flex;flex-direction:column;gap:3px;margin:0}
+/* min-height hält die Eingabefelder auf einer Linie, auch wenn eine
+   Beschriftung zweizeilig umbricht. */
+.bez-feld span{font-size:11.5px;color:var(--ink-dim);font-weight:600;min-height:2.6em;display:block}
+.bez-feld input{padding:5px 8px;font-size:13px}
 .reg-head{display:flex;align-items:center;gap:8px;margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--navy)}
 .reg-head b{font-size:14px} .reg-head .badge{margin-left:auto}
 
@@ -341,53 +349,53 @@ const DOC_INFO = {
   zivilstand:       "Nachweis, wenn sich der Zivilstand geändert hat (Heirat, Trennung, Scheidung, Verwitwung) – er bestimmt Tarif und Sozialabzüge.",
   kinder:           "Geburtsdaten aller Kinder; bei volljährigen Kindern zusätzlich die Ausbildungsbestätigung der Schule oder Hochschule.",
 
-  lohnausweis:      "Lohnausweis jedes Arbeitgebers für das ganze Jahr – auch bei Stellenwechsel und bei Anstellungen von nur wenigen Monaten.",
+  lohnausweis:      "Lohnausweis jedes Arbeitgebers – auch bei Stellenwechsel und kurzen Anstellungen. Wir bezeichnen ihn mit Person, Arbeitgeber, Gültigkeitszeitraum (z.B. 01.01.–30.09.) und Nettolohn; bei mehreren Ausweisen fortlaufend nummeriert.",
   lohnausweis_neben:"Lohnausweis für jede Nebenbeschäftigung, auch bei kleinen Beträgen und Einsätzen auf Abruf.",
   lohnausweis_p:    "Lohnausweis der Partnerin oder des Partners bei gemeinsamer Veranlagung.",
   selbst_abschluss: "Jahresrechnung der selbständigen Tätigkeit (Bilanz und Erfolgsrechnung) sowie die AHV-Abrechnung der Ausgleichskasse.",
   ahv_rente:        "Jahresbescheinigung der Ausgleichskasse über AHV- oder IV-Renten. Renten sind zu 100 % steuerbar.",
   pk_rente:         "Rentenbescheinigung der Pensionskasse (BVG). Bei Kapitalbezug zusätzlich die Abrechnung – dieser wird gesondert besteuert.",
-  taggeld:          "Abrechnungen über Taggelder der Arbeitslosenkasse, der Krankentaggeld- oder der Unfallversicherung (SUVA); sie ersetzen Lohn und sind steuerbar.",
+  taggeld:          "Ersatzeinkünfte: Taggelder aus IV, ALV, Unfall, Krankheit oder Mutterschaft, je Person. Sie ersetzen Lohn und sind steuerbar.",
   wertschriftenertrag:"Steuer- oder Zinsausweis der Bank über die Erträge des Jahres – Grundlage für die Rückforderung der Verrechnungssteuer.",
-  unterhalt_erhalten:"Nachweis über erhaltene Unterhaltsbeiträge für Sie selbst und für minderjährige Kinder (Vereinbarung oder Kontoauszug).",
-  vr_honorar:       "Bescheinigung über Verwaltungsrats- oder Behördenhonorare, auch wenn sie nicht über einen Lohnausweis abgerechnet wurden.",
+  unterhalt_erhalten:"Nachweis über erhaltene Alimente bzw. Unterhaltsbeiträge mit Höhe, für Sie selbst und für minderjährige Kinder (Vereinbarung oder Kontoauszug).",
+  vr_honorar:       "Verwaltungsratshonorare je Person, auch wenn sie nicht über einen Lohnausweis abgerechnet wurden.",
   uebrige_eink:     "Alle weiteren Einkünfte: Erwerbsersatz, Lotteriegewinne über CHF 1'000, Entschädigungen, Einnahmen aus Nebentätigkeiten.",
 
-  fahrkosten:       "Nachweis des Arbeitswegs: ÖV-Abonnement mit Preis oder – bei Autofahrt – Anzahl Arbeitstage und Distanz. Beim Bund gilt ein tieferer Höchstabzug.",
+  fahrkosten:       "Berufsauslagen für den Arbeitsweg: ÖV-Abonnement mit Preis oder – bei Autofahrt – Anzahl Arbeitstage und Distanz. Beim Bund gilt ein tieferer Höchstabzug.",
   verpflegung:      "Nachweis, dass die Hauptmahlzeit auswärts eingenommen wurde, sowie allfällige Verbilligung durch den Arbeitgeber (Kantine, Lunch-Check).",
-  weiterbildung:    "Rechnungen für berufliche Aus- und Weiterbildung samt Kursbestätigung; abzüglich der Beiträge, die der Arbeitgeber übernommen hat.",
+  weiterbildung:    "Rechnungen für berufliche Aus- und Weiterbildung samt Kursbestätigung, mit der Höhe der Kosten; abzüglich der Beiträge, die der Arbeitgeber übernommen hat.",
   berufsauslagen:   "Übrige Berufskosten: Arbeitszimmer, Fachliteratur, Werkzeuge, Berufskleidung – soweit sie über die Pauschale hinausgehen.",
 
   schuldzinsen:     "Zinsbescheinigung für Privatkredite, Darlehen und Leasing per 31.12. Nur Zinsen sind abziehbar, nicht die Amortisation.",
-  unterhalt_bezahlt:"Nachweis über bezahlte Unterhaltsbeiträge samt Name und Adresse der empfangenden Person; Beiträge an volljährige Kinder sind nicht abziehbar.",
-  saeule3a:         "Bescheinigung der Bank oder Versicherung über die Einzahlung in die Säule 3a. Ohne diesen Beleg akzeptiert das Steueramt den Abzug nicht.",
-  pk_einkauf:       "Bestätigung der Pensionskasse über einen freiwilligen Einkauf. Achtung: Kapitalbezug innert drei Jahren macht den Abzug rückgängig.",
-  praemien_kk:      "Jahresbescheinigung der Krankenkasse über die bezahlten Prämien für alle Familienmitglieder – nicht die Police, sondern die Prämienbescheinigung.",
+  unterhalt_bezahlt:"Nachweis über bezahlte Alimente bzw. Unterhaltsbeiträge mit Höhe und Name der empfangenden Person; Beiträge an volljährige Kinder sind nicht abziehbar.",
+  saeule3a:         "Bescheinigung der gebundenen Vorsorge (Säule 3a) mit Versicherer bzw. Bank und Höhe der Einzahlung. Ohne diesen Beleg akzeptiert das Steueramt den Abzug nicht.",
+  pk_einkauf:       "Bestätigung über den Einkaufsbeitrag in die 2. Säule mit Versicherer und Höhe des Einkaufs. Achtung: Kapitalbezug innert drei Jahren macht den Abzug rückgängig.",
+  praemien_kk:      "Prämienbescheinigung und Police der Krankenkasse mit der Höhe der Jahresbeiträge, für jede versicherte Person.",
   praemien_leben:   "Prämienabrechnung der Lebens- oder Risikoversicherung des abgelaufenen Jahres.",
   praemien_unfall:  "Prämienabrechnung einer privaten Unfallversicherung (ausserhalb des Arbeitgebers).",
 
-  spenden:          "Spendenquittungen gemeinnütziger Organisationen. Abziehbar ab total CHF 100 pro Jahr, höchstens 20 % des Nettoeinkommens.",
-  krankheitskosten: "Selbst getragene Arzt-, Zahnarzt-, Spital- und Medikamentenkosten sowie Brillen; abzüglich Rückerstattungen der Krankenkasse. Abziehbar erst über 5 % des Nettoeinkommens – deshalb bitte alles einreichen.",
+  spenden:          "Spendenbescheinigungen gemeinnütziger Organisationen; massgebend ist der Gesamtbetrag aller Spenden. Abziehbar ab total CHF 100 pro Jahr, höchstens 20 % des Nettoeinkommens.",
+  krankheitskosten: "Selbst getragene Arzt-, Zahnarzt-, Spital- und Medikamentenkosten sowie Brillen, mit der Höhe der selbst getragenen Kosten; abzüglich Rückerstattungen der Krankenkasse. Abziehbar erst über 5 % des Nettoeinkommens – deshalb bitte alles einreichen.",
   behinderung:      "Behinderungsbedingte Kosten (Pflege, Hilfsmittel, Heim) bei Bezug einer Hilflosenentschädigung oder einer IV-Rente; sie sind ohne Selbstbehalt abziehbar.",
-  kinderbetreuung:  "Rechnungen von Kita, Hort, Tagesmutter oder Tagesfamilie für Kinder unter 14 Jahren, ausgestellt auf die Eltern.",
-  parteispenden:    "Mitgliederbeiträge und Zuwendungen an politische Parteien, die im Kanton oder im Bund vertreten sind.",
+  kinderbetreuung:  "Rechnungen von Kita, Hort, Tagesmutter oder Tagesfamilie für Kinder unter 14 Jahren, mit der Höhe der Beiträge und ausgestellt auf die Eltern.",
+  parteispenden:    "Mitgliederbeiträge an politische Parteien, die im Kanton oder im Bund vertreten sind – mit dem Gesamtbetrag des Jahres.",
 
-  bankauszug:       "Steuerauszug jeder Bank- und Postverbindung per 31.12. – auch von Konten mit kleinem Saldo, von Sparkonten der Kinder und von Konten im Ausland.",
+  bankauszug:       "Zins- und Saldobescheinigung jedes Bank- und Postkontos per 31.12. mit IBAN, Saldo, Zinsen und Kosten – auch Konten mit kleinem Saldo, Sparkonten der Kinder und Konten im Ausland.",
   depotauszug:      "Steuerauszug des Wertschriftendepots mit Steuerwerten und Erträgen per 31.12. Der normale Depotauszug genügt nicht.",
-  krypto:           "Bestand jeder Kryptowährung per 31.12. mit Wallet-Adresse oder Kontoauszug der Börse. Kursgewinne im Privatvermögen bleiben steuerfrei, der Bestand ist zu deklarieren.",
-  darlehen_guthaben:"Darlehensverträge und offene Guthaben gegenüber Dritten mit Saldo und Zins per 31.12.",
+  krypto:           "Nachweis der Krypto-Bestände per 31.12. mit Wallet oder Kontoauszug der Börse. Kursgewinne im Privatvermögen bleiben steuerfrei, der Bestand ist zu deklarieren.",
+  darlehen_guthaben:"Darlehen und Guthaben mit Institut, Höhe der Schuld bzw. des Guthabens per 31.12. und den bezahlten Zinsen.",
   beteiligung:      "Nachweis über Beteiligungen an nicht kotierten Gesellschaften (Aktien, Stammanteile) mit dem Steuerwert der Gesellschaft.",
   rueckkaufswert:   "Bescheinigung der Versicherung über den Rückkaufswert der Lebensversicherung per 31.12. – dieser gehört zum steuerbaren Vermögen.",
   fahrzeug:         "Marke, Typ, Jahrgang und geschätzter Occasionswert (z.B. Eurotax) jedes Motorfahrzeugs per 31.12.",
-  schulden:         "Alle Schulden per 31.12. mit Restsaldo: Hypotheken, Kredite, Leasing, private Darlehen – inklusive Gläubigername und Adresse.",
+  schulden:         "Schuldenverzeichnis und Schuldzinsen per 31.12.: Kredite, Hypotheken, Leasing, private Darlehen – mit Gläubiger, Restsaldo und bezahlten Zinsen.",
   erbschaft:        "Unterlagen zu Erbschaft, Erbvorbezug oder Schenkung im Steuerjahr (Teilungsvertrag, Bestätigung, Datum und Betrag).",
 
   eigenmietwert:    "Amtliche Schätzung der Liegenschaft mit Eigenmietwert und Steuerwert. Der Eigenmietwert wird als Einkommen besteuert.",
-  hypothek:         "Zinsausweis der Bank über die bezahlten Hypothekarzinsen per 31.12. – nur Zinsen, nicht Amortisationen.",
+  hypothek:         "Hypothekarzinsbescheinigung mit Institut und IBAN, der Schuld per 31.12. und den bezahlten Zinsen – nur Zinsen, nicht Amortisationen.",
   unterhalt_liegen: "Handwerkerrechnungen für werterhaltenden Unterhalt, die Gebäudeversicherungsprämie und Beiträge an Wasser oder Abwasser. Wertvermehrende Investitionen sind nicht abziehbar, senken aber später die Grundstückgewinnsteuer – bitte trotzdem einreichen.",
   mietertrag:       "Mietzinseinnahmen des Jahres je Objekt, inklusive Nebenkostenabrechnung und Leerstände.",
   liegenschaft_aus: "Angaben zu Liegenschaften im Ausland: Lage, Wert und Mieterträge. Sie sind in der Schweiz satzbestimmend, auch wenn sie hier nicht besteuert werden.",
-  liegenschaftssteuer:"Rechnungen der Gemeinde für Liegenschaftssteuer und weitere objektbezogene Abgaben.",
+  liegenschaftssteuer:"Liegenschaftssteuer und Nebenkosten mit Institut bzw. IBAN der Zahlung.",
 
   quellensteuer:    "Abrechnung über die vom Lohn abgezogene Quellensteuer – Grundlage für die nachträgliche ordentliche Veranlagung.",
   aufstellung:      "Eigene Zusammenstellungen (Excel, Liste) zu Positionen mit vielen Einzelbelegen, etwa Arztkosten oder Spenden.",
@@ -398,6 +406,91 @@ const DOC_INFO = {
   sonstiges:        "Beleg ohne eindeutige Zuordnung – bitte kurz beschreiben, worum es sich handelt."
 };
 DOCTYPES.forEach(t => { t.info = DOC_INFO[t.id] || ""; });
+
+/* ==================================================================
+   BENENNUNG DER BELEGE  –  Anleitung "Steuerdokumente sortieren"
+   Jeder Dokumenttyp verlangt bestimmte Angaben im Dateinamen:
+   Name der Person, Arbeitgeber/Institut, IBAN, Zeitraum, Betrag,
+   bezahlte Zinsen, laufende Nummer bei mehreren gleichartigen Belegen.
+   "neutral" heisst: kein Personenname – der Beleg trägt nur den
+   Über-Titel (Liegenschaften).
+   ================================================================== */
+const BEZ_FELDER = {
+  person:   { label:"Name Person",                          platzhalter:"Muster Anna" },
+  stelle:   { label:"Arbeitgeber / Institut / Versicherer",  platzhalter:"Migros AG" },
+  iban:     { label:"IBAN",                                  platzhalter:"CH93 0076 2011 6238 5295 7" },
+  zeitraum: { label:"Zeitraum",                              platzhalter:"01.01.–30.09.2024" },
+  betrag:   { label:"Betrag CHF",                            platzhalter:"52340" },
+  zinsen:   { label:"Bezahlte Zinsen CHF",                   platzhalter:"1240" },
+  nr:       { label:"Nummer (bei mehreren gleichartigen)",   platzhalter:"1" }
+};
+/* felder = Reihenfolge im Dateinamen · pflicht = ohne diese Angabe gilt
+   die Bezeichnung als unvollständig · neutral = ohne Personenname      */
+const BEZ = {
+  /* 1 Einkommen */
+  lohnausweis:      { felder:["person","stelle","nr","zeitraum","betrag"], pflicht:["person","stelle","zeitraum","betrag"] },
+  lohnausweis_neben:{ felder:["person","stelle","nr","zeitraum","betrag"], pflicht:["person","stelle"] },
+  lohnausweis_p:    { felder:["person","stelle","nr","zeitraum","betrag"], pflicht:["person","stelle","zeitraum","betrag"] },
+  taggeld:          { felder:["person","stelle","zeitraum","betrag"],      pflicht:["person"] },
+  ahv_rente:        { felder:["person","stelle","betrag"],                 pflicht:["person"] },
+  pk_rente:         { felder:["person","stelle","betrag"],                 pflicht:["person"] },
+  vr_honorar:       { felder:["person","stelle","betrag"],                 pflicht:["person"] },
+  uebrige_eink:     { felder:["person","stelle","betrag"],                 pflicht:["person"] },
+  selbst_abschluss: { felder:["person","stelle","zeitraum","betrag"],      pflicht:["person"] },
+  quellensteuer:    { felder:["person","stelle","zeitraum","betrag"],      pflicht:["person"] },
+
+  /* 2 Wertschriften & Vermögen */
+  bankauszug:       { felder:["person","stelle","iban","betrag","zinsen"], pflicht:["person","stelle","iban","betrag"] },
+  depotauszug:      { felder:["person","stelle","iban","betrag","zinsen"], pflicht:["person","stelle","betrag"] },
+  wertschriftenertrag:{ felder:["person","stelle","iban","betrag"],        pflicht:["person","stelle"] },
+  krypto:           { felder:["person","stelle","betrag"],                 pflicht:["person","betrag"] },
+  darlehen_guthaben:{ felder:["person","stelle","betrag","zinsen"],        pflicht:["person","stelle","betrag"] },
+  beteiligung:      { felder:["person","stelle","betrag"],                 pflicht:["person","stelle","betrag"] },
+  rueckkaufswert:   { felder:["person","stelle","betrag"],                 pflicht:["person","stelle","betrag"] },
+
+  /* 3 Abzüge */
+  saeule3a:         { felder:["person","stelle","betrag"],                 pflicht:["person","stelle","betrag"] },
+  pk_einkauf:       { felder:["person","stelle","betrag"],                 pflicht:["person","stelle","betrag"] },
+  praemien_kk:      { felder:["person","stelle","betrag"],                 pflicht:["person","betrag"] },
+  praemien_leben:   { felder:["person","stelle","betrag"],                 pflicht:["person","stelle"] },
+  praemien_unfall:  { felder:["person","stelle","betrag"],                 pflicht:["person"] },
+  krankheitskosten: { felder:["person","betrag"],                          pflicht:["person","betrag"] },
+  behinderung:      { felder:["person","betrag"],                          pflicht:["person"] },
+  fahrkosten:       { felder:["person","betrag"],                          pflicht:["person"] },
+  verpflegung:      { felder:["person","betrag"],                          pflicht:["person"] },
+  berufsauslagen:   { felder:["person","betrag"],                          pflicht:["person"] },
+  weiterbildung:    { felder:["person","betrag"],                          pflicht:["person","betrag"] },
+  spenden:          { felder:["betrag"],                                   pflicht:["betrag"] },
+  parteispenden:    { felder:["betrag"],                                   pflicht:["betrag"] },
+  kinderbetreuung:  { felder:["stelle","betrag"],                          pflicht:["betrag"] },
+  unterhalt_bezahlt:{ felder:["person","betrag"],                          pflicht:["betrag"] },
+  unterhalt_erhalten:{ felder:["person","betrag"],                         pflicht:["betrag"] },
+
+  /* 4 Schulden */
+  schulden:         { felder:["person","stelle","betrag","zinsen"],        pflicht:["betrag"] },
+  schuldzinsen:     { felder:["person","stelle","betrag","zinsen"],        pflicht:["zinsen"] },
+
+  /* 5 Liegenschaften – Über-Titel ohne Personenname, ausser wo verlangt */
+  eigenmietwert:    { felder:[], neutral:true },
+  mietertrag:       { felder:[], neutral:true },
+  unterhalt_liegen: { felder:[], neutral:true },
+  hypothek:         { felder:["stelle","iban","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], neutral:true },
+  liegenschaftssteuer:{ felder:["stelle","iban","betrag"],        pflicht:["stelle"],                    neutral:true },
+  liegenschaft_aus: { felder:["stelle","betrag"],                 neutral:true }
+};
+const bezRegel = id => BEZ[id] || { felder:[], pflicht:[] };
+/* Welche Angaben fehlen noch? */
+function bezFehlt(doc){
+  const r = bezRegel(doc.docType);
+  return (r.pflicht || []).filter(f => !String((doc.bez || {})[f] || "").trim());
+}
+/* Kurzfassung der Regel als Satz – erscheint im Konverter und im Dialog. */
+function bezRegelText(id){
+  const r = bezRegel(id);
+  if(!r.felder.length) return r.neutral ? "Über-Titel, ohne Personenname." : "Keine Zusatzangaben nötig.";
+  const namen = r.felder.map(f => BEZ_FELDER[f].label.split(" / ")[0]);
+  return (r.neutral ? "Über-Titel (ohne Personenname) mit " : "Zu bezeichnen mit ") + namen.join(", ") + ".";
+}
 
 /* Profil-Merkmale des Kunden – steuern Checkliste und Erkennung. */
 const PROFILE_FIELDS = [
@@ -1050,13 +1143,96 @@ function classify(filename, text){
   return { docType:best.id, score:best.score, sicher, hits:best.hits.slice(0,4) };
 }
 /* Dateiname nach Schema:  2025_02_1.1_Lohnausweis_Muster-Anna_01.pdf */
+/* Dateiname nach der Anleitung "Steuerdokumente sortieren".
+   Aufbau:  Jahr_Register_Ziffer_Dokumenttyp_<Angaben der Regel>_Nr.ext
+   Die Angaben stammen aus doc.bez (Person, Institut, IBAN, Zeitraum,
+   Betrag, Zinsen, laufende Nummer). Fehlt eine Angabe, wird sie
+   weggelassen – der Beleg erscheint dann mit dem Hinweis
+   "Bezeichnung ergänzen".                                            */
+const bezIban = v => String(v || "").replace(/\s+/g,"").toUpperCase();
+/* Betrag im Dateinamen: ganze Franken, abgeschnitten statt gerundet –
+   so stimmen die führenden Ziffern mit dem Beleg überein.             */
+const bezBetrag = v => {
+  const n = vglNum(v);
+  return n ? "CHF-" + Math.trunc(n).toLocaleString("de-CH").replace(/[’']/g,"") : "";
+};
+/* Datumsangaben behalten ihre Punkte – "01.01.-30.09.2024" liest sich
+   im Ordner deutlich besser als "01-01-30-09-2024".                   */
+const bezZeitraum = v => String(v || "").replace(/[–—]/g, "-").replace(/[^0-9.\-]/g, "");
+function bezTeile(doc, client){
+  const r = bezRegel(doc.docType), b = doc.bez || {};
+  const out = [];
+  for(const f of (r.felder || [])){
+    const v = String(b[f] || "").trim();
+    if(!v) continue;
+    if(f === "person" && r.neutral) continue;
+    if(f === "iban")          out.push(bezIban(v));
+    else if(f === "betrag")   out.push(bezBetrag(v));
+    else if(f === "zinsen")   out.push("Zins-" + bezBetrag(v).replace("CHF-",""));
+    else if(f === "nr")       out.push(String(v).replace(/\D/g,"") || slug(v));
+    else if(f === "zeitraum") out.push(bezZeitraum(v));
+    else out.push(slug(v));               // Person, Institut: nur Buchstaben
+  }
+  /* Ohne eigene Angaben bleibt es beim Kundennamen – ausser bei
+     Liegenschaftsbelegen, die nur den Über-Titel tragen. */
+  if(!out.length && !r.neutral) out.push(slug(clientName(client).replace(", ", "-")));
+  return out.filter(Boolean);
+}
 function buildName(doc, client, index){
   const t = DT[doc.docType] || DT.sonstiges;
   const r = REG[doc.register] || REG.R99;
   const ext = (doc.origName.match(/\.[A-Za-z0-9]{1,5}$/) || [".pdf"])[0].toLowerCase();
   const zif = (doc.ziffer && doc.ziffer !== "–") ? doc.ziffer + "_" : "";
   const nr  = String(index).padStart(2,"0");
-  return `${doc.jahr}_${r.nr}_${zif}${slug(t.label)}_${slug(clientName(client).replace(", ","-"))}_${nr}${ext}`;
+  const teile = bezTeile(doc, client).join("_");
+  let stamm = `${doc.jahr}_${r.nr}_${zif}${slug(t.label)}${teile ? "_" + teile : ""}`;
+  if(stamm.length > 150) stamm = stamm.slice(0, 150).replace(/-+$/,"");   // Windows-Pfadgrenze
+  return `${stamm}_${nr}${ext}`;
+}
+
+/* ------------------------------------------------------------------
+   Angaben für die Bezeichnung aus dem Belegtext lesen.
+   Nur, was sich zuverlässig erkennen lässt – alles Übrige bleibt leer
+   und wird im Konverter nachgetragen.
+   ------------------------------------------------------------------ */
+const KK_NAMEN = ["css","helsana","swica","sanitas","concordia","kpt","assura","visana","atupri","sympany","groupe mutuel","agrisano","oekk","sanagate","avenir"];
+const BANK_NAMEN = ["postfinance","ubs","credit suisse","raiffeisen","zkb","zürcher kantonalbank","migros bank","yuh","neon","revolut","wir bank","valiant","bank cler","swissquote","saxo","interactive brokers","alternative bank"];
+const VERS_NAMEN = ["axa","zurich","swiss life","baloise","basler","mobiliar","helvetia","allianz","generali","vaudoise","pax","elvia"];
+function bezAusText(text, docType, client){
+  const t = normText(text || ""), roh = String(text || "");
+  const b = {};
+  /* IBAN – eindeutig genug für die automatische Übernahme */
+  const iban = roh.match(/\bCH\d{2}[\s]?(?:[0-9A-Z]{4}[\s]?){4}[0-9A-Z]{1,4}\b/i);
+  if(iban) b.iban = bezIban(iban[0]);
+  /* Institut / Versicherer / Krankenkasse aus bekannten Namen */
+  const treffer = [...KK_NAMEN, ...BANK_NAMEN, ...VERS_NAMEN].find(n => keyHit(t, normText(n)));
+  if(treffer) b.stelle = treffer.replace(/\b\w/g, c => c.toUpperCase());
+  /* Zeitraum "01.01.-31.12.2024" oder "01.01.2024 bis 30.09.2024" */
+  const zr = roh.match(/(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)\s*(?:-|–|—|bis)\s*(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)/);
+  if(zr) b.zeitraum = `${zr[1]}-${zr[2]}`;
+  /* Betrag: nur mit klarem Stichwort davor, sonst zu unsicher */
+  const stichwort = {
+    lohnausweis:["nettolohn total","nettolohn","total nettolohn","bruttolohn total"],
+    lohnausweis_p:["nettolohn total","nettolohn"],
+    lohnausweis_neben:["nettolohn total","nettolohn"],
+    saeule3a:["total der beitraege","beitraege","einzahlung","total einzahlungen"],
+    pk_einkauf:["einkaufssumme","einkauf","total einkauf"],
+    praemien_kk:["total praemien","praemien total","jahrespraemie","total der praemien"],
+    bankauszug:["saldo per","saldo","steuerwert","kontostand"],
+    depotauszug:["steuerwert","total steuerwert","depotwert"],
+    hypothek:["zinsen","zinsbelastung","total zinsen"],
+    schuldzinsen:["zinsen","total zinsen"]
+  }[docType] || [];
+  for(const k of stichwort){
+    const i = t.indexOf(normText(k));
+    if(i === -1) continue;
+    const f = vglFindBetrag(t, i + k.length, 90);
+    if(f && f.wert > 0){ b.betrag = String(f.wert); break; }
+  }
+  /* Person: der Kundenname, wenn er im Beleg vorkommt – sonst offen lassen */
+  const nachname = normText(client?.name || "");
+  if(nachname.length > 2 && t.includes(nachname)) b.person = clientName(client).replace(", ", " ");
+  return b;
 }
 function renumber(clientId, jahr){
   const client = clientById(clientId);
@@ -3063,7 +3239,8 @@ function viewDossier(){
       ${docs.filter(d => d.register === r.id).sort((a,b) => a.newName.localeCompare(b.newName)).map(d => `
         <div class="doc-row">
           <div><div class="fn"><b>${esc(d.newName)}</b></div>
-               <div class="small">Original: ${esc(d.origName)} · ${kb(d.size)}${d.unsicher?' · <span class="badge warn">Zuordnung prüfen</span>':""}</div></div>
+               <div class="small">Original: ${esc(d.origName)} · ${kb(d.size)}${d.unsicher?' · <span class="badge warn">Zuordnung prüfen</span>':""}${
+                 bezFehlt(d).length ? ` · <span class="badge warn">Bezeichnung ergänzen: ${esc(bezFehlt(d).map(f => BEZ_FELDER[f].label.split(" / ")[0]).join(", "))}</span>` : ""}</div></div>
           <div class="small">${esc(DT[d.docType]?.label || d.docType)}${d.ziffer !== "–" ? " · Ziff. " + esc(d.ziffer) : ""}</div>
           <div class="no-print"><button class="btn-sm" data-redo="${d.id}">Umordnen</button></div>
           <div class="no-print"><button class="btn-sm" data-dl="${d.id}">Öffnen</button>
@@ -3149,18 +3326,28 @@ function viewDossier(){
 async function reclassifyDialog(docId){
   const d = await dbGet("docs", docId); if(!d) return;
   const kt = clientById(d.clientId)?.kanton || S.settings.kanton;
-  const ok = await modal({ title:"Dokument neu zuordnen", ok:"Übernehmen", body:`
+  const r = bezRegel(d.docType), b = d.bez || {};
+  const ok = await modal({ title:"Dokument zuordnen und bezeichnen", ok:"Übernehmen", wide:true, body:`
     <p class="small">${esc(d.origName)}</p>
-    <label>Dokumenttyp</label>
-    <select name="dt">${DOCTYPES.map(t => `<option value="${t.id}" ${t.id===d.docType?"selected":""}>
-      ${REG[t.reg].nr} · ${esc(t.label)}${zifferFor(t.id, kt)!=="–"?" (Ziff. "+zifferFor(t.id, kt)+")":""}</option>`).join("")}</select>
-    <div style="height:10px"></div>
-    <label>Steuerjahr</label><select name="jahr">${yearOptions(d.jahr)}</select>` });
+    <div class="grid g2">
+      <div><label>Dokumenttyp</label>
+        <select name="dt">${DOCTYPES.map(t => `<option value="${t.id}" ${t.id===d.docType?"selected":""}>
+          ${REG[t.reg].nr} · ${esc(t.label)}${zifferFor(t.id, kt)!=="–"?" (Ziff. "+zifferFor(t.id, kt)+")":""}</option>`).join("")}</select></div>
+      <div><label>Steuerjahr</label><select name="jahr">${yearOptions(d.jahr)}</select></div>
+    </div>
+    ${r.felder.length ? `<div class="hint" style="margin-top:12px">${esc(bezRegelText(d.docType))}</div>
+      <div class="grid g3">${r.felder.map(f => `
+        <div><label>${esc(BEZ_FELDER[f].label)}</label>
+          <input name="b_${f}" value="${esc(b[f] || "")}" placeholder="${esc(BEZ_FELDER[f].platzhalter)}"></div>`).join("")}</div>
+      <p class="small">Der Dateiname entsteht daraus automatisch. Wird der Dokumenttyp oben geändert,
+        gelten beim nächsten Öffnen die Felder der neuen Regel.</p>` : ""}` });
   if(!ok) return;
   const t = DT[dlgVal("dt")] || DT.sonstiges;
   const oldJahr = d.jahr;
+  const neuBez = { ...b };
+  r.felder.forEach(f => { neuBez[f] = dlgVal("b_" + f); });
   Object.assign(d, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, clientById(d.clientId)?.kanton),
-                     jahr:dlgVal("jahr"), unsicher:false });
+                     jahr:dlgVal("jahr"), unsicher:false, bez:neuBez });
   await dbPut("docs", d);
   const i = S.docs.findIndex(x => x.id === d.id); if(i >= 0) S.docs[i] = d;
   await renumber(d.clientId, d.jahr);
@@ -3379,6 +3566,36 @@ async function exportZip(c, jahr){
   download(blob, `Steuerdossier_${jahr}_${slug(clientName(c).replace(", ","-"))}.zip`);
   toast("Dossier exportiert");
 }
+/* Ein Bild (Scan, Foto) in eine A4-PDF legen – das Bild füllt die Seite
+   unter Wahrung der Proportionen, oben steht der Dateiname als Titel.  */
+async function bildAlsPdf(blob, titel){
+  try{
+    const url = URL.createObjectURL(blob);
+    let bild;
+    try{
+      const img = await ladeBild(url);
+      const bw = img.naturalWidth || img.width, bh = img.naturalHeight || img.height;
+      const f = Math.min(1, 1400 / Math.max(bw, bh));
+      const w = Math.max(1, Math.round(bw * f)), h = Math.max(1, Math.round(bh * f));
+      const cv = document.createElement("canvas");
+      cv.width = w; cv.height = h;
+      const ctx = cv.getContext("2d");
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      bild = await pdfBildAus({ w, h, rgb:new Uint8ClampedArray(ctx.getImageData(0, 0, w, h).data) });
+    } finally { URL.revokeObjectURL(url); }
+    if(!bild) return null;
+    const d = pdfDoc({ margin:28 });
+    d.neueSeite();
+    d.text(String(titel || "").replace(/\.[A-Za-z0-9]+$/, ""), d.margin, { size:8.5, c:[0.33,0.38,0.48] });
+    d.y -= 12;
+    const maxW = d.breite, maxH = d.y - d.margin;
+    const skala = Math.min(maxW / bild.w, maxH / bild.h);
+    const w = bild.w * skala, h = bild.h * skala;
+    d.bild(bild, d.margin + (maxW - w) / 2, d.y - h, w, h);
+    return await d.blob();
+  }catch(e){ return null; }
+}
 async function dossierZipBlob(c, jahr){
   const docs = docsOf(c.id, jahr);
   if(!docs.length) return null;
@@ -3397,8 +3614,14 @@ async function dossierZipBlob(c, jahr){
   for(const d of [...docs].sort((a,b) => a.newName.localeCompare(b.newName))){
     const full = await dbGet("docs", d.id);
     if(!full?.blob) continue;
-    const buf = new Uint8Array(await full.blob.arrayBuffer());
-    files.push({ name:eindeutig(d.newName), data:buf });
+    /* Jeder Beleg soll als einzelne PDF im ZIP liegen – Fotos und Scans
+       werden dafür in eine PDF-Seite gelegt, PDF bleiben unverändert. */
+    let blob = full.blob, name = d.newName;
+    if(isBild(d.origName)){
+      const pdf = await bildAlsPdf(full.blob, d.newName);
+      if(pdf){ blob = pdf; name = d.newName.replace(/\.[A-Za-z0-9]+$/, "") + ".pdf"; }
+    }
+    files.push({ name:eindeutig(name), data:new Uint8Array(await blob.arrayBuffer()) });
   }
   const enc = new TextEncoder();
   files.push({ name:eindeutig("00_Inhaltsverzeichnis.txt"), data:enc.encode(tocText(c, jahr)) });
@@ -3480,6 +3703,16 @@ function viewConverter(){
         <div><select data-qy="${i}" class="qyear">${yearOptions(q.jahr)}</select></div>
         <div class="num">${q.sicher ? "" : `<button class="btn-sm" data-ocr="${i}" title="Text per OCR lesen">OCR</button> `}
           <button class="btn-sm btn-danger" data-qx="${i}">✕</button></div>
+        ${bezRegel(q.docType).felder.length ? `<div class="bez-zeile">
+          <div class="small" style="margin-bottom:4px">${esc(bezRegelText(q.docType))}
+            ${bezFehlt(q).length ? `<span class="badge warn">fehlt: ${esc(bezFehlt(q).map(f => BEZ_FELDER[f].label.split(" / ")[0]).join(", "))}</span>` : '<span class="badge ok">vollständig</span>'}</div>
+          <div class="bez-felder">${bezRegel(q.docType).felder.map(f => `
+            <label class="bez-feld"><span>${esc(BEZ_FELDER[f].label)}</span>
+              <input data-qb="${i}" data-f="${f}" value="${esc((q.bez || {})[f] || "")}"
+                     placeholder="${esc(BEZ_FELDER[f].platzhalter)}"></label>`).join("")}</div>
+          <div class="small mono" style="margin-top:5px">Dateiname: ${esc(buildName(
+            { ...q, origName:q.name }, clientById(S.clientId) || {}, 1))}</div>
+        </div>` : ""}
       </div>`).join("")}
     </div>` : ""}
   <div class="card"><div class="card-head"><h3>Bereits abgelegt: ${docsOf(c.id, jahr).length} Dokumente (${jahr})</h3>
@@ -3499,7 +3732,14 @@ function viewConverter(){
   drop.addEventListener("drop", e => intake([...e.dataTransfer.files], jahr));
   $$(".qtype").forEach(sel => sel.onchange = () => { const t = DT[sel.value];
     Object.assign(S.queue[+sel.dataset.q],
-      { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), sicher:true }); });
+      { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), sicher:true });
+    render();   // andere Regel = andere Felder
+  });
+  $$("[data-qb]").forEach(inp => inp.onchange = () => {
+    const q = S.queue[+inp.dataset.qb];
+    (q.bez = q.bez || {})[inp.dataset.f] = inp.value.trim();
+    render();
+  });
   $$(".qyear").forEach(sel => sel.onchange = () => { S.queue[+sel.dataset.qy].jahr = sel.value; });
   $$("[data-qx]").forEach(b => b.onclick = () => { S.queue.splice(+b.dataset.qx,1); render(); });
   $$("[data-ocr]").forEach(b => b.onclick = async () => {
@@ -3558,9 +3798,11 @@ async function intake(files, jahr){
     }
     const cl = classify(f.name, text);
     const t = DT[cl.docType];
+    const kunde = clientById(S.clientId) || {};
     S.queue.push({ file:f, name:f.name, size:f.size, docType:t.id, register:t.reg,
-                   ziffer:zifferFor(t.id, (clientById(S.clientId) || {}).kanton),
+                   ziffer:zifferFor(t.id, kunde.kanton),
                    jahr: detectYear(text, f.name) || String(jahr),
+                   bez: bezAusText(text, t.id, kunde),
                    sicher:cl.sicher, hits:cl.hits });
   }
   if(stat) stat.textContent = "";
@@ -3571,6 +3813,7 @@ async function applyQueue(c, jahr){
   for(const q of S.queue){
     const doc = { id:uid(), clientId:c.id, jahr:String(q.jahr), origName:q.name, size:q.size,
                   docType:q.docType, register:q.register, ziffer:q.ziffer, unsicher:!q.sicher,
+                  bez:q.bez || {},
                   blob:q.file, newName:q.name, added:new Date().toISOString() };
     doc.newName = buildName(doc, c, 1);
     await dbPut("docs", doc);
