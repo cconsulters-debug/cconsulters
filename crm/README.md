@@ -18,6 +18,20 @@ Synchronisation über mehrere Geräte.
 Nach dem Deploy erreichbar unter `https://<deine-domain>/crm/`. Die Seite ist auf `noindex` gesetzt und
 in `robots.txt` gesperrt; die Daten liegen weiterhin im Browser, nicht auf dem Server.
 
+**Der einfachste Weg: Branch `crm-live`.** Dieser Branch enthält ausschliesslich die fertige Anwendung,
+`index.html` liegt direkt im Wurzelverzeichnis. In Netlify genügt darum eine einzige Angabe:
+
+| Feld | Wert |
+|---|---|
+| Branch to deploy | `crm-live` |
+| Base directory | *leer* |
+| Build command | *leer* |
+| Publish directory | *leer* |
+
+Der Branch wird von der GitHub Action `.github/workflows/crm-live.yml` bei jeder Änderung im Ordner
+`crm/` automatisch neu geschrieben – die Site ist damit ohne Zutun immer auf dem aktuellen Stand.
+Von Hand bearbeitet wird dort nichts.
+
 > Ohne aktivierte Synchronisation gilt: zwei Geräte = zwei getrennte Datenbestände (Abschnitt 6b).
 
 ---
