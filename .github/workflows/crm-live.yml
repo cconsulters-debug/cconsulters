@@ -1,0 +1,62 @@
+# Hält den Auslieferungs-Branch "crm-live" automatisch aktuell.
+#
+# Sobald im Ordner crm/ etwas geändert wird, entsteht daraus ein Branch,
+# der die Anwendung direkt im Wurzelverzeichnis trägt. Eine Netlify-Site
+# braucht dann nur noch: Branch to deploy = crm-live.
+name: CRM ausliefern
+
+on:
+  push:
+    branches: [claude/private-tax-crm-iyy00a]
+    paths: ['crm/**']
+  workflow_dispatch:        # erlaubt das Auslösen von Hand
+
+permissions:
+  contents: write
+
+concurrency:
+  group: crm-live
+  cancel-in-progress: true
+
+jobs:
+  ausliefern:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Quellstand holen
+        uses: actions/checkout@v4
+
+      - name: Auslieferung zusammenstellen
+        run: |
+          set -e
+          rm -rf ../auslieferung && mkdir -p ../auslieferung
+          cp crm/index.html    ../auslieferung/index.html
+          cp crm/netlify.toml  ../auslieferung/netlify.toml
+          cp -r crm/vendor     ../auslieferung/vendor
+          printf '# Privates Steuer-CRM - nicht indexieren.\nUser-agent: *\nDisallow: /\n' \
+            > ../auslieferung/robots.txt
+          # Hinweis für alle, die den Branch direkt öffnen
+          cat > ../auslieferung/README.md <<'MD'
+          # Steuer-CRM – Auslieferungs-Branch
+
+          Enthält nur die fertige Anwendung (`index.html` im Wurzelverzeichnis,
+          `vendor/` für die Scan-Erkennung).
+
+          **Netlify: Branch to deploy = `crm-live`** – kein Base directory, kein Build command.
+
+          Wird automatisch aus `crm/` des Branches `claude/private-tax-crm-iyy00a`
+          erzeugt. Änderungen hier gehen beim nächsten Abgleich verloren.
+          MD
+
+      - name: Branch crm-live schreiben
+        run: |
+          set -e
+          cd ../auslieferung
+          git init -q -b crm-live
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "CRM-Stand aus ${GITHUB_SHA::7} übernommen"
+          git push -q --force \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" \
+            crm-live
+          echo "crm-live aktualisiert aus ${GITHUB_SHA::7}"
