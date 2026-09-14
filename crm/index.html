@@ -1195,9 +1195,13 @@ function buildName(doc, client, index){
    Nur, was sich zuverlässig erkennen lässt – alles Übrige bleibt leer
    und wird im Konverter nachgetragen.
    ------------------------------------------------------------------ */
-const KK_NAMEN = ["css","helsana","swica","sanitas","concordia","kpt","assura","visana","atupri","sympany","groupe mutuel","agrisano","oekk","sanagate","avenir"];
-const BANK_NAMEN = ["postfinance","ubs","credit suisse","raiffeisen","zkb","zürcher kantonalbank","migros bank","yuh","neon","revolut","wir bank","valiant","bank cler","swissquote","saxo","interactive brokers","alternative bank"];
-const VERS_NAMEN = ["axa","zurich","swiss life","baloise","basler","mobiliar","helvetia","allianz","generali","vaudoise","pax","elvia"];
+/* Schreibweise wie im Markt üblich – sie landet so im Dateinamen. */
+const INSTITUTE = ["CSS","Helsana","SWICA","Sanitas","Concordia","KPT","Assura","Visana","Atupri",
+  "Sympany","Groupe Mutuel","Agrisano","ÖKK","Sanagate","Avenir",
+  "PostFinance","UBS","Credit Suisse","Raiffeisen","ZKB","Zürcher Kantonalbank","Migros Bank","Yuh",
+  "Neon","Revolut","WIR Bank","Valiant","Bank Cler","Swissquote","Saxo","Interactive Brokers",
+  "Alternative Bank","AXA","Zurich","Swiss Life","Baloise","Basler","Mobiliar","Helvetia","Allianz",
+  "Generali","Vaudoise","PAX","Elvia"];
 function bezAusText(text, docType, client){
   const t = normText(text || ""), roh = String(text || "");
   const b = {};
@@ -1205,8 +1209,14 @@ function bezAusText(text, docType, client){
   const iban = roh.match(/\bCH\d{2}[\s]?(?:[0-9A-Z]{4}[\s]?){4}[0-9A-Z]{1,4}\b/i);
   if(iban) b.iban = bezIban(iban[0]);
   /* Institut / Versicherer / Krankenkasse aus bekannten Namen */
-  const treffer = [...KK_NAMEN, ...BANK_NAMEN, ...VERS_NAMEN].find(n => keyHit(t, normText(n)));
-  if(treffer) b.stelle = treffer.replace(/\b\w/g, c => c.toUpperCase());
+  const treffer = INSTITUTE.find(n => keyHit(t, normText(n)));
+  if(treffer) b.stelle = treffer;
+  /* Arbeitgeber beim Lohnausweis: erste Firma mit Rechtsform im Kopf des Belegs. */
+  if(!b.stelle && ["lohnausweis","lohnausweis_neben","lohnausweis_p","taggeld","vr_honorar"].includes(docType)){
+    const firma = roh.slice(0, 1200)
+      .match(/\b([A-ZÄÖÜ][\wÄÖÜäöüéèà&.\-]*(?:\s+[A-ZÄÖÜ0-9][\wÄÖÜäöüéèà&.\-]*){0,3}\s+(?:AG|GmbH|SA|S\.A\.|Sàrl|SARL|Genossenschaft|Stiftung|KLG|KmG))\b/);
+    if(firma) b.stelle = firma[1].trim();
+  }
   /* Zeitraum "01.01.-31.12.2024" oder "01.01.2024 bis 30.09.2024" */
   const zr = roh.match(/(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)\s*(?:-|–|—|bis)\s*(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)/);
   if(zr) b.zeitraum = `${zr[1]}-${zr[2]}`;
@@ -1279,34 +1289,166 @@ async function deflate(bytes){
   }catch(e){ return null; }
 }
 /* Textstücke aus einem Inhaltsstrom: (…) Tj / [(…)…] TJ / <hex> Tj */
-function streamText(str){
-  const out = [];
-  const re = /\((?:\\.|[^()\\])*\)|<[0-9A-Fa-f\s]+>/g;
+/* ------------------------------------------------------------------
+   Zeichensatz-Tabellen (/ToUnicode) lesen.
+   Viele PDF – aus Word, aus dem Browser, von Banken und Versicherungen –
+   betten nur die benutzten Zeichen ein und vergeben dafür eigene Codes.
+   Ohne diese Tabelle kommt aus "Muster" der Buchstabensalat "0XVWHU".
+   Darum: pro Schrift (/F1, /F2 …) die Tabelle einlesen und beim Lesen
+   des Textes anwenden.
+   ------------------------------------------------------------------ */
+function cmapParsen(txt){
+  const map = new Map();
+  const hexZahl = h => parseInt(h, 16);
+  const ziel = h => {                       // Zielzeichen, ggf. mehrere
+    let s = "";
+    for(let i = 0; i + 3 < h.length + 1; i += 4) s += String.fromCharCode(hexZahl(h.substr(i,4)));
+    return s;
+  };
   let m;
+  const bfchar = /beginbfchar([\s\S]*?)endbfchar/g;
+  while((m = bfchar.exec(txt))){
+    const paare = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g;
+    let p; while((p = paare.exec(m[1]))) map.set(hexZahl(p[1]), ziel(p[2]));
+  }
+  const bfrange = /beginbfrange([\s\S]*?)endbfrange/g;
+  while((m = bfrange.exec(txt))){
+    const einfach = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g;
+    let p;
+    while((p = einfach.exec(m[1]))){
+      const von = hexZahl(p[1]), bis = hexZahl(p[2]), start = hexZahl(p[3]);
+      for(let c = von; c <= bis && c - von < 4096; c++) map.set(c, String.fromCharCode(start + (c - von)));
+    }
+    const liste = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*\[([\s\S]*?)\]/g;
+    while((p = liste.exec(m[1]))){
+      const von = hexZahl(p[1]);
+      const eintraege = p[3].match(/<([0-9A-Fa-f]+)>/g) || [];
+      eintraege.forEach((e, i) => map.set(von + i, ziel(e.slice(1,-1))));
+    }
+  }
+  return map;
+}
+/* Alle Schriften des Dokuments auf ihre Tabelle abbilden: /F1 -> Map. */
+async function pdfSchriften(doc, bytes){
+  const schriften = new Map();
+  const objPos = {};
+  let m;
+  const objRe = /(\d+)\s+0\s+obj/g;
+  while((m = objRe.exec(doc))) objPos[m[1]] = m.index + m[0].length;
+
+  const objText = nr => {
+    const start = objPos[nr];
+    if(start === undefined) return "";
+    const ende = doc.indexOf("endobj", start);
+    return doc.slice(start, ende === -1 ? start + 2000 : ende);
+  };
+  /* Stromdaten eines Objekts entpacken (die Tabellen sind komprimiert). */
+  const objStrom = async nr => {
+    const start = objPos[nr];
+    if(start === undefined) return "";
+    const s = doc.indexOf("stream", start);
+    if(s === -1) return "";
+    let a = s + 6;
+    if(doc[a] === "\r") a++;
+    if(doc[a] === "\n") a++;
+    const e = doc.indexOf("endstream", a);
+    if(e === -1) return "";
+    const kopf = doc.slice(start, s);
+    let data = bytes.subarray(a, e);
+    const lenM = kopf.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
+    if(lenM && a + (+lenM[1]) <= e) data = bytes.subarray(a, a + (+lenM[1]));
+    if(/FlateDecode/.test(kopf)){
+      const roh = await inflate(data);
+      if(!roh) return "";
+      data = roh;
+    }
+    return latin1(data);
+  };
+
+  /* /Font << /F1 5 0 R /F2 8 0 R >> einsammeln */
+  const fontRe = /\/Font\s*<<([\s\S]{0,2000}?)>>/g;
+  const zuordnung = new Map();
+  while((m = fontRe.exec(doc))){
+    const paare = /\/([A-Za-z0-9#+.\-]+)\s+(\d+)\s+0\s+R/g;
+    let p; while((p = paare.exec(m[1]))) if(!zuordnung.has(p[1])) zuordnung.set(p[1], p[2]);
+  }
+  for(const [name, nr] of zuordnung){
+    let text = objText(nr);
+    let tu = text.match(/\/ToUnicode\s+(\d+)\s+0\s+R/);
+    if(!tu){                                   // Type0-Schrift: über /DescendantFonts
+      const nach = text.match(/\/DescendantFonts\s*\[\s*(\d+)\s+0\s+R/);
+      if(nach) tu = objText(nach[1]).match(/\/ToUnicode\s+(\d+)\s+0\s+R/);
+    }
+    if(!tu) continue;
+    const cmap = await objStrom(tu[1]);
+    if(cmap) schriften.set(name, cmapParsen(cmap));
+  }
+  return schriften;
+}
+/* Textstücke eines Inhaltsstroms lesen – mit der Tabelle der aktiven Schrift. */
+function streamText(str, schriften){
+  const out = [];
+  const re = /\/([A-Za-z0-9#+.\-]+)\s+[\d.]+\s+Tf|\((?:\\.|[^()\\])*\)|<[0-9A-Fa-f\s]+>/g;
+  let m, aktiv = null, letztesEnde = 0;
+  /* Zwischen zwei Textstücken steht im PDF die Feinverschiebung. Kleine
+     Werte sind Kerning innerhalb eines Wortes ("V errechnungssteuer"),
+     grosse ein echter Wortabstand. Nur Letztere werden zu einem Leerzeichen,
+     sonst zerfallen Wörter und IBAN-Nummern.                              */
+  const trennung = zwischen => {
+    /* Zeilenwechsel nur bei echter Bewegung nach unten/oben (y-Versatz)
+       oder bei T* / ET. Ein reiner x-Versatz ist Buchstabenabstand –
+       die Leerzeichen zwischen Wörtern stehen bereits im Text selbst. */
+    if(/\bT\*/.test(zwischen) || /\bET\b/.test(zwischen)) return "\n";
+    const td = zwischen.match(/(-?[\d.]+)\s+(-?[\d.]+)\s+T[dDm]/g);
+    if(td){
+      const letzte = td[td.length - 1].match(/(-?[\d.]+)\s+(-?[\d.]+)/);
+      if(letzte && Math.abs(parseFloat(letzte[2])) > 0.5) return "\n";
+    }
+    return "";
+  };
+  const uebersetzen = (code, roh) => {
+    if(aktiv && aktiv.has(code)) return aktiv.get(code);
+    return (code >= 32 || code === 10) ? roh : "";
+  };
   while((m = re.exec(str))){
+    if(m[1] !== undefined){                       // Schriftwechsel
+      aktiv = schriften ? (schriften.get(m[1]) || null) : null;
+      letztesEnde = re.lastIndex;
+      continue;
+    }
+    if(out.length) out.push(trennung(str.slice(letztesEnde, m.index)));
+    letztesEnde = m.index + m[0].length;
     const raw = m[0];
     if(raw[0] === "<"){
       const hex = raw.slice(1,-1).replace(/\s+/g,"");
       let t = "";
       for(let i = 0; i + 1 < hex.length; i += 2){
         const code = parseInt(hex.substr(i,2), 16);
-        if(code >= 32 || code === 10) t += String.fromCharCode(code);
+        const zwei = i + 3 < hex.length + 1 ? parseInt(hex.substr(i,4), 16) : code;
+        /* Zweibyte-Codes sind bei eingebetteten Schriften die Regel. */
+        if(aktiv && aktiv.has(zwei) && hex.length % 4 === 0){ t += aktiv.get(zwei); i += 2; continue; }
+        t += uebersetzen(code, String.fromCharCode(code));
       }
       out.push(t);
     } else {
-      out.push(raw.slice(1,-1)
+      const roh = raw.slice(1,-1)
         .replace(/\\([nrtbf])/g, " ")
         .replace(/\\([0-7]{1,3})/g, (_,o) => String.fromCharCode(parseInt(o,8)))
-        .replace(/\\(.)/g, "$1"));
+        .replace(/\\(.)/g, "$1");
+      if(!aktiv){ out.push(roh); continue; }
+      let t = "";
+      for(const ch of roh) t += uebersetzen(ch.charCodeAt(0), ch);
+      out.push(t);
     }
   }
-  return out.join(" ");
+  return out.join("");
 }
 async function pdfTextLocal(file, maxBytes = 12e6){
   try{
     const bytes = new Uint8Array(await file.slice(0, maxBytes).arrayBuffer());
     if(latin1(bytes.subarray(0,5)) !== "%PDF-") return "";
     const doc = latin1(bytes);
+    const schriften = await pdfSchriften(doc, bytes);
     let out = "", i = 0, streams = 0;
     while((i = doc.indexOf("stream", i)) !== -1 && streams < 60){
       const dictStart = doc.lastIndexOf("<<", i);
@@ -1317,7 +1459,10 @@ async function pdfTextLocal(file, maxBytes = 12e6){
       const end = doc.indexOf("endstream", s);
       if(end === -1) break;
       i = end + 9;
+      /* Bilder und eingebettete Schriftprogramme enthalten keinen Text –
+         ihr Binärinhalt würde die Erkennung nur verrauschen. */
       if(/\/(Image|DCTDecode|JPXDecode|JBIG2Decode|CCITTFaxDecode)/.test(dict)) continue;
+      if(/\/(FontFile\d?|Length1|CIDFontType\dC?)/.test(dict)) continue;
       /* Ende exakt bestimmen: /Length wenn vorhanden, sonst Zeilenumbrüche
          vor "endstream" abschneiden – sonst scheitert die Dekomprimierung. */
       const lenM = dict.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
@@ -1328,13 +1473,32 @@ async function pdfTextLocal(file, maxBytes = 12e6){
       if(/FlateDecode/.test(dict)) data = await inflate(data);
       if(!data) continue;
       streams++;
-      out += streamText(latin1(data)) + "\n";
+      out += streamText(latin1(data), schriften) + "\n";
       if(out.length > 40000) break;
     }
     return out;
   }catch(e){ return ""; }
 }
-const textUsable = t => (String(t).match(/[A-Za-zÄÖÜäöü]{3,}/g) || []).length >= 5;
+/* Ist das gelesene wirklich Text – oder Buchstabensalat?
+   Eine Schrift ohne Zeichensatz-Tabelle liefert Zeichenfolgen, die wie
+   Text aussehen ("0XVWHU%DX"), aber keine sind. Solche Treffer würden
+   die Erkennung still verfälschen, statt die Texterkennung (OCR)
+   anzustossen. Darum wird gegen Wörter geprüft, die in Schweizer
+   Steuerbelegen praktisch immer vorkommen.                            */
+const BELEG_WOERTER = /\b(?:chf|fr|total|betrag|datum|steuer\w*|lohn\w*|praemie\w*|prämie\w*|versicher\w*|konto|saldo|zins\w*|iban|rechnung|bescheinigung|ausweis|jahr|person|name|adresse|nummer|beitr\w*|abzug|einkommen|vermoegen|vermögen|gmbh|ag\b|bank|kasse|20\d\d)\b/gi;
+function textUsable(t){
+  const s = String(t || "");
+  const woerter = s.match(/[A-Za-zÄÖÜäöüß]{3,}/g) || [];
+  if(woerter.length < 5) return false;
+  /* Mindestens zwei belegtypische Wörter – sonst ist es kein lesbarer Beleg. */
+  const treffer = new Set((s.match(BELEG_WOERTER) || []).map(x => x.toLowerCase()));
+  if(treffer.size >= 2) return true;
+  /* Reserve: sehr kurze Belege ohne diese Wörter erkennt man am
+     Vokalanteil – Buchstabensalat hat deutlich zu wenige Vokale. */
+  const buchstaben = (s.match(/[A-Za-zÄÖÜäöüß]/g) || []).length;
+  const vokale = (s.match(/[aeiouäöüAEIOUÄÖÜ]/g) || []).length;
+  return buchstaben > 40 && vokale / buchstaben > 0.28;
+}
 
 /* Reserve: pdf.js (nur mit Internetverbindung, z.B. für PDFs mit
    ungewöhnlicher Schrifteinbettung).                                     */
@@ -1734,6 +1898,8 @@ const TARIFE = {
                  { tranche:1000000, satz:0.0025 }, { tranche:Infinity, satz:0.0030 } ]
       },
       steuerfussKanton: 98,
+      /* Personalsteuer der Gemeinde, pro erwachsene Person (§ 201 StG ZH). */
+      personalsteuer: 24,
       gemeinden: {
         "Winterthur":{ gemeinde:122, kirche:{ "ev.-ref.":10, "röm.-kath.":13, "keine":0 } },
         "Zürich":    { gemeinde:119, kirche:{ "ev.-ref.":10, "röm.-kath.":12, "keine":0 } },
@@ -1881,7 +2047,9 @@ function vglRechnung(daten, stat, extra){
   r.kirche   = (einfEink + einfVerm) * f(stat.fussKirche);
   r.vermoegenssteuer = einfVerm * (f(stat.fussKanton) + f(stat.fussGemeinde) + f(stat.fussKirche));
   r.stbVermoegen = reinvermoegen;
-  r.total = r.bund + r.kanton + r.gemeinde + r.kirche;
+  /* Personalsteuer: fester Betrag der Gemeinde je erwachsene Person. */
+  r.personal = (kt.personalsteuer || 0) * (verheiratet ? 2 : 1);
+  r.total = r.bund + r.kanton + r.gemeinde + r.kirche + r.personal;
 
   /* Grenzsteuersatz numerisch: was kostet der nächste Tausender Einkommen?
      Der Probelauf läuft ohne eigene Grenzsatzmessung – sonst käme es zur Endlosschleife. */
@@ -1894,8 +2062,20 @@ function vglRechnung(daten, stat, extra){
   return r;
 }
 
+/* "max" in einem Szenario heisst: bis zum gesetzlichen Maximum auffüllen.
+   Ohne diese Auflösung stünde im Szenario der volle Maximalbetrag zusätzlich
+   zur bereits erfassten Einzahlung – und jeder Bericht meldete eine
+   Überschreitung, die es gar nicht gibt.                                  */
+const vglIstMax = v => String(v ?? "").trim().toLowerCase() === "max";
+function vglAufloesen(sz, daten, stat){
+  if(!vglIstMax(sz.s3a)) return sz;
+  const max = vglNum(stat.saeule3aMitPk) || TARIFE.vorgaben.saeule3aMitPk;
+  const erfasst = Math.max(0, vglNum((daten || {}).a_saeule3a));
+  return { ...sz, s3a: Math.max(0, max - erfasst) };
+}
 /* Wirkung eines zusätzlichen Abzugs (Szenario). */
-function vglSzenario(daten, stat, basis, sz){
+function vglSzenario(daten, stat, basis, szRoh){
+  const sz = vglAufloesen(szRoh, daten, stat);
   const einsatz = Math.max(0, vglNum(sz.s3a)) + Math.max(0, vglNum(sz.pk)) + Math.max(0, vglNum(sz.weitere));
   const r = vglRechnung(daten, stat, sz);
   let ersparnis;
@@ -1945,7 +2125,7 @@ async function ensureVergleich(clientId, jahrNeu){
         stat: vglStandardStatus(c),
         daten: { alt: alt ? { ...alt.daten.neu } : {}, neu: alt ? { ...alt.daten.neu } : {} },
         szenarien: [
-          { label:"Säule 3a (Maximum mit PK)", s3a:TARIFE.vorgaben.saeule3aMitPk, pk:"", weitere:"" },
+          { label:"Säule 3a bis zum Maximum auffüllen", s3a:"max", pk:"", weitere:"" },
           { label:"Einkauf Pensionskasse",     s3a:"", pk:10000, weitere:"" }
         ],
         staffelBetrag:"", staffelJahre:3, notiz:"", created:today(), updated:today() };
@@ -1986,6 +2166,7 @@ function vglBericht(v){
     zeile("Staatssteuer Kanton", rAlt.kanton, rNeu.kanton),
     zeile("Gemeindesteuer", rAlt.gemeinde, rNeu.gemeinde),
     zeile("Kirchensteuer", rAlt.kirche, rNeu.kirche),
+    zeile("Personalsteuer", rAlt.personal ?? 0, rNeu.personal ?? 0),
     zeile("Total Steuerbelastung", rAlt.total, rNeu.total, true)
   ] : [];
 
@@ -1996,7 +2177,7 @@ function vglBericht(v){
   /* Plausibilität und Pflichthinweise */
   const hinweise = [];
   const max3a = st.saeule3aMitPk;
-  const total3a = vglNum(dNeu.a_saeule3a) + szenarien.reduce((a,s) => a + vglNum(s.s3a), 0);
+  const total3a = vglNum(dNeu.a_saeule3a) + szenarien.reduce((a,s) => a + (vglIstMax(s.s3a) ? 0 : vglNum(s.s3a)), 0);
   if(total3a > max3a)
     hinweise.push(`Säule 3a: erfasste und geplante Einzahlungen ergeben CHF ${chf(total3a)} – das Maximum mit Pensionskasse beträgt CHF ${chf(max3a)}.`);
   if(vglNum(dNeu.a_pkeinkauf) || szenarien.some(s => vglNum(s.pk)) || staffel)
@@ -2014,7 +2195,9 @@ function vglBericht(v){
   });
   hinweise.push(rAlt.modus === "grenzsatz"
     ? `Grenzsatz-Modus: Die Steuerwirkung ist mit einem angenommenen Grenzsteuersatz von ${vglNum(st.grenzsatz)} % geschätzt – keine Veranlagungsberechnung.`
-    : `Berechnung mit hinterlegten Tarifen (Stand ${TARIFE.meta.steuerjahr}, ${TARIFE.meta.stand}). Provisorische Berechnung – massgebend ist die Veranlagung des Steueramts.`);
+    : (tarifGeprueft()
+        ? `Berechnung mit den hinterlegten Tarifen – ${tarifStatusText()} Provisorische Berechnung; massgebend ist die Veranlagung des Steueramts.`
+        : `ACHTUNG: Die Tarifwerte wurden für diese Steuerperiode noch nicht geprüft (Ausgangsdaten Stand ${TARIFE.meta.steuerjahr}). Vor der Weitergabe an Kundinnen und Kunden unter Einstellungen → Steuertarife prüfen und bestätigen.`));
 
   return { kunde:clientName(c), mandat:c.mandat || "", ort:[c.plz, c.ort].filter(Boolean).join(" "),
            kanzlei:S.settings.kanzlei, bearbeiter:S.settings.bearbeiter, datum:deAt(today()),
@@ -2453,8 +2636,11 @@ function viewVergleich(){
       <button class="pill ${tarif ? "" : "active"}" data-modus="grenzsatz">Grenzsatz-Schätzung</button>
     </div></div>
     ${tarif
-      ? `<div class="hint">Rechnet mit den hinterlegten Tarifen (Stand ${TARIFE.meta.steuerjahr}).
-           <b>Vor der Mandantenauswertung die Tarifwerte prüfen</b> – sie ändern jährlich.</div>`
+      ? (tarifGeprueft()
+          ? `<div class="hint">${esc(tarifStatusText())} Provisorische Berechnung – massgebend bleibt die Veranlagung.</div>`
+          : `<div class="hint warn"><b>Tarife noch nicht geprüft.</b> Die Werte sind Ausgangsdaten
+               (Stand ${TARIFE.meta.steuerjahr}) und ändern jährlich. Einmal pro Steuerperiode unter
+               <b>Einstellungen → Steuertarife</b> prüfen und bestätigen – sonst trägt jeder Bericht diesen Vorbehalt.</div>`)
       : `<div class="hint warn">Schnellmodus: Es wird keine Steuerlast berechnet, sondern die Wirkung
            über einen geschätzten Grenzsteuersatz. Für Kantone ohne hinterlegten Tarif der richtige Weg.</div>`}
     <div class="grid g4">
@@ -2524,7 +2710,9 @@ function viewVergleich(){
   <div class="card no-print"><div class="card-head"><h3>Einzahlungen durchrechnen</h3>
     <button class="btn-sm" id="szAdd">+ Variante</button></div>
     <p class="small">Jede Zeile rechnet die Steuerersparnis für das Jahr ${esc(v.jahrNeu)} –
-      auf Basis der oben erfassten Werte. «Ersparnis in %» zeigt, wie viel jeder einbezahlte Franken an Steuern spart.</p>
+      auf Basis der oben erfassten Werte. «Ersparnis in %» zeigt, wie viel jeder einbezahlte Franken an Steuern spart.<br>
+      Steht bei Säule 3a das Wort <b>max</b>, füllt das CRM bis zum Maximum von
+      CHF ${chf(st.saeule3aMitPk)} auf – gerechnet wird also nur die <b>Differenz</b> zum bereits erfassten Betrag.</p>
     <table><thead><tr><th>Variante</th><th class="num" style="width:130px">Säule 3a</th>
       <th class="num" style="width:130px">PK-Einkauf</th><th class="num" style="width:130px">Weitere Abzüge</th>
       <th class="num" style="width:130px">Ersparnis</th><th class="num" style="width:90px">in %</th><th></th></tr></thead>
@@ -2674,7 +2862,13 @@ const VGL_KONTROLLE = {
 
 /* Ersten plausiblen Frankenbetrag nach einer Fundstelle lesen. */
 function vglFindBetrag(t, ab, fenster = 120){
-  const seg = t.slice(ab, ab + fenster);
+  /* Datumsangaben ausblenden: aus "Saldo per 31.12.2024 42'318.55" wäre
+     sonst 31.12 der Betrag. Gleiche Länge behalten, damit die Fundstelle
+     weiterhin stimmt. */
+  const seg = t.slice(ab, ab + fenster)
+    .replace(/\b\d{1,2}\.\s?\d{1,2}\.\s?\d{2,4}\b/g, x => " ".repeat(x.length))
+    .replace(/\b\d{1,2}\.\d{1,2}\.(?!\d)/g, x => " ".repeat(x.length))
+    .replace(/\b\d{4}-\d{2}-\d{2}\b/g, x => " ".repeat(x.length));
   const re = /(?:chf\s*)?(\d{1,3}(?:['’ ]\d{3})+(?:[.,]\d{2})?|\d+[.,]\d{2}|\d{3,7}|0)(?![\d'’])/g;
   let m;
   while((m = re.exec(seg))){
@@ -3809,21 +4003,41 @@ async function intake(files, jahr){
   render();
 }
 async function applyQueue(c, jahr){
-  const years = new Set(), proJahr = {};
+  const years = new Set(), proJahr = {}, offen = [];
+  let fehler = null;
   for(const q of S.queue){
     const doc = { id:uid(), clientId:c.id, jahr:String(q.jahr), origName:q.name, size:q.size,
                   docType:q.docType, register:q.register, ziffer:q.ziffer, unsicher:!q.sicher,
                   bez:q.bez || {},
                   blob:q.file, newName:q.name, added:new Date().toISOString() };
     doc.newName = buildName(doc, c, 1);
-    await dbPut("docs", doc);
+    try{
+      await dbPut("docs", doc);
+    }catch(e){
+      /* Nicht stillschweigend verlieren: der Beleg bleibt in der
+         Warteschlange, damit er nach dem Aufräumen erneut abgelegt wird. */
+      fehler = e; offen.push(q); continue;
+    }
     delete doc.blob;                 // Datei liegt in der Datenbank, nicht im Arbeitsspeicher
     S.docs.push(doc);
     years.add(String(q.jahr));
     proJahr[q.jahr] = (proJahr[q.jahr] || 0) + 1;
   }
   for(const y of years){ await ensureDossier(c.id, y); await renumber(c.id, y); }
-  const n = S.queue.length; S.queue = [];
+  const n = S.queue.length - offen.length;
+  S.queue = offen;
+  if(fehler){
+    const voll = /quota|storage|speicher/i.test(fehler.name + " " + fehler.message);
+    S.convMsg = voll
+      ? `${offen.length} Beleg(e) konnten nicht abgelegt werden: der Browserspeicher ist voll. `
+        + "Zuerst ein Backup inkl. Dateien exportieren, danach abgeschlossene Steuerjahre über "
+        + "das Dossier entfernen – die Belege bleiben in der Warteschlange und lassen sich dann erneut übernehmen."
+      : `${offen.length} Beleg(e) konnten nicht abgelegt werden: ${fehler.message}. `
+        + "Sie bleiben in der Warteschlange.";
+    toast("Nicht alle Belege konnten abgelegt werden");
+    render();
+    if(!n) return;
+  }
   const jahre = [...years].sort();
   /* Angezeigt wird das Jahr, in dem die meisten Belege gelandet sind –
      das ist das Dossier, an dem gerade gearbeitet wird. */
@@ -4349,6 +4563,86 @@ function markeBind(){
   };
 }
 
+/* ==================================================================
+   STEUERTARIFE PRÜFEN
+   Die mitgelieferten Tarifwerte sind Ausgangsdaten. Sie ändern jährlich
+   (kalte Progression, Steuerfussbeschlüsse). Solange sie nicht bestätigt
+   sind, tragen Bildschirm und Bericht einen deutlichen Vorbehalt.
+   ================================================================== */
+const tarifGeprueft = () => S.settings.tarifGeprueft || null;
+function tarifStatusText(){
+  const g = tarifGeprueft();
+  if(!g) return `Tarife noch nicht geprüft (Ausgangsdaten Stand ${TARIFE.meta.steuerjahr}).`;
+  return `Tarife geprüft am ${deAt(g.am)}${g.durch ? " durch " + g.durch : ""} für Steuerjahr ${g.jahr}.`;
+}
+function tarifCardHtml(){
+  const g = tarifGeprueft();
+  const kt = TARIFE.kantone.ZH;
+  const stufen = (t, titel) => `
+    <h4 style="margin:14px 0 6px">${esc(titel)}</h4>
+    <div style="overflow-x:auto"><table><thead><tr>
+      <th class="num">ab CHF</th><th class="num">Sockelbetrag</th><th class="num">Satz</th></tr></thead>
+      <tbody>${t.stufen.map(s => `<tr><td class="num">${chf(s.ab)}</td>
+        <td class="num">${chf(s.sockel)}</td>
+        <td class="num">${(s.satz * 100).toLocaleString("de-CH", { maximumFractionDigits:2 })} %</td></tr>`).join("")}
+      </tbody></table></div>`;
+  return `
+  <div class="card"><div class="card-head"><h3>Steuertarife</h3>
+    <span class="badge ${g ? "ok" : "warn"}">${g ? "geprüft" : "ungeprüft"}</span></div>
+    <div class="hint ${g ? "" : "warn"}"><b>${esc(tarifStatusText())}</b><br>
+      Die Werte unten sind die Grundlage jeder Berechnung im Steuervergleich. Sie ändern jedes Jahr.
+      Bitte einmal pro Steuerperiode gegen die amtlichen Tarife prüfen – danach hier bestätigen.
+      Solange nicht bestätigt, steht auf jedem Bericht ein Vorbehalt.</div>
+    <div class="grid g2">
+      <div><label>Quelle Bund</label><input value="${esc(TARIFE.bund.quelle)}" readonly></div>
+      <div><label>Quelle Kanton</label><input value="${esc(kt.quelle)}" readonly></div>
+    </div>
+    <div class="grid g4" style="margin-top:12px">
+      <div class="kpi"><b>${chf(TARIFE.vorgaben.saeule3aMitPk)}</b><span>Säule 3a mit PK</span></div>
+      <div class="kpi"><b>${chf(TARIFE.vorgaben.saeule3aOhnePk)}</b><span>Säule 3a ohne PK</span></div>
+      <div class="kpi"><b>${chf(TARIFE.vorgaben.kinderabzugKanton)}</b><span>Kinderabzug Kanton</span></div>
+      <div class="kpi"><b>${chf(TARIFE.vorgaben.kinderabzugBund)}</b><span>Kinderabzug Bund</span></div>
+      <div class="kpi"><b>${chf(kt.personalsteuer)}</b><span>Personalsteuer je Person</span></div>
+      <div class="kpi"><b>${kt.steuerfussKanton} %</b><span>Steuerfuss Kanton</span></div>
+    </div>
+    <details style="margin-top:14px"><summary class="small" style="cursor:pointer">Alle Tarifstufen anzeigen</summary>
+      ${stufen(TARIFE.bund.alleinstehend, "Direkte Bundessteuer – " + TARIFE.bund.alleinstehend.bezeichnung)}
+      ${stufen(TARIFE.bund.verheiratet, "Direkte Bundessteuer – " + TARIFE.bund.verheiratet.bezeichnung)}
+      ${stufen(kt.einkommen.alleinstehend, "Kanton Zürich – " + kt.einkommen.alleinstehend.bezeichnung)}
+      ${stufen(kt.einkommen.verheiratet, "Kanton Zürich – " + kt.einkommen.verheiratet.bezeichnung)}
+      <h4 style="margin:14px 0 6px">Steuerfüsse (Ausgangswerte)</h4>
+      <div style="overflow-x:auto"><table><thead><tr><th>Gemeinde</th><th class="num">Kanton %</th>
+        <th class="num">Gemeinde %</th></tr></thead><tbody>
+        ${Object.entries(kt.gemeinden).map(([n, w]) => `<tr><td>${esc(n)}</td>
+          <td class="num">${kt.steuerfussKanton}</td><td class="num">${w.gemeinde}</td></tr>`).join("")}
+      </tbody></table></div>
+    </details>
+    <div class="row" style="margin-top:14px">
+      <button class="btn-primary" id="tarifOk">${g ? "Prüfung erneuern" : "Tarife als geprüft bestätigen"}</button>
+      ${g ? '<button id="tarifWeg">Bestätigung zurückziehen</button>' : ""}
+      <span class="small">Die Bestätigung erscheint im Fuss jedes Steuervergleichs.</span>
+    </div>
+  </div>`;
+}
+function tarifBind(){
+  if(!$("#tarifOk")) return;
+  $("#tarifOk").onclick = async () => {
+    const ok = await modal({ title:"Tarife bestätigen", ok:"Bestätigen", body:`
+      <p class="small">Bestätige, dass du die Tarifwerte gegen die amtlichen Grundlagen geprüft hast
+        (ESTV für die Bundessteuer, § 35 / § 47 StG ZH und der Steuerfussbeschluss der Gemeinde).</p>
+      <div class="grid g2">
+        <div><label>Geprüft durch (Kürzel)</label><input name="durch" value="${esc(S.settings.bearbeiter || "")}"></div>
+        <div><label>Für Steuerjahr</label><select name="jahr">${yearOptions(S.settings.jahr)}</select></div>
+      </div>` });
+    if(!ok) return;
+    S.settings.tarifGeprueft = { am:today(), durch:dlgVal("durch"), jahr:dlgVal("jahr") };
+    await saveSettings(); toast("Tarife als geprüft vermerkt"); render();
+  };
+  if($("#tarifWeg")) $("#tarifWeg").onclick = async () => {
+    delete S.settings.tarifGeprueft; await saveSettings(); toast("Bestätigung zurückgezogen"); render();
+  };
+}
+
 /* ---------- Einstellungen & Backup ---------- */
 function viewSettings(){
   const s = S.settings, cfgOk = !!syncCfg();
@@ -4407,6 +4701,8 @@ function viewSettings(){
     <div class="row" style="margin-top:10px"><button class="btn-primary" id="saveInvSet">Speichern</button>
       <span class="small">Nächste Rechnung erhält die Nummer <b>${esc(nextInvoiceNr(s.jahr))}</b></span></div>
   </div>
+
+  ${tarifCardHtml()}
 
   <div class="card"><h3>Texterkennung (OCR)</h3>
     <p class="small">Digitale PDF werden immer und ohne Internet gelesen. Für <b>eingescannte Belege
@@ -4490,6 +4786,7 @@ function viewSettings(){
       <div class="kpi"><b>${S.docs.length}</b><span>Dokumente</span></div>
       <div class="kpi"><b>${kb(S.docs.reduce((a,d) => a + (d.size||0), 0))}</b><span>Dateivolumen</span></div>
     </div>
+    <p class="small" id="platzInfo" style="margin-top:10px">Speicherbelegung wird ermittelt …</p>
     <div class="row" style="margin-top:12px">
       <button id="demoOn">Demo-Daten laden (für Verkaufsgespräche)</button>
       <button id="demoOff">Demo-Daten entfernen</button>
@@ -4507,6 +4804,7 @@ function viewSettings(){
     await saveSettings(); toast("Einstellungen gespeichert"); render();
   };
   markeBind();
+  tarifBind();
 
   /* --- Sicherheit --- */
   if($("#encOn")) $("#encOn").onclick = async () => {
@@ -4633,6 +4931,21 @@ function viewSettings(){
   $("#expFull").onclick = () => exportBackup(true);
   $("#impJson").onclick = () => $("#impFile").click();
   $("#impFile").onchange = e => importBackup(e.target.files[0]);
+
+  /* --- Speicherplatz: rechtzeitig sehen, wenn es eng wird --- */
+  (async () => {
+    const el = $("#platzInfo"); if(!el) return;
+    try{
+      const e = await navigator.storage?.estimate?.();
+      if(!e || !e.quota){ el.textContent = "Speicherbelegung: vom Browser nicht auskunftsfähig."; return; }
+      const pct = Math.round(e.usage / e.quota * 100);
+      el.textContent = `Speicher belegt: ${kb(e.usage)} von rund ${kb(e.quota)} (${pct} %).`;
+      if(pct >= 80){
+        el.textContent += " Es wird eng – Backup exportieren und abgeschlossene Jahrgänge entfernen.";
+        el.style.color = "var(--danger)";
+      }
+    }catch(err){ el.textContent = "Speicherbelegung nicht ermittelbar."; }
+  })();
 
   /* --- Demo --- */
   $("#demoOn").onclick  = () => loadDemoData();
@@ -4789,7 +5102,7 @@ async function loadDemoData(){
       await dbPut("vergleiche", { id:"demo_vgl_" + slug(d.mandat), demo:true, clientId:c.id,
         jahrNeu:jn, jahrAlt:String(+jn - 1), stat:vglStandardStatus(c),
         daten:{ alt:d.vergleich.alt, neu:d.vergleich.neu },
-        szenarien:[{ label:"Säule 3a ausschöpfen", s3a:TARIFE.vorgaben.saeule3aMitPk, pk:"", weitere:"" },
+        szenarien:[{ label:"Säule 3a bis zum Maximum auffüllen", s3a:"max", pk:"", weitere:"" },
                    { label:"Einkauf Pensionskasse", s3a:"", pk:15000, weitere:"" }],
         staffelBetrag:d.vergleich.staffelBetrag, staffelJahre:d.vergleich.staffelJahre,
         notiz:"", created:today(), updated:today() });

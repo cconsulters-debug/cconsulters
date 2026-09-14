@@ -55,7 +55,11 @@ Beim Hineinziehen einer Datei passiert dreierlei:
 
 1. **Erkennen** – Dateiname **und PDF-Inhalt** werden nach Stichwörtern durchsucht. Die Textextraktion
    ist fest eingebaut und läuft **ohne Internet** – ein Beleg namens `Scan_0007.pdf` wird am Inhalt als
-   Lohnausweis erkannt, samt Steuerjahr. Lange Stichwörter gewinnen gegen kurze („Lohnausweis" schlägt
+   Bank-Steuerauszug erkannt, samt Steuerjahr, Institut, IBAN und Saldo.
+   Dabei werden auch die **Zeichensatz-Tabellen des PDF** (`/ToUnicode`) gelesen: Belege aus Word,
+   aus dem Browser oder von Banken betten oft nur die benutzten Zeichen mit eigenen Codes ein –
+   ohne diese Tabelle käme aus «Muster» der Buchstabensalat «0XVWHU». Liefert ein PDF trotzdem
+   keinen lesbaren Text, wird das erkannt und die Texterkennung (OCR) übernimmt. Lange Stichwörter gewinnen gegen kurze („Lohnausweis" schlägt
    „Ausweis"). Unsichere Treffer bekommen den Hinweis **„bitte prüfen"** – ein Klick im Dropdown korrigiert sie.
 2. **Umbenennen** nach der Anleitung „Steuerdokumente sortieren" (Details gleich unten):
    `Jahr_Register_Ziffer_Dokumenttyp_<Angaben zum Beleg>_Nr.pdf`
@@ -299,6 +303,17 @@ Verkaufsgespräche (und entfernt sie auf Knopfdruck wieder).
 > Tarife und Sozialabzüge ändern jährlich; die Berechnung bleibt provisorisch – massgebend ist die
 > Veranlagung des Steueramts. Wer nichts pflegen will, arbeitet im Grenzsatz-Modus.
 
+### Tarife prüfen – einmal pro Steuerperiode
+
+*Einstellungen → Steuertarife* zeigt alle hinterlegten Werte: die Stufen der direkten Bundessteuer,
+die Stufen des Kantons Zürich, Steuerfüsse, Personalsteuer, Kinderabzüge und die Maxima der Säule 3a –
+je mit Quellenangabe.
+
+**Die mitgelieferten Werte sind Ausgangsdaten.** Sie ändern jährlich (kalte Progression, Steuerfüsse).
+Solange sie nicht bestätigt sind, trägt **jeder** Steuervergleich den Vermerk, dass die Tarife
+ungeprüft sind – am Bildschirm und im Bericht. Nach der Prüfung gegen ESTV und § 35/§ 47 StG ZH
+bestätigst du sie mit Kürzel und Steuerjahr; danach erscheint stattdessen «Tarife geprüft am … durch …».
+
 ## 6d. Honorar & Rechnungen
 
 *Honorar & Rechnungen* im Menü, oder direkt im Dossier über „+ Rechnung für <Jahr>".
@@ -359,6 +374,11 @@ Ohne Synchronisation liegen die Daten nur in diesem Browser. **Browserdaten lös
 
 Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-Stick ablegen – sie enthalten Kundendaten.
 
+**Speicherplatz im Auge behalten:** *Einstellungen → Demo & Statistik* zeigt, wie viel Platz der
+Browser belegt und wie viel er insgesamt gewährt. Ab 80 % erscheint eine Warnung. Reicht der Platz
+beim Ablegen nicht, bleiben die betroffenen Belege in der Warteschlange stehen und das CRM sagt es
+deutlich – es geht nichts stillschweigend verloren.
+
 ### Notfall-Anleitung ausdrucken
 
 **`Notfall-Anleitung.pdf`** (eine Seite A4) beantwortet den Ernstfall ohne Nachdenken: was wo liegt,
@@ -386,6 +406,20 @@ eigene Marke mit Logo auf allen Dokumenten und weitergebbarem Markenprofil · De
 | Direkter Import in ZHprivateTax / eTax | offen – Schnittstelle prüfen | Doppelerfassung entfällt |
 | Mehrbenutzerbetrieb mit Rollen | 3–5 Tage | Kanzleien ab 3 Personen |
 | Tarife weiterer Kantone im Steuervergleich | ½ Tag pro Kanton | Tarifberechnung ausserhalb ZH |
+
+**Ehrliche Einordnung für den Kanzleialltag:**
+- **Die Steuertarife sind Ausgangsdaten, keine amtliche Quelle.** Einmal pro Steuerperiode prüfen und
+  unter *Einstellungen → Steuertarife* bestätigen. Bis dahin trägt jeder Bericht einen Vorbehalt.
+- **Das CRM erstellt keine Steuererklärung und reicht nichts ein.** Es bereitet vor, sortiert, belegt
+  und kommuniziert; die Deklaration selbst läuft weiter über ZHprivateTax/eTax.
+- **Tarifberechnung nur für Zürich.** Für andere Kantone bleibt der Grenzsatz-Modus – der rechnet die
+  *Wirkung* eines Abzugs, nicht die Steuerlast.
+- **Einzelarbeitsplatz.** Mit Synchronisation auf mehreren Geräten derselben Person, aber ohne
+  gleichzeitiges Arbeiten am selben Mandat (der spätere Speichervorgang gewinnt).
+- **Der Browserspeicher ist endlich.** Bei vielen gescannten Dossiers wird er knapp; die Belegung steht
+  unter *Einstellungen → Demo & Statistik*. Abgeschlossene Jahrgänge als ZIP + Backup auslagern.
+- **Aufbewahrungspflichten organisiert das CRM nicht.** Die zehnjährige Aufbewahrung sicherst du über
+  Backups und archivierte Dossier-ZIP.
 
 **Bekannte Grenzen heute:**
 - Die Scan-Erkennung braucht die gehostete Version; bei einer per Doppelklick geöffneten Datei
