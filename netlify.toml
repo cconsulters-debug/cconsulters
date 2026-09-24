@@ -1,0 +1,28 @@
+# Einstellungen für eine eigene Netlify-Site, die NUR das Steuer-CRM zeigt.
+#
+# In Netlify genügt dafür eine einzige Angabe:
+#   Site configuration → Build & deploy → Base directory = crm
+# Alles Weitere (kein Build, was veröffentlicht wird, Schutz vor Google)
+# steht hier und wird automatisch übernommen.
+
+[build]
+  publish = "."
+  command = ""
+
+# Privates CRM: nie indexieren, nicht in fremde Seiten einbetten lassen,
+# nichts zwischenspeichern.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Cache-Control = "no-store"
+
+# Die mitgelieferte Texterkennung ist gross und ändert sich nie –
+# sie darf im Browser zwischengespeichert werden.
+[[headers]]
+  for = "/vendor/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
