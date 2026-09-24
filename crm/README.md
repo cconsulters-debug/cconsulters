@@ -358,9 +358,22 @@ geänderte Abzüge und Steuerfüsse über den Knopf **«Abzüge aus Tarif-Einste
   überfällige Rechnungen und den bezahlten Jahresumsatz.
 - Die E-Mail-Vorlage „Honorarrechnung" zieht Rechnungsnummer, Betrag und Fälligkeit automatisch.
 
-> Schweizer QR-Rechnung ist bewusst **nicht** enthalten – eine fehlerhafte QR-Rechnung wäre schlimmer
-> als keine. Die Rechnung nennt IBAN und Rechnungsnummer im Text; für Kleinmandate genügt das.
-> Eine echte QR-Rechnung ist eine mögliche Ausbaustufe.
+### QR-Rechnung (Schweizer Zahlteil)
+
+**«Rechnung als PDF (mit QR-Zahlteil)»** erzeugt die komplette Rechnung als PDF: Briefkopf mit Logo,
+Adressfeld für Fenstercouvert rechts, Positionen, Total – und unten den **Zahlteil mit Empfangsschein**
+nach Swiss Payment Standards (strukturierte Adressen, Schweizerkreuz, Masse 210 × 105 mm).
+
+- Einmalig unter *Einstellungen → Rechnungsstellung*: **IBAN** und **Zahlungsempfänger** (Name, Strasse,
+  Nr., PLZ, Ort). Leere Felder übernimmt das CRM aus Kanzleiname und Marken-Adresse. Die IBAN wird auf
+  ihre Prüfziffer kontrolliert.
+- Normale IBAN → Zahlteil ohne Referenz, Mitteilung «Rechnung R-…». **QR-IBAN** → das CRM bildet
+  automatisch eine gültige QR-Referenz (27 Stellen mit Prüfziffer) aus der Rechnungsnummer.
+- Fehlt etwas, zeigt die Rechnung oben **was** fehlt – eine unvollständige QR-Rechnung wird nie erzeugt.
+- **Beim Drucken «Tatsächliche Grösse» / 100 % wählen**, sonst stimmen die Masse des Zahlteils nicht.
+- Geprüft: Der QR-Code wird von einem unabhängigen Decoder gelesen, auch aus der gerenderten PDF;
+  die Prüfziffer der QR-Referenz stimmt mit dem offiziellen Beispiel der SIX überein.
+  **Vor dem ersten Versand trotzdem einmal mit der eigenen Banking-App scannen.**
 
 ## 6e. Eingescannte Belege (OCR)
 
@@ -397,8 +410,11 @@ und ein vom Scanner falsch gelesenes „Pramienbescheinigung" führen zum selben
 Ohne Synchronisation liegen die Daten nur in diesem Browser. **Browserdaten löschen = CRM leer.**
 
 - **Einstellungen → Backup exportieren (Stammdaten)**: Kunden, Dossiers, Checklisten, Dokumentenliste. Klein, monatlich machen.
-- **Backup inkl. Dateien**: zusätzlich alle abgelegten Belege (wird gross, dafür vollständig). Vor jedem Gerätewechsel.
-- **Backup einlesen** stellt alles wieder her (auch auf einem neuen Rechner).
+- **Backup inkl. Dateien**: zusätzlich alle abgelegten Belege, als **ZIP-Datei** (Beleg für Beleg
+  geschrieben – auch bei Hunderten MB stürzt der Browser nicht ab). Vor jedem Gerätewechsel und am
+  Ende jeder Saison.
+- **Backup einlesen** stellt alles wieder her (auch auf einem neuen Rechner) – nimmt die ZIP-Datei
+  und ältere `.json`-Backups gleichermassen.
 - Bei aktivierter Verschlüsselung wird das Backup mit einem eigenen Passwort geschützt, das du beim
   Export festlegst – notiere es zusammen mit dem Wiederherstellungsschlüssel.
 
@@ -432,19 +448,21 @@ im Ernstfall **nicht** hilft. Ausdrucken, ausfüllen, zum Backup legen.
 Kantons-Profile · Steuervergleich mit Word- und PDF-Bericht · Honorar und Rechnungen ·
 lokale Verschlüsselung mit Sperrbildschirm und Wiederherstellungsschlüssel · verschlüsselte Backups ·
 Gmail-Versand und Beleg-Import · Ende-zu-Ende-verschlüsselte Cloud-Synchronisation ·
-eigene Marke mit Logo auf allen Dokumenten und weitergebbarem Markenprofil · Demo-Modus.
+eigene Marke mit Logo auf allen Dokumenten und weitergebbarem Markenprofil · Schweizer QR-Rechnung ·
+bearbeitbare Steuertarife · Backup inkl. Belegen als ZIP · Demo-Modus.
 
 | Nächste Ausbaustufe | Aufwand | Vorteil |
 |---|---|---|
-| Schweizer QR-Rechnung im Rechnungsdruck | 2–3 Tage | Zahlung per Banking-App scannbar |
 | Mehrseitige Scans automatisch in Einzelbelege trennen | 2–3 Tage | ein Stapel-Scan wird zu mehreren Dokumenten |
 | Direkter Import in ZHprivateTax / eTax | offen – Schnittstelle prüfen | Doppelerfassung entfällt |
 | Mehrbenutzerbetrieb mit Rollen | 3–5 Tage | Kanzleien ab 3 Personen |
 | Tarife weiterer Kantone im Steuervergleich | ½ Tag pro Kanton | Tarifberechnung ausserhalb ZH |
 
 **Ehrliche Einordnung für den Kanzleialltag:**
-- **Die Steuertarife sind Ausgangsdaten, keine amtliche Quelle.** Einmal pro Steuerperiode prüfen und
-  unter *Einstellungen → Steuertarife* bestätigen. Bis dahin trägt jeder Bericht einen Vorbehalt.
+- **Die Steuertarife sind Ausgangsdaten, keine amtliche Quelle – und nicht die von 2025.** Der Zürcher
+  Grundtarif 2025 beginnt z.B. bei CHF 7'000, hinterlegt sind die älteren Werte (ab CHF 6'900). Einmal pro
+  Steuerperiode unter *Einstellungen → Steuertarife* korrigieren und bestätigen. Bis dahin trägt jeder
+  Bericht einen Vorbehalt.
 - **Das CRM erstellt keine Steuererklärung und reicht nichts ein.** Es bereitet vor, sortiert, belegt
   und kommuniziert; die Deklaration selbst läuft weiter über ZHprivateTax/eTax.
 - **Tarifberechnung nur für Zürich.** Für andere Kantone bleibt der Grenzsatz-Modus – der rechnet die

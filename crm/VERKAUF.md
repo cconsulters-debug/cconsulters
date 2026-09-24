@@ -37,7 +37,7 @@ höchstens die Dokumentensortierung als Ergänzung.
 | **Basis** | Lizenz, eigenes Branding, Einrichtung per Videocall (1 Std.), Handbuch | **CHF 890** einmalig |
 | **Plus** | Basis + Gmail-Anbindung eingerichtet + Cloud-Sync eingerichtet | **CHF 1'490** einmalig |
 | **Wartung** | Updates, neue Steuerperiode, 4 Supportanfragen/Jahr | **CHF 240/Jahr** |
-| **Rechnungsmodul** | im Preis enthalten: Tarifliste, MwSt, Nummernkreis, Rechnungsdruck | – |
+| **Rechnungsmodul** | im Preis enthalten: Tarifliste, MwSt, Nummernkreis, Rechnung als PDF mit Schweizer QR-Zahlteil | – |
 | **Kantonspaket** | Ziffern eines weiteren Kantons erfasst und geprüft | **CHF 290** einmalig |
 | **Anpassung** | eigene Register, Sonderwünsche | **CHF 140/Std.** |
 
@@ -61,8 +61,8 @@ Stundenansatz von CHF 120 sind das CHF 6'000 – das Paket amortisiert sich im e
    PK-Einkauf von CHF 45'000 gestaffelt über drei Jahre CHF 1'277 mehr spart als einmalig – das ist
    Beratungsleistung, die der Kunde direkt verrechnen kann.
 7. **Abrechnung zeigen:** aus dem Dossier heraus eine Rechnung erzeugen, Position aus der Tarifliste
-   wählen, drucken. Treuhänder erkennen dort sofort, dass die Saison damit vollständig abgedeckt ist.
-6. **Abschluss:** „Soll ich es Ihnen bis Freitag mit Ihrem Logo und Ihren Farben einrichten?"
+   wählen, als PDF mit QR-Zahlteil speichern – und den QR-Code live mit der Banking-App scannen. Treuhänder erkennen dort sofort, dass die Saison damit vollständig abgedeckt ist.
+8. **Abschluss:** „Soll ich es Ihnen bis Freitag mit Ihrem Logo und Ihren Farben einrichten?"
 
 **Vor der Demo immer:** Demo-Daten laden, echte Kundendaten vorher entfernen oder ein separates
 Browserprofil verwenden.
