@@ -313,20 +313,36 @@ Verkaufsgespräche (und entfernt sie auf Knopfdruck wieder).
   offline. Sie bringt Kopfzeile auf jeder Seite, rechtsbündige Beträge, automatischen Seitenumbruch
   und Seitenzahlen mit.
 
-> **Vor der ersten Mandantenauswertung die Tarifwerte prüfen** (im Code unter `TARIFE`, Stand 2024).
+> **Vor der ersten Mandantenauswertung die Tarifwerte prüfen** (Einstellungen → Steuertarife).
 > Tarife und Sozialabzüge ändern jährlich; die Berechnung bleibt provisorisch – massgebend ist die
 > Veranlagung des Steueramts. Wer nichts pflegen will, arbeitet im Grenzsatz-Modus.
 
-### Tarife prüfen – einmal pro Steuerperiode
+- **Säule 3a bei Ehepaaren:** Unter *Grundlagen* wählst du, ob eine Person oder **beide Ehegatten**
+  einzahlen. Bei zwei Erwerbstätigen gilt das doppelte Maximum – «max» füllt bis dahin auf, und die
+  Überschreitungswarnung rechnet mit dem richtigen Wert. Varianten sind Alternativen: geprüft wird die
+  grösste, nicht die Summe.
+- **Beide Jahre, ein Tarif:** Vorjahr und neues Jahr werden mit denselben hinterlegten Tarifwerten
+  gerechnet. Die Differenz zeigt also die Wirkung geänderter Einkünfte und Abzüge, nicht Tarifänderungen –
+  der Bericht sagt das ausdrücklich.
 
-*Einstellungen → Steuertarife* zeigt alle hinterlegten Werte: die Stufen der direkten Bundessteuer,
-die Stufen des Kantons Zürich, Steuerfüsse, Personalsteuer, Kinderabzüge und die Maxima der Säule 3a –
-je mit Quellenangabe.
+### Tarife prüfen und korrigieren – einmal pro Steuerperiode
 
-**Die mitgelieferten Werte sind Ausgangsdaten.** Sie ändern jährlich (kalte Progression, Steuerfüsse).
-Solange sie nicht bestätigt sind, trägt **jeder** Steuervergleich den Vermerk, dass die Tarife
-ungeprüft sind – am Bildschirm und im Bericht. Nach der Prüfung gegen ESTV und § 35/§ 47 StG ZH
-bestätigst du sie mit Kürzel und Steuerjahr; danach erscheint stattdessen «Tarife geprüft am … durch …».
+*Einstellungen → Steuertarife*:
+
+1. **«Tarife bearbeiten»** – alle Werte werden zu Eingabefeldern: Stufen der direkten Bundessteuer
+   (Grund- und Verheiratetentarif, Einheitssatz), Stufen des Kantons Zürich, Vermögenssteuer-Tranchen
+   und Freibeträge, Steuerfuss Kanton, Personalsteuer, Kinder- und Verheiratetenabzüge, Säule-3a-Maxima
+   sowie die Steuerfüsse der Gemeinden (Gemeinden ergänzen oder entfernen).
+2. Werte mit den amtlichen Tabellen vergleichen (ESTV, § 35 / § 47 StG ZH, Steuerfussbeschluss) und
+   korrigieren. **«Sockelbeträge aus der Staffel berechnen»** rechnet die Sockel automatisch nach.
+   Unplausibles (Stufe tiefer als die vorherige, Sockel passt nicht zur Staffel) wird angezeigt.
+3. **Steuerjahr** der Werte eintragen und **speichern**.
+4. **«Tarife als geprüft bestätigen»** mit Kürzel und Steuerjahr.
+
+Jede Änderung hebt eine frühere Bestätigung auf. Die Bestätigung gilt **für ein Steuerjahr**: Betrifft
+ein Vergleich ein anderes Jahr, trägt der Bericht wieder den Vorbehalt. Bestehende Vergleiche übernehmen
+geänderte Abzüge und Steuerfüsse über den Knopf **«Abzüge aus Tarif-Einstellungen holen»**.
+**«Ausgangswerte wiederherstellen»** verwirft die eigenen Werte.
 
 ## 6d. Honorar & Rechnungen
 
@@ -387,6 +403,11 @@ Ohne Synchronisation liegen die Daten nur in diesem Browser. **Browserdaten lös
   Export festlegst – notiere es zusammen mit dem Wiederherstellungsschlüssel.
 
 Backups auf einer verschlüsselten Festplatte oder einem verschlüsselten USB-Stick ablegen – sie enthalten Kundendaten.
+
+**Dauerhafter Speicher:** Beim Start bittet das CRM den Browser, die Daten **nicht** bei Platzmangel
+selbständig zu löschen. *Einstellungen → Demo & Statistik* zeigt, ob der Browser das zugesagt hat.
+Steht dort «NICHT zugesagt»: die CRM-Adresse als Lesezeichen speichern (oder in Chrome/Edge über
+das Menü als App installieren) – dann gewährt der Browser die Zusage in aller Regel.
 
 **Speicherplatz im Auge behalten:** *Einstellungen → Demo & Statistik* zeigt, wie viel Platz der
 Browser belegt und wie viel er insgesamt gewährt. Ab 80 % erscheint eine Warnung. Reicht der Platz

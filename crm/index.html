@@ -811,6 +811,7 @@ async function loadAll(){
   S.vergleiche = await dbAll("vergleiche");
   const st = await dbGet("kv","settings");
   if(st && st.v) S.settings = Object.assign(S.settings, st.v);
+  tarifAnwenden();
 }
 const saveSettings = () => dbPut("kv", { k:"settings", v:S.settings });
 
@@ -1229,25 +1230,83 @@ function bezAusText(text, docType, client){
     pk_einkauf:["einkaufssumme","einkauf","total einkauf"],
     praemien_kk:["total praemien","praemien total","jahrespraemie","total der praemien"],
     bankauszug:["saldo per","saldo","steuerwert","kontostand"],
-    depotauszug:["steuerwert","total steuerwert","depotwert"],
-    hypothek:["zinsen","zinsbelastung","total zinsen"],
-    schuldzinsen:["zinsen","total zinsen"]
+    depotauszug:["total steuerwert","steuerwert","depotwert"],
+    hypothek:["hypothekarschuld","schuld per","saldo per","restschuld","hypothek total","kapital"],
+    schulden:["restschuld","schuld per","saldo per","kreditbetrag","total schulden"],
+    schuldzinsen:["restschuld","schuld per","saldo per","kreditbetrag"],
+    darlehen_guthaben:["saldo per","darlehensbetrag","guthaben","restschuld"],
+    spenden:["total spenden","total der zuwendungen","spende","betrag"],
+    kinderbetreuung:["total","betreuungskosten","rechnungsbetrag"],
+    krankheitskosten:["selbstbehalt","kostenbeteiligung","total","rechnungsbetrag"],
+    weiterbildung:["total","kursgeld","rechnungsbetrag"],
+    rueckkaufswert:["rueckkaufswert"],
+    krypto:["total","gesamtwert","steuerwert"]
   }[docType] || [];
-  for(const k of stichwort){
-    const i = t.indexOf(normText(k));
-    if(i === -1) continue;
-    const f = vglFindBetrag(t, i + k.length, 90);
-    if(f && f.wert > 0){ b.betrag = String(f.wert); break; }
+  const regel = bezRegel(docType);
+  const erster = liste => {
+    for(const k of liste){
+      const kn = normText(k);
+      let i = t.indexOf(kn);
+      while(i !== -1){
+        const f = vglFindBetrag(t, i + kn.length, 90);
+        if(f && f.wert > 0) return String(f.wert);
+        i = t.indexOf(kn, i + kn.length);
+      }
+    }
+    return "";
+  };
+  const betrag = erster(stichwort);
+  if(betrag) b.betrag = betrag;
+  /* Bezahlte Zinsen: eigenes Feld, wo die Regel es verlangt (Konto, Hypothek,
+     Schulden) – nie als "Betrag", der bei Hypotheken die Schuld meint. */
+  if((regel.felder || []).includes("zinsen")){
+    const zins = erster(["total zinsen","bezahlte zinsen","zinsbelastung","hypothekarzins","schuldzins",
+                         "bruttozins","zinsertrag","zinsgutschrift","zinsen"]);
+    if(zins && zins !== b.betrag) b.zinsen = zins;
   }
-  /* Person: der Kundenname, wenn er im Beleg vorkommt – sonst offen lassen */
-  const nachname = normText(client?.name || "");
-  if(nachname.length > 2 && t.includes(nachname)) b.person = clientName(client).replace(", ", " ");
+  b.person = bezPerson(t, docType, client) || undefined;
+  if(!b.person) delete b.person;
   return b;
+}
+/* Wem gehört der Beleg? Kundin/Kunde, Partner/in oder ein Kind – erkannt am
+   Vornamen im Belegtext. Bei Ehepaaren mit gleichem Nachnamen reicht der
+   Nachname allein nicht: sonst trüge der Lohnausweis des Partners den Namen
+   der Kundin. Findet sich nur der Nachname, gilt der Beleg als Kundenbeleg
+   (beim Typ "Lohnausweis Partner/in" als Partnerbeleg).                   */
+function bezPerson(t, docType, client){
+  if(!client) return "";
+  const nach = normText(client.name || "");
+  const pers = [
+    { vor:client.vorname, nach:client.name, rolle:"kunde" },
+    { vor:client.partner?.vorname, nach:client.partner?.name || client.name, rolle:"partner" },
+    ...(client.kinder || []).map(k => ({ vor:k.name, nach:client.name, rolle:"kind" }))
+  ].filter(p => p.vor || p.nach);
+  const hat = w => { const n = normText(w || ""); return n.length > 1 && keyHit(t, n); };
+  const name = p => [p.nach, p.vor].filter(Boolean).join(" ");
+  /* "Elena & Paul" im Vornamenfeld: jeder Vorname zählt einzeln. */
+  const vornamen = p => String(p.vor || "").split(/\s*(?:&|\+|,|\bund\b)\s*/).filter(Boolean);
+  const treffer = pers.filter(p => hat(p.nach) && vornamen(p).some(hat));
+  if(treffer.length === 1) return name(treffer[0]);
+  if(treffer.length > 1){
+    const bevorzugt = treffer.find(p => p.rolle === (docType === "lohnausweis_p" ? "partner" : "kunde"));
+    return name(bevorzugt || treffer[0]);
+  }
+  if(nach.length > 2 && keyHit(t, nach)){
+    const p = docType === "lohnausweis_p" && (client.partner?.vorname || client.partner?.name) ? pers[1] : pers[0];
+    return name(p);
+  }
+  return "";
+}
+/* Bereits eingetippte Angaben nie überschreiben – nur leere Felder füllen. */
+function bezErgaenzen(alt, neu){
+  const out = { ...(alt || {}) };
+  for(const [k, v] of Object.entries(neu || {})) if(v && !String(out[k] || "").trim()) out[k] = v;
+  return out;
 }
 function renumber(clientId, jahr){
   const client = clientById(clientId);
   const list = docsOf(clientId, jahr).sort((a,b) =>
-    (a.register+a.ziffer).localeCompare(b.register+b.ziffer) || a.added.localeCompare(b.added));
+    ((a.register||"")+(a.ziffer||"")).localeCompare((b.register||"")+(b.ziffer||"")) || String(a.added||"").localeCompare(String(b.added||"")));
   const counter = {};
   list.forEach(d => {
     const k = d.register + d.docType;
@@ -1301,8 +1360,11 @@ function cmapParsen(txt){
   const map = new Map();
   const hexZahl = h => parseInt(h, 16);
   const ziel = h => {                       // Zielzeichen, ggf. mehrere
+    /* Manche Erzeuger schreiben das Ziel einbytig ("<41>" statt "<0041>") –
+       ohne diese Sonderregel käme dafür eine leere Zeichenkette heraus. */
+    if(h.length < 4) return String.fromCharCode(hexZahl(h));
     let s = "";
-    for(let i = 0; i + 3 < h.length + 1; i += 4) s += String.fromCharCode(hexZahl(h.substr(i,4)));
+    for(let i = 0; i + 4 <= h.length; i += 4) s += String.fromCharCode(hexZahl(h.substr(i,4)));
     return s;
   };
   let m;
@@ -1313,17 +1375,23 @@ function cmapParsen(txt){
   }
   const bfrange = /beginbfrange([\s\S]*?)endbfrange/g;
   while((m = bfrange.exec(txt))){
-    const einfach = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g;
-    let p;
-    while((p = einfach.exec(m[1]))){
-      const von = hexZahl(p[1]), bis = hexZahl(p[2]), start = hexZahl(p[3]);
-      for(let c = von; c <= bis && c - von < 4096; c++) map.set(c, String.fromCharCode(start + (c - von)));
-    }
+    /* Erst die Listenform "<von> <bis> [<a> <b> …]" lesen und entfernen –
+       sonst hielte die einfache Form drei Listeneinträge für einen Bereich. */
     const liste = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*\[([\s\S]*?)\]/g;
+    let p;
     while((p = liste.exec(m[1]))){
       const von = hexZahl(p[1]);
       const eintraege = p[3].match(/<([0-9A-Fa-f]+)>/g) || [];
       eintraege.forEach((e, i) => map.set(von + i, ziel(e.slice(1,-1))));
+    }
+    const rest = m[1].replace(liste, " ");
+    const einfach = /<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>/g;
+    while((p = einfach.exec(rest))){
+      const von = hexZahl(p[1]), bis = hexZahl(p[2]);
+      const basis = ziel(p[3]);
+      /* Bei mehreren Zielzeichen wird nur das letzte hochgezählt (Norm). */
+      const vorne = basis.slice(0, -1), start = basis.charCodeAt(basis.length - 1);
+      for(let c = von; c <= bis && c - von < 4096; c++) map.set(c, vorne + String.fromCharCode(start + (c - von)));
     }
   }
   return map;
@@ -1336,9 +1404,37 @@ async function pdfSchriften(doc, bytes){
   const objRe = /(\d+)\s+0\s+obj/g;
   while((m = objRe.exec(doc))) objPos[m[1]] = m.index + m[0].length;
 
+  /* Neuere PDF (Word, Acrobat, viele Banken) packen die Schriftbeschreibungen
+     in komprimierte Objektströme (/ObjStm). Ohne diese auszupacken fände das
+     CRM die Zeichensatz-Tabellen nicht – und läse wieder Buchstabensalat. */
+  const imStrom = {};
+  const osRe = /\/Type\s*\/ObjStm/g;
+  while((m = osRe.exec(doc))){
+    const dictStart = doc.lastIndexOf("<<", m.index);
+    const s = doc.indexOf("stream", m.index);
+    if(dictStart === -1 || s === -1) continue;
+    const kopf = doc.slice(dictStart, s);
+    let a = s + 6;
+    if(doc[a] === "\r") a++;
+    if(doc[a] === "\n") a++;
+    const e = doc.indexOf("endstream", a);
+    if(e === -1) continue;
+    const lenM = kopf.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
+    let data = bytes.subarray(a, lenM && a + (+lenM[1]) <= e ? a + (+lenM[1]) : e);
+    if(/FlateDecode/.test(kopf)){ data = await inflate(data); if(!data) continue; }
+    const inhalt = latin1(data);
+    const n = +(kopf.match(/\/N\s+(\d+)/) || [])[1] || 0;
+    const first = +(kopf.match(/\/First\s+(\d+)/) || [])[1] || 0;
+    const zahlen = inhalt.slice(0, first).trim().split(/\s+/).map(Number);
+    for(let i = 0; i < n && 2 * i + 1 < zahlen.length; i++){
+      const nr = zahlen[2 * i], von = first + zahlen[2 * i + 1];
+      const bis = 2 * i + 3 < zahlen.length ? first + zahlen[2 * i + 3] : inhalt.length;
+      imStrom[nr] = inhalt.slice(von, bis);
+    }
+  }
   const objText = nr => {
     const start = objPos[nr];
-    if(start === undefined) return "";
+    if(start === undefined) return imStrom[nr] || "";
     const ende = doc.indexOf("endobj", start);
     return doc.slice(start, ende === -1 ? start + 2000 : ende);
   };
@@ -1368,9 +1464,17 @@ async function pdfSchriften(doc, bytes){
   /* /Font << /F1 5 0 R /F2 8 0 R >> einsammeln */
   const fontRe = /\/Font\s*<<([\s\S]{0,2000}?)>>/g;
   const zuordnung = new Map();
-  while((m = fontRe.exec(doc))){
+  const paareLesen = txt => {
     const paare = /\/([A-Za-z0-9#+.\-]+)\s+(\d+)\s+0\s+R/g;
-    let p; while((p = paare.exec(m[1]))) if(!zuordnung.has(p[1])) zuordnung.set(p[1], p[2]);
+    let p; while((p = paare.exec(txt))) if(!zuordnung.has(p[1])) zuordnung.set(p[1], p[2]);
+  };
+  const quellen = [doc, ...Object.values(imStrom)];
+  for(const q of quellen){
+    fontRe.lastIndex = 0;
+    while((m = fontRe.exec(q))) paareLesen(m[1]);
+    /* Schriftliste als eigenes Objekt: /Font 12 0 R */
+    const ind = /\/Font\s+(\d+)\s+0\s+R/g;
+    while((m = ind.exec(q))) paareLesen(objText(m[1]));
   }
   for(const [name, nr] of zuordnung){
     let text = objText(nr);
@@ -1451,7 +1555,10 @@ async function pdfTextLocal(file, maxBytes = 12e6){
     const schriften = await pdfSchriften(doc, bytes);
     let out = "", i = 0, streams = 0;
     while((i = doc.indexOf("stream", i)) !== -1 && streams < 60){
-      const dictStart = doc.lastIndexOf("<<", i);
+      /* Ganzes Objekt-Wörterbuch ab "N 0 obj" – nicht nur das letzte "<<",
+         das bei verschachtelten Angaben (/DecodeParms << … >>) den Typ verfehlt. */
+      const objStart = doc.lastIndexOf("obj", i);
+      const dictStart = objStart !== -1 && i - objStart < 4000 ? objStart : doc.lastIndexOf("<<", i);
       const dict = dictStart === -1 ? "" : doc.slice(dictStart, i);
       let s = i + 6;
       if(doc[s] === "\r") s++;
@@ -1463,6 +1570,7 @@ async function pdfTextLocal(file, maxBytes = 12e6){
          ihr Binärinhalt würde die Erkennung nur verrauschen. */
       if(/\/(Image|DCTDecode|JPXDecode|JBIG2Decode|CCITTFaxDecode)/.test(dict)) continue;
       if(/\/(FontFile\d?|Length1|CIDFontType\dC?)/.test(dict)) continue;
+      if(/\/Type\s*\/(ObjStm|XRef|Metadata|EmbeddedFile)/.test(dict)) continue;   // Verwaltungsdaten, kein Seitentext
       /* Ende exakt bestimmen: /Length wenn vorhanden, sonst Zeilenumbrüche
          vor "endstream" abschneiden – sonst scheitert die Dekomprimierung. */
       const lenM = dict.match(/\/Length\s+(\d+)(?!\s+\d+\s+R)/);
@@ -1917,6 +2025,24 @@ const TARIFE = {
   }
 };
 const KT_TARIF = k => TARIFE.kantone[kantonCode(k)] || null;
+/* Mitgelieferte Ausgangswerte – eigene Werte (Einstellungen → Steuertarife)
+   werden darübergelegt. So bleibt «zurücksetzen» jederzeit möglich.       */
+const TARIFE_STD = structuredClone(TARIFE);
+function tarifAnwenden(){
+  const basis = structuredClone(TARIFE_STD);
+  const e = S.settings.steuerTarif;
+  if(e && e.bund && e.zh){
+    basis.bund = { ...basis.bund, ...structuredClone(e.bund) };
+    basis.kantone.ZH = { ...basis.kantone.ZH, ...structuredClone(e.zh) };
+    Object.assign(basis.vorgaben, e.vorgaben || {});
+    if(e.steuerjahr) basis.meta.steuerjahr = +e.steuerjahr;
+    basis.meta.eigen = true;
+  }
+  /* Aus einem JSON-Backup kommt "unendlich" als null zurück. */
+  basis.kantone.ZH.vermoegen.stufen.forEach(s => { if(s.tranche == null || s.tranche === "") s.tranche = Infinity; });
+  Object.keys(TARIFE).forEach(k => delete TARIFE[k]);
+  Object.assign(TARIFE, basis);
+}
 
 /* Positionen der Steuererklärung – Grundlage der Gegenüberstellung. */
 const VGL_GRUPPEN = [
@@ -2067,9 +2193,14 @@ function vglRechnung(daten, stat, extra){
    zur bereits erfassten Einzahlung – und jeder Bericht meldete eine
    Überschreitung, die es gar nicht gibt.                                  */
 const vglIstMax = v => String(v ?? "").trim().toLowerCase() === "max";
+/* Säule 3a gilt je erwerbstätige Person. Bei Ehepaaren, die beide ein
+   Erwerbseinkommen haben, verdoppelt sich das Maximum im gemeinsamen
+   Vergleich – sonst meldete jeder Bericht eine Überschreitung.          */
+const vgl3aPersonen = stat => stat.verheiratet && stat.zweiVerdiener !== false ? 2 : 1;
+const vgl3aMax = stat => (vglNum(stat.saeule3aMitPk) || TARIFE.vorgaben.saeule3aMitPk) * vgl3aPersonen(stat);
 function vglAufloesen(sz, daten, stat){
   if(!vglIstMax(sz.s3a)) return sz;
-  const max = vglNum(stat.saeule3aMitPk) || TARIFE.vorgaben.saeule3aMitPk;
+  const max = vgl3aMax(stat);
   const erfasst = Math.max(0, vglNum((daten || {}).a_saeule3a));
   return { ...sz, s3a: Math.max(0, max - erfasst) };
 }
@@ -2111,7 +2242,7 @@ function vglStandardStatus(c){
   const gem = (kt.gemeinden || {})[c?.gemeinde] || Object.values(kt.gemeinden || {})[0] || { gemeinde:115, kirche:{ "keine":0 } };
   const verh = ["verheiratet","eingetragene Partnerschaft"].includes(c?.zivilstand);
   return { modus:"tarif", kanton:kantonCode(c?.kanton), gemeinde:c?.gemeinde || "",
-           verheiratet:verh, konfession:"keine",
+           verheiratet:verh, zweiVerdiener: verh && !!c?.profil?.partner_erwerb, konfession:"keine",
            kinder:(c?.kinder || []).length,
            fussKanton:kt.steuerfussKanton ?? 98, fussGemeinde:gem.gemeinde, fussKirche:0,
            grenzsatz:30, ...TARIFE.vorgaben };
@@ -2170,16 +2301,22 @@ function vglBericht(v){
     zeile("Total Steuerbelastung", rAlt.total, rNeu.total, true)
   ] : [];
 
-  const szenarien = (v.szenarien || []).filter(s => vglNum(s.s3a) || vglNum(s.pk) || vglNum(s.weitere))
+  const szenarien = (v.szenarien || []).filter(s => vglIstMax(s.s3a) || vglNum(s.s3a) || vglNum(s.pk) || vglNum(s.weitere))
     .map(s => vglSzenario(dNeu, st, rNeu, s));
   const staffel = vglStaffelung(dNeu, st, rNeu, v.staffelBetrag, v.staffelJahre);
 
   /* Plausibilität und Pflichthinweise */
   const hinweise = [];
-  const max3a = st.saeule3aMitPk;
-  const total3a = vglNum(dNeu.a_saeule3a) + szenarien.reduce((a,s) => a + (vglIstMax(s.s3a) ? 0 : vglNum(s.s3a)), 0);
-  if(total3a > max3a)
-    hinweise.push(`Säule 3a: erfasste und geplante Einzahlungen ergeben CHF ${chf(total3a)} – das Maximum mit Pensionskasse beträgt CHF ${chf(max3a)}.`);
+  /* Varianten sind Alternativen, keine Summe: geprüft wird die grösste. */
+  const max3a = vgl3aMax(st), pers3a = vgl3aPersonen(st);
+  const erfasst3a = vglNum(dNeu.a_saeule3a);
+  const total3a = erfasst3a + Math.max(0, ...szenarien.map(s => vglNum(s.s3a)));
+  if(erfasst3a > max3a)
+    hinweise.push(`Säule 3a: erfasst sind CHF ${chf(erfasst3a)} – das Maximum mit Pensionskasse beträgt CHF ${chf(max3a)}`
+      + (pers3a > 1 ? " (zwei erwerbstätige Ehegatten)." : "."));
+  else if(total3a > max3a + 0.5)
+    hinweise.push(`Säule 3a: erfasste und geplante Einzahlung ergeben zusammen CHF ${chf(total3a)} – das Maximum mit Pensionskasse beträgt CHF ${chf(max3a)}`
+      + (pers3a > 1 ? " (zwei erwerbstätige Ehegatten)." : "."));
   if(vglNum(dNeu.a_pkeinkauf) || szenarien.some(s => vglNum(s.pk)) || staffel)
     hinweise.push(`Einkauf Pensionskasse: Bei Kapitalbezug innert ${st.pkSperrfristJahre} Jahren nach dem Einkauf wird der Abzug verweigert bzw. aufgerechnet (Art. 79b Abs. 3 BVG).`);
   if(rNeu.ohneKantonstarif)
@@ -2195,9 +2332,13 @@ function vglBericht(v){
   });
   hinweise.push(rAlt.modus === "grenzsatz"
     ? `Grenzsatz-Modus: Die Steuerwirkung ist mit einem angenommenen Grenzsteuersatz von ${vglNum(st.grenzsatz)} % geschätzt – keine Veranlagungsberechnung.`
-    : (tarifGeprueft()
+    : (tarifPasstZu(v.jahrNeu)
         ? `Berechnung mit den hinterlegten Tarifen – ${tarifStatusText()} Provisorische Berechnung; massgebend ist die Veranlagung des Steueramts.`
-        : `ACHTUNG: Die Tarifwerte wurden für diese Steuerperiode noch nicht geprüft (Ausgangsdaten Stand ${TARIFE.meta.steuerjahr}). Vor der Weitergabe an Kundinnen und Kunden unter Einstellungen → Steuertarife prüfen und bestätigen.`));
+        : tarifGeprueft()
+          ? `ACHTUNG: Die Tarife sind für das Steuerjahr ${tarifGeprueft().jahr} geprüft, dieser Vergleich betrifft ${v.jahrNeu}. Vor der Weitergabe die Tarife ${v.jahrNeu} unter Einstellungen → Steuertarife erfassen und bestätigen.`
+          : `ACHTUNG: Die Tarifwerte (Steuerjahr ${TARIFE.meta.steuerjahr}) sind noch nicht geprüft. Vor der Weitergabe an Kundinnen und Kunden unter Einstellungen → Steuertarife prüfen und bestätigen.`));
+  if(rAlt.modus === "tarif")
+    hinweise.push(`Beide Jahre sind mit denselben Tarifwerten (Steuerjahr ${TARIFE.meta.steuerjahr}) gerechnet. Die Veränderung zeigt die Wirkung der geänderten Einkünfte und Abzüge – Tarifänderungen zwischen den Jahren sind nicht enthalten.`);
 
   return { kunde:clientName(c), mandat:c.mandat || "", ort:[c.plz, c.ort].filter(Boolean).join(" "),
            kanzlei:S.settings.kanzlei, bearbeiter:S.settings.bearbeiter, datum:deAt(today()),
@@ -2636,11 +2777,13 @@ function viewVergleich(){
       <button class="pill ${tarif ? "" : "active"}" data-modus="grenzsatz">Grenzsatz-Schätzung</button>
     </div></div>
     ${tarif
-      ? (tarifGeprueft()
+      ? (tarifPasstZu(v.jahrNeu)
           ? `<div class="hint">${esc(tarifStatusText())} Provisorische Berechnung – massgebend bleibt die Veranlagung.</div>`
-          : `<div class="hint warn"><b>Tarife noch nicht geprüft.</b> Die Werte sind Ausgangsdaten
-               (Stand ${TARIFE.meta.steuerjahr}) und ändern jährlich. Einmal pro Steuerperiode unter
-               <b>Einstellungen → Steuertarife</b> prüfen und bestätigen – sonst trägt jeder Bericht diesen Vorbehalt.</div>`)
+          : `<div class="hint warn"><b>${tarifGeprueft() ? `Tarife geprüft für ${esc(tarifGeprueft().jahr)}, nicht für ${esc(v.jahrNeu)}.`
+                                                          : "Tarife noch nicht geprüft."}</b>
+               Hinterlegt sind Werte für Steuerjahr ${esc(TARIFE.meta.steuerjahr)}; sie ändern jährlich. Einmal pro Steuerperiode unter
+               <b>Einstellungen → Steuertarife</b> erfassen und bestätigen – sonst trägt jeder Bericht diesen Vorbehalt.
+               <button class="btn-sm no-print" id="zuTarifen" style="margin-left:6px">Zu den Tarifen</button></div>`)
       : `<div class="hint warn">Schnellmodus: Es wird keine Steuerlast berechnet, sondern die Wirkung
            über einen geschätzten Grenzsteuersatz. Für Kantone ohne hinterlegten Tarif der richtige Weg.</div>`}
     <div class="grid g4">
@@ -2674,8 +2817,12 @@ function viewVergleich(){
         Steht eine Veranlagung zur Verfügung, ist der Satz daraus ablesbar.</span></div>
     </div>`}
     <div class="grid g4" style="margin-top:12px">
-      <div><label>Maximum Säule 3a (mit PK)</label><input class="num" id="stMax3a" value="${esc(st.saeule3aMitPk)}"></div>
+      <div><label>Maximum Säule 3a (mit PK) je Person</label><input class="num" id="stMax3a" value="${esc(st.saeule3aMitPk)}"></div>
+      <div><label>Säule 3a zahlen ein</label><select id="st3aPers" ${st.verheiratet ? "" : "disabled"}>
+        <option value="1" ${vgl3aPersonen(st) === 1 ? "selected" : ""}>eine Person</option>
+        <option value="2" ${vgl3aPersonen(st) === 2 ? "selected" : ""}>beide Ehegatten (je erwerbstätig)</option></select></div>
       <div><label>&nbsp;</label><button id="vglCopyAlt">Vorjahreswerte ins neue Jahr kopieren</button></div>
+      <div><label>&nbsp;</label><button id="vglTarifNeu" title="Kinder-/Verheiratetenabzüge, Säule-3a-Maximum und Steuerfüsse neu aus Einstellungen → Steuertarife holen">Abzüge aus Tarif-Einstellungen holen</button></div>
       <div><label>&nbsp;</label><button class="btn-danger" id="vglDel">Vergleich löschen</button></div>
     </div>
   </div>
@@ -2712,7 +2859,7 @@ function viewVergleich(){
     <p class="small">Jede Zeile rechnet die Steuerersparnis für das Jahr ${esc(v.jahrNeu)} –
       auf Basis der oben erfassten Werte. «Ersparnis in %» zeigt, wie viel jeder einbezahlte Franken an Steuern spart.<br>
       Steht bei Säule 3a das Wort <b>max</b>, füllt das CRM bis zum Maximum von
-      CHF ${chf(st.saeule3aMitPk)} auf – gerechnet wird also nur die <b>Differenz</b> zum bereits erfassten Betrag.</p>
+      CHF ${chf(vgl3aMax(st))}${vgl3aPersonen(st) > 1 ? " (zwei Personen)" : ""} auf – gerechnet wird also nur die <b>Differenz</b> zum bereits erfassten Betrag.</p>
     <table><thead><tr><th>Variante</th><th class="num" style="width:130px">Säule 3a</th>
       <th class="num" style="width:130px">PK-Einkauf</th><th class="num" style="width:130px">Weitere Abzüge</th>
       <th class="num" style="width:130px">Ersparnis</th><th class="num" style="width:90px">in %</th><th></th></tr></thead>
@@ -2761,6 +2908,7 @@ function viewVergleich(){
   $("#stTarif").onchange    = e => patchStat({ verheiratet:e.target.value === "1" });
   $("#stKinder").onchange   = e => patchStat({ kinder:Math.max(0, Math.round(vglNum(e.target.value))) });
   $("#stMax3a").onchange    = e => patchStat({ saeule3aMitPk:vglNum(e.target.value) });
+  $("#st3aPers").onchange   = e => patchStat({ zweiVerdiener:e.target.value === "2" });
   if($("#stFussK"))  $("#stFussK").onchange  = e => patchStat({ fussKanton:vglNum(e.target.value) });
   if($("#stFussG"))  $("#stFussG").onchange  = e => patchStat({ fussGemeinde:vglNum(e.target.value) });
   if($("#stFussKi")) $("#stFussKi").onchange = e => patchStat({ fussKirche:vglNum(e.target.value) });
@@ -2778,6 +2926,14 @@ function viewVergleich(){
     const s = inp.dataset.seite;
     (v.daten[s] = v.daten[s] || {})[inp.dataset.key] = inp.value.trim();
     await vglSave(v); render();
+  });
+  $("#zuTarifen") && ($("#zuTarifen").onclick = () => { go("settings");
+    setTimeout(() => $("#tarifKarte")?.scrollIntoView({ behavior:"smooth" }), 50); });
+  $("#vglTarifNeu") && ($("#vglTarifNeu").onclick = () => {
+    const kt = KT_TARIF(v.stat.kanton), g = (kt?.gemeinden || {})[v.stat.gemeinde];
+    patchStat({ ...TARIFE.vorgaben, ...(kt ? { fussKanton:kt.steuerfussKanton } : {}),
+                ...(g ? { fussGemeinde:g.gemeinde } : {}) });
+    toast("Abzüge und Steuerfüsse aus den Tarif-Einstellungen übernommen");
   });
   $("#vglCopyAlt").onclick = async () => {
     if(!confirmBox(`Werte ${v.jahrAlt} in die Spalte ${v.jahrNeu} kopieren? Bestehende Werte werden überschrieben.`)) return;
@@ -3790,6 +3946,9 @@ async function bildAlsPdf(blob, titel){
     return await d.blob();
   }catch(e){ return null; }
 }
+/* Name im ZIP: Fotos und Scans werden dort zu PDF – das Inhaltsverzeichnis
+   nennt deshalb dieselbe Endung wie die Datei im ZIP. */
+const zipName = d => isBild(d.origName) ? d.newName.replace(/\.[A-Za-z0-9]+$/, "") + ".pdf" : d.newName;
 async function dossierZipBlob(c, jahr){
   const docs = docsOf(c.id, jahr);
   if(!docs.length) return null;
@@ -3813,7 +3972,7 @@ async function dossierZipBlob(c, jahr){
     let blob = full.blob, name = d.newName;
     if(isBild(d.origName)){
       const pdf = await bildAlsPdf(full.blob, d.newName);
-      if(pdf){ blob = pdf; name = d.newName.replace(/\.[A-Za-z0-9]+$/, "") + ".pdf"; }
+      if(pdf){ blob = pdf; name = zipName(d); }
     }
     files.push({ name:eindeutig(name), data:new Uint8Array(await blob.arrayBuffer()) });
   }
@@ -3830,7 +3989,7 @@ function tocText(c, jahr){
   REGISTERS.filter(r => docs.some(d => d.register === r.id)).forEach(r => {
     out += `\n${r.nr} · ${r.label}\n`;
     docs.filter(d => d.register === r.id).sort((a,b) => a.newName.localeCompare(b.newName))
-        .forEach(d => out += `   ${d.newName}${d.ziffer !== "–" ? "   (Ziff. " + d.ziffer + ")" : ""}\n`);
+        .forEach(d => out += `   ${zipName(d)}${d.ziffer !== "–" ? "   (Ziff. " + d.ziffer + ")" : ""}\n`);
   });
   out += `\n\nCHECKLISTE: ${st.done}/${st.total} erledigt\n`;
   st.open.forEach(i => out += `   OFFEN: ${i.label}${i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : ""}\n`);
@@ -3838,6 +3997,7 @@ function tocText(c, jahr){
 }
 function printToc(c, jahr){
   const w = window.open("", "_blank");
+  if(!w) return toast("Neues Fenster wurde blockiert – bitte Pop-ups für diese Seite erlauben");
   w.document.write(`<pre style="font:13px ui-monospace,monospace;white-space:pre-wrap">${esc(tocText(c, jahr))}</pre>`);
   w.document.close(); w.print();
 }
@@ -3861,8 +4021,10 @@ function viewConverter(){
       <select id="convYear" style="width:auto">${yearOptions(jahr)}</select>
     </div>
   </div>
-  <div class="hint">Benennungsschema: <span class="mono">Jahr_Register_Ziffer_Dokumenttyp_Kunde_Nr.pdf</span> –
-    Beispiel <span class="mono">${jahr}_02_1.1_Lohnausweis_${esc(slug(clientName(c).replace(", ","-")))}_01.pdf</span></div>
+  <div class="hint">Benennung nach der Anleitung «Steuerdokumente sortieren»:
+    <span class="mono">Jahr_Register_Ziffer_Dokumenttyp_Angaben_Nr.pdf</span> – die Angaben (Person, Arbeitgeber/Institut,
+    IBAN, Zeitraum, Betrag, Zinsen) liest das CRM aus dem Beleg; Fehlendes trägst du unten nach.
+    Beispiel <span class="mono">${jahr}_02_1.1_Lohnausweis-alle-Arbeitgeber_${esc(slug(clientName(c).replace(", ","-")))}_Migros-AG_01.01.-31.12.${jahr}_CHF-52340_01.pdf</span></div>
   <div class="card">
     <div class="drop" id="drop">
       <b>Dateien hierher ziehen</b>
@@ -3925,8 +4087,9 @@ function viewConverter(){
   ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", e => intake([...e.dataTransfer.files], jahr));
   $$(".qtype").forEach(sel => sel.onchange = () => { const t = DT[sel.value];
-    Object.assign(S.queue[+sel.dataset.q],
-      { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), sicher:true });
+    const q = S.queue[+sel.dataset.q];
+    Object.assign(q, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), sicher:true,
+                       bez:bezErgaenzen(q.bez, bezAusText(q.text, t.id, c)) });
     render();   // andere Regel = andere Felder
   });
   $$("[data-qb]").forEach(inp => inp.onchange = () => {
@@ -3934,7 +4097,7 @@ function viewConverter(){
     (q.bez = q.bez || {})[inp.dataset.f] = inp.value.trim();
     render();
   });
-  $$(".qyear").forEach(sel => sel.onchange = () => { S.queue[+sel.dataset.qy].jahr = sel.value; });
+  $$(".qyear").forEach(sel => sel.onchange = () => { S.queue[+sel.dataset.qy].jahr = sel.value; render(); });
   $$("[data-qx]").forEach(b => b.onclick = () => { S.queue.splice(+b.dataset.qx,1); render(); });
   $$("[data-ocr]").forEach(b => b.onclick = async () => {
     const q = S.queue[+b.dataset.ocr], stat = $("#status");
@@ -3943,7 +4106,9 @@ function viewConverter(){
       const text = await ocrFile(q.file, pct => stat.textContent = `OCR ${q.name}: ${pct}%`);
       const cl = classify(q.name, text), t = DT[cl.docType];
       Object.assign(q, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton),
-                         sicher:cl.sicher, hits:cl.hits, jahr: detectYear(text, q.name) || q.jahr });
+                         sicher:cl.sicher, hits:cl.hits, jahr: detectYear(text, q.name) || q.jahr,
+                         text:String(text || "").slice(0, 30000),
+                         bez:bezErgaenzen(q.bez, bezAusText(text, t.id, c)) });
       stat.textContent = cl.sicher ? "OCR erfolgreich erkannt." : "OCR gelesen – Zuordnung bitte prüfen.";
       render();
     }catch(e){ S.convMsg = e.message; stat.textContent = e.message; b.disabled = false; render(); }
@@ -3997,6 +4162,9 @@ async function intake(files, jahr){
                    ziffer:zifferFor(t.id, kunde.kanton),
                    jahr: detectYear(text, f.name) || String(jahr),
                    bez: bezAusText(text, t.id, kunde),
+                   /* Text bleibt erhalten: wählt man einen anderen Typ, werden
+                      dessen Angaben daraus nachgelesen, ohne erneutes Einlesen. */
+                   text: String(text || "").slice(0, 30000),
                    sicher:cl.sicher, hits:cl.hits });
   }
   if(stat) stat.textContent = "";
@@ -4572,74 +4740,234 @@ function markeBind(){
 const tarifGeprueft = () => S.settings.tarifGeprueft || null;
 function tarifStatusText(){
   const g = tarifGeprueft();
-  if(!g) return `Tarife noch nicht geprüft (Ausgangsdaten Stand ${TARIFE.meta.steuerjahr}).`;
+  if(!g) return `Tarife noch nicht geprüft (Werte für Steuerjahr ${TARIFE.meta.steuerjahr}${TARIFE.meta.eigen ? ", selbst erfasst" : ", Ausgangsdaten"}).`;
   return `Tarife geprüft am ${deAt(g.am)}${g.durch ? " durch " + g.durch : ""} für Steuerjahr ${g.jahr}.`;
+}
+/* Gilt die Prüfung für das Jahr, das verglichen wird? */
+function tarifPasstZu(jahr){
+  const g = tarifGeprueft();
+  return !!g && String(g.jahr) === String(jahr);
+}
+
+/* ---------- Bearbeiten ----------
+   Gearbeitet wird an einem Entwurf; erst «Speichern» übernimmt ihn.
+   Pfade wie "bund.alleinstehend.stufen.3.ab" adressieren ein Feld.
+   Sätze werden in % (Einkommen) bzw. ‰ (Vermögen) angezeigt.        */
+const tarifHol = (obj, pfad) => pfad.split(".").reduce((o, k) => o == null ? o : o[k], obj);
+function tarifSetz(obj, pfad, wert){
+  const teile = pfad.split("."), letzt = teile.pop();
+  const ziel = teile.reduce((o, k) => o[k], obj);
+  ziel[letzt] = wert;
+}
+function tarifEntwurfNeu(){
+  return structuredClone({ steuerjahr:TARIFE.meta.steuerjahr, bund:TARIFE.bund,
+                           zh:TARIFE.kantone.ZH, vorgaben:TARIFE.vorgaben });
+}
+/* Sockelbeträge aus der Staffel errechnen: jeder Sockel = Sockel davor
+   + Einkommensspanne × Satz davor. Erspart das Nachrechnen von Hand. */
+function tarifSockelRechnen(stufen){
+  for(let i = 1; i < stufen.length; i++){
+    const v = stufen[i - 1];
+    stufen[i].sockel = Math.round((v.sockel + (stufen[i].ab - v.ab) * v.satz) * 100) / 100;
+  }
+}
+/* Offensichtliche Fehler finden, bevor gerechnet wird. */
+function tarifPruefen(e){
+  const fehler = [];
+  const staffel = (st, titel) => {
+    for(let i = 1; i < st.length; i++){
+      if(!(st[i].ab > st[i-1].ab)) fehler.push(`${titel}: Stufe ${i+1} beginnt nicht über der vorherigen.`);
+      const soll = st[i-1].sockel + (st[i].ab - st[i-1].ab) * st[i-1].satz;
+      if(Math.abs(soll - st[i].sockel) > Math.max(5, soll * 0.01))
+        fehler.push(`${titel}: Sockel ab CHF ${chf(st[i].ab)} ist ${chf(st[i].sockel)}, aus der Staffel ergäbe sich ${chf(soll)}.`);
+    }
+    st.forEach(s => { if(s.satz < 0 || s.satz > 0.5) fehler.push(`${titel}: Satz ${s.satz * 100} % ist unplausibel.`); });
+  };
+  staffel(e.bund.alleinstehend.stufen, "Bund Grundtarif");
+  staffel(e.bund.verheiratet.stufen, "Bund Verheiratetentarif");
+  staffel(e.zh.einkommen.alleinstehend.stufen, "Kanton Grundtarif");
+  staffel(e.zh.einkommen.verheiratet.stufen, "Kanton Verheiratetentarif");
+  return fehler;
+}
+function tarifStaffelHtml(pfad, titel, e, bearbeiten){
+  const t = tarifHol(e, pfad);
+  const zelle = (p, wert, skala = 1, stellen = 2) => bearbeiten
+    ? `<input class="num vgl-in" data-tp="${p}" data-skala="${skala}" value="${esc(+(wert * skala).toFixed(stellen))}" inputmode="decimal">`
+    : (skala === 1 ? chf(wert) : (wert * skala).toLocaleString("de-CH", { maximumFractionDigits:stellen }) + (skala === 100 ? " %" : " ‰"));
+  return `<h4 style="margin:14px 0 6px">${esc(titel)}</h4>
+    <div style="overflow-x:auto"><table><thead><tr>
+      <th class="num">ab CHF</th><th class="num">Sockelbetrag CHF</th><th class="num">Satz %</th>${bearbeiten ? "<th></th>" : ""}</tr></thead>
+      <tbody>${t.stufen.map((s, i) => `<tr><td class="num">${zelle(`${pfad}.stufen.${i}.ab`, s.ab)}</td>
+        <td class="num">${zelle(`${pfad}.stufen.${i}.sockel`, s.sockel)}</td>
+        <td class="num">${zelle(`${pfad}.stufen.${i}.satz`, s.satz, 100, 3)}</td>
+        ${bearbeiten ? `<td class="num"><button class="btn-sm btn-ghost" data-tdel="${pfad}.stufen" data-i="${i}" title="Stufe entfernen">✕</button></td>` : ""}</tr>`).join("")}
+      </tbody></table></div>
+    ${t.flatAb !== undefined ? `<p class="small" style="margin-top:6px">Ab CHF ${bearbeiten
+      ? `<input class="num vgl-in" style="width:130px;display:inline-block" data-tp="${pfad}.flatAb" data-skala="1" value="${esc(t.flatAb)}">`
+      : chf(t.flatAb)} gilt ein Einheitssatz von ${bearbeiten
+      ? `<input class="num vgl-in" style="width:90px;display:inline-block" data-tp="${pfad}.flatSatz" data-skala="100" value="${esc(+(t.flatSatz * 100).toFixed(3))}">`
+      : (t.flatSatz * 100).toLocaleString("de-CH", { maximumFractionDigits:3 })} % auf dem ganzen Einkommen.</p>` : ""}
+    ${bearbeiten ? `<div class="row" style="margin-top:6px">
+      <button class="btn-sm" data-tadd="${pfad}.stufen">+ Stufe</button>
+      <button class="btn-sm" data-tsockel="${pfad}.stufen">Sockelbeträge aus der Staffel berechnen</button></div>` : ""}`;
 }
 function tarifCardHtml(){
   const g = tarifGeprueft();
-  const kt = TARIFE.kantone.ZH;
-  const stufen = (t, titel) => `
-    <h4 style="margin:14px 0 6px">${esc(titel)}</h4>
-    <div style="overflow-x:auto"><table><thead><tr>
-      <th class="num">ab CHF</th><th class="num">Sockelbetrag</th><th class="num">Satz</th></tr></thead>
-      <tbody>${t.stufen.map(s => `<tr><td class="num">${chf(s.ab)}</td>
-        <td class="num">${chf(s.sockel)}</td>
-        <td class="num">${(s.satz * 100).toLocaleString("de-CH", { maximumFractionDigits:2 })} %</td></tr>`).join("")}
-      </tbody></table></div>`;
+  const bearb = !!S.tarifEntwurf;
+  const e = S.tarifEntwurf || tarifEntwurfNeu();
+  const feld = (pfad, label, skala = 1) => `<div><label>${esc(label)}</label>${bearb
+    ? `<input class="num" data-tp="${pfad}" data-skala="${skala}" value="${esc(+(tarifHol(e, pfad) * skala).toFixed(3))}" inputmode="decimal">`
+    : `<div class="kpi" style="padding:8px 10px"><b style="font-size:17px">${skala === 1 ? chf(tarifHol(e, pfad)) : (tarifHol(e, pfad) * skala) + " %"}</b></div>`}</div>`;
+  const fehler = bearb ? tarifPruefen(e) : [];
+  const vt = e.zh.vermoegen;
   return `
-  <div class="card"><div class="card-head"><h3>Steuertarife</h3>
-    <span class="badge ${g ? "ok" : "warn"}">${g ? "geprüft" : "ungeprüft"}</span></div>
+  <div class="card" id="tarifKarte"><div class="card-head"><h3>Steuertarife ${esc(e.steuerjahr)}</h3>
+    <div class="row">
+      ${TARIFE.meta.eigen && !bearb ? '<span class="badge">selbst erfasst</span>' : ""}
+      <span class="badge ${g ? "ok" : "warn"}">${g ? "geprüft für " + esc(g.jahr) : "ungeprüft"}</span></div></div>
     <div class="hint ${g ? "" : "warn"}"><b>${esc(tarifStatusText())}</b><br>
-      Die Werte unten sind die Grundlage jeder Berechnung im Steuervergleich. Sie ändern jedes Jahr.
-      Bitte einmal pro Steuerperiode gegen die amtlichen Tarife prüfen – danach hier bestätigen.
-      Solange nicht bestätigt, steht auf jedem Bericht ein Vorbehalt.</div>
+      Diese Werte sind die Grundlage jeder Berechnung im Steuervergleich und ändern jedes Jahr
+      (Ausgleich der kalten Progression, Steuerfüsse). So gehst du vor:
+      <b>1.</b> «Tarife bearbeiten» – <b>2.</b> Werte mit den amtlichen Tabellen vergleichen und korrigieren –
+      <b>3.</b> speichern – <b>4.</b> «als geprüft bestätigen». Solange nicht bestätigt, trägt jeder Bericht einen Vorbehalt.</div>
     <div class="grid g2">
-      <div><label>Quelle Bund</label><input value="${esc(TARIFE.bund.quelle)}" readonly></div>
-      <div><label>Quelle Kanton</label><input value="${esc(kt.quelle)}" readonly></div>
+      <div><label>Quelle Bund</label><input value="${esc(TARIFE.bund.quelle || "")}" readonly></div>
+      <div><label>Quelle Kanton</label><input value="${esc(e.zh.quelle || "")}" readonly></div>
     </div>
-    <div class="grid g4" style="margin-top:12px">
-      <div class="kpi"><b>${chf(TARIFE.vorgaben.saeule3aMitPk)}</b><span>Säule 3a mit PK</span></div>
-      <div class="kpi"><b>${chf(TARIFE.vorgaben.saeule3aOhnePk)}</b><span>Säule 3a ohne PK</span></div>
-      <div class="kpi"><b>${chf(TARIFE.vorgaben.kinderabzugKanton)}</b><span>Kinderabzug Kanton</span></div>
-      <div class="kpi"><b>${chf(TARIFE.vorgaben.kinderabzugBund)}</b><span>Kinderabzug Bund</span></div>
-      <div class="kpi"><b>${chf(kt.personalsteuer)}</b><span>Personalsteuer je Person</span></div>
-      <div class="kpi"><b>${kt.steuerfussKanton} %</b><span>Steuerfuss Kanton</span></div>
+    ${bearb ? `<div class="grid g4" style="margin-top:12px">
+      <div><label>Die Werte gelten für Steuerjahr</label><input class="num" data-tp="steuerjahr" data-skala="1" value="${esc(e.steuerjahr)}"></div></div>` : ""}
+    <h4 style="margin:14px 0 6px">Abzüge und Beträge</h4>
+    <div class="grid g4">
+      ${feld("vorgaben.saeule3aMitPk", "Säule 3a mit PK (je Person)")}
+      ${feld("vorgaben.saeule3aOhnePk", "Säule 3a ohne PK (je Person)")}
+      ${feld("vorgaben.kinderabzugKanton", "Kinderabzug Kanton")}
+      ${feld("vorgaben.kinderabzugBund", "Kinderabzug Bund")}
+      ${feld("vorgaben.verheiratetenabzugKanton", "Verheiratetenabzug Kanton")}
+      ${feld("vorgaben.verheiratetenabzugBund", "Verheiratetenabzug Bund")}
+      ${feld("bund.kinderabzugSteuerbetrag", "Bund: Abzug vom Steuerbetrag je Kind")}
+      ${feld("zh.personalsteuer", "Personalsteuer je Person")}
+      ${feld("zh.steuerfussKanton", "Steuerfuss Kanton %")}
+      ${feld("zh.vermoegen.freibetrag.alleinstehend", "Vermögen: Freibetrag alleinstehend")}
+      ${feld("zh.vermoegen.freibetrag.verheiratet", "Vermögen: Freibetrag verheiratet")}
     </div>
-    <details style="margin-top:14px"><summary class="small" style="cursor:pointer">Alle Tarifstufen anzeigen</summary>
-      ${stufen(TARIFE.bund.alleinstehend, "Direkte Bundessteuer – " + TARIFE.bund.alleinstehend.bezeichnung)}
-      ${stufen(TARIFE.bund.verheiratet, "Direkte Bundessteuer – " + TARIFE.bund.verheiratet.bezeichnung)}
-      ${stufen(kt.einkommen.alleinstehend, "Kanton Zürich – " + kt.einkommen.alleinstehend.bezeichnung)}
-      ${stufen(kt.einkommen.verheiratet, "Kanton Zürich – " + kt.einkommen.verheiratet.bezeichnung)}
-      <h4 style="margin:14px 0 6px">Steuerfüsse (Ausgangswerte)</h4>
-      <div style="overflow-x:auto"><table><thead><tr><th>Gemeinde</th><th class="num">Kanton %</th>
-        <th class="num">Gemeinde %</th></tr></thead><tbody>
-        ${Object.entries(kt.gemeinden).map(([n, w]) => `<tr><td>${esc(n)}</td>
-          <td class="num">${kt.steuerfussKanton}</td><td class="num">${w.gemeinde}</td></tr>`).join("")}
+    ${bearb && fehler.length ? `<div class="hint warn" style="margin-top:12px"><b>Bitte prüfen:</b><br>${fehler.map(esc).join("<br>")}</div>` : ""}
+    <details style="margin-top:14px" ${bearb ? "open" : ""}><summary class="small" style="cursor:pointer">Alle Tarifstufen ${bearb ? "bearbeiten" : "anzeigen"}</summary>
+      ${tarifStaffelHtml("bund.alleinstehend", "Direkte Bundessteuer – " + e.bund.alleinstehend.bezeichnung, e, bearb)}
+      ${tarifStaffelHtml("bund.verheiratet", "Direkte Bundessteuer – " + e.bund.verheiratet.bezeichnung, e, bearb)}
+      ${tarifStaffelHtml("zh.einkommen.alleinstehend", "Kanton Zürich – " + e.zh.einkommen.alleinstehend.bezeichnung, e, bearb)}
+      ${tarifStaffelHtml("zh.einkommen.verheiratet", "Kanton Zürich – " + e.zh.einkommen.verheiratet.bezeichnung, e, bearb)}
+      <h4 style="margin:14px 0 6px">Kanton Zürich – Vermögenssteuer (einfache Steuer, auf dem Betrag über dem Freibetrag)</h4>
+      <div style="overflow-x:auto"><table><thead><tr><th class="num">Tranche CHF (leer = Rest)</th><th class="num">Satz ‰</th>${bearb ? "<th></th>" : ""}</tr></thead><tbody>
+        ${vt.stufen.map((s, i) => `<tr>
+          <td class="num">${bearb ? `<input class="num vgl-in" data-tp="zh.vermoegen.stufen.${i}.tranche" data-skala="1" value="${s.tranche === Infinity || s.tranche == null ? "" : esc(s.tranche)}">`
+                                  : (s.tranche === Infinity || s.tranche == null ? "Rest" : chf(s.tranche))}</td>
+          <td class="num">${bearb ? `<input class="num vgl-in" data-tp="zh.vermoegen.stufen.${i}.satz" data-skala="1000" value="${esc(+(s.satz * 1000).toFixed(3))}">`
+                                  : (s.satz * 1000).toLocaleString("de-CH", { maximumFractionDigits:3 }) + " ‰"}</td>
+          ${bearb ? `<td class="num"><button class="btn-sm btn-ghost" data-tdel="zh.vermoegen.stufen" data-i="${i}">✕</button></td>` : ""}</tr>`).join("")}
       </tbody></table></div>
+      ${bearb ? `<div class="row" style="margin-top:6px"><button class="btn-sm" data-tadd="zh.vermoegen.stufen">+ Tranche</button></div>` : ""}
+      <h4 style="margin:14px 0 6px">Steuerfüsse der Gemeinden</h4>
+      <div style="overflow-x:auto"><table><thead><tr><th>Gemeinde</th><th class="num">Gemeinde %</th>
+        <th class="num">ref. Kirche %</th><th class="num">kath. Kirche %</th>${bearb ? "<th></th>" : ""}</tr></thead><tbody>
+        ${Object.entries(e.zh.gemeinden).map(([n, w]) => `<tr>
+          <td>${bearb ? `<input data-gname="${esc(n)}" value="${esc(n)}">` : esc(n)}</td>
+          <td class="num">${bearb ? `<input class="num vgl-in" data-gw="${esc(n)}" data-gk="gemeinde" value="${esc(w.gemeinde)}">` : w.gemeinde}</td>
+          <td class="num">${bearb ? `<input class="num vgl-in" data-gw="${esc(n)}" data-gk="ev.-ref." value="${esc(w.kirche?.["ev.-ref."] ?? 0)}">` : (w.kirche?.["ev.-ref."] ?? 0)}</td>
+          <td class="num">${bearb ? `<input class="num vgl-in" data-gw="${esc(n)}" data-gk="röm.-kath." value="${esc(w.kirche?.["röm.-kath."] ?? 0)}">` : (w.kirche?.["röm.-kath."] ?? 0)}</td>
+          ${bearb ? `<td class="num"><button class="btn-sm btn-ghost" data-gdel="${esc(n)}">✕</button></td>` : ""}</tr>`).join("")}
+      </tbody></table></div>
+      ${bearb ? `<div class="row" style="margin-top:6px"><button class="btn-sm" id="gAdd">+ Gemeinde</button></div>` : ""}
     </details>
     <div class="row" style="margin-top:14px">
-      <button class="btn-primary" id="tarifOk">${g ? "Prüfung erneuern" : "Tarife als geprüft bestätigen"}</button>
-      ${g ? '<button id="tarifWeg">Bestätigung zurückziehen</button>' : ""}
-      <span class="small">Die Bestätigung erscheint im Fuss jedes Steuervergleichs.</span>
+      ${bearb ? `<button class="btn-primary" id="tarifSpeichern">Tarife speichern</button>
+                 <button class="btn-ghost" id="tarifAbbruch">Abbrechen</button>`
+              : `<button id="tarifEdit">Tarife bearbeiten</button>
+                 <button class="btn-primary" id="tarifOk">${g ? "Prüfung erneuern" : "Tarife als geprüft bestätigen"}</button>
+                 ${g ? '<button id="tarifWeg">Bestätigung zurückziehen</button>' : ""}
+                 ${TARIFE.meta.eigen ? '<button class="btn-danger" id="tarifStd">Ausgangswerte wiederherstellen</button>' : ""}`}
+      <span class="small">${bearb ? "Nach dem Speichern muss die Prüfung neu bestätigt werden."
+                                  : "Die Bestätigung erscheint im Fuss jedes Steuervergleichs."}</span>
     </div>
   </div>`;
 }
 function tarifBind(){
-  if(!$("#tarifOk")) return;
+  if(!$("#tarifKarte")) return;
+  const neuZeichnen = () => {
+    const y = window.scrollY; render(); window.scrollTo(0, y);
+  };
+  if($("#tarifEdit")) $("#tarifEdit").onclick = () => { S.tarifEntwurf = tarifEntwurfNeu(); neuZeichnen(); };
+  if($("#tarifAbbruch")) $("#tarifAbbruch").onclick = () => { S.tarifEntwurf = null; neuZeichnen(); };
+  const e = S.tarifEntwurf;
+  if(e){
+    $$("#tarifKarte [data-tp]").forEach(inp => inp.onchange = () => {
+      const roh = inp.value.trim(), skala = +inp.dataset.skala || 1;
+      const wert = roh === "" && /tranche$/.test(inp.dataset.tp) ? Infinity : vglNum(roh) / skala;
+      tarifSetz(e, inp.dataset.tp, wert);
+      /* Kein Neuzeichnen: sonst springt der Cursor beim Tabulator aus dem Feld. */
+    });
+    $$("#tarifKarte [data-tadd]").forEach(b => b.onclick = () => {
+      const st = tarifHol(e, b.dataset.tadd), letzte = st[st.length - 1] || {};
+      st.push(b.dataset.tadd.includes("vermoegen") ? { tranche:Infinity, satz:letzte.satz || 0 }
+                                                   : { ab:(letzte.ab || 0) + 10000, sockel:0, satz:letzte.satz || 0 });
+      if(!b.dataset.tadd.includes("vermoegen")) tarifSockelRechnen(st);
+      neuZeichnen();
+    });
+    $$("#tarifKarte [data-tdel]").forEach(b => b.onclick = () => {
+      tarifHol(e, b.dataset.tdel).splice(+b.dataset.i, 1); neuZeichnen();
+    });
+    $$("#tarifKarte [data-tsockel]").forEach(b => b.onclick = () => {
+      tarifSockelRechnen(tarifHol(e, b.dataset.tsockel)); toast("Sockelbeträge neu berechnet"); neuZeichnen();
+    });
+    $$("#tarifKarte [data-gw]").forEach(inp => inp.onchange = () => {
+      const g = e.zh.gemeinden[inp.dataset.gw]; if(!g) return;
+      if(inp.dataset.gk === "gemeinde") g.gemeinde = vglNum(inp.value);
+      else (g.kirche = g.kirche || { keine:0 })[inp.dataset.gk] = vglNum(inp.value);
+    });
+    $$("#tarifKarte [data-gname]").forEach(inp => inp.onchange = () => {
+      const alt = inp.dataset.gname, neu = inp.value.trim();
+      if(!neu || neu === alt || e.zh.gemeinden[neu]) return neuZeichnen();
+      e.zh.gemeinden = Object.fromEntries(Object.entries(e.zh.gemeinden).map(([n, w]) => [n === alt ? neu : n, w]));
+      neuZeichnen();
+    });
+    $$("#tarifKarte [data-gdel]").forEach(b => b.onclick = () => { delete e.zh.gemeinden[b.dataset.gdel]; neuZeichnen(); });
+    if($("#gAdd")) $("#gAdd").onclick = () => {
+      let n = "Neue Gemeinde", i = 2; while(e.zh.gemeinden[n]) n = "Neue Gemeinde " + i++;
+      e.zh.gemeinden[n] = { gemeinde:100, kirche:{ "ev.-ref.":10, "röm.-kath.":10, "keine":0 } };
+      neuZeichnen();
+    };
+    $("#tarifSpeichern").onclick = async () => {
+      const fehler = tarifPruefen(e);
+      if(fehler.length && !confirmBox(`${fehler.length} Auffälligkeit(en) in den Tarifen:\n\n${fehler.slice(0, 6).join("\n")}\n\nTrotzdem speichern?`)) return;
+      S.settings.steuerTarif = structuredClone(e);
+      delete S.settings.tarifGeprueft;          // neue Werte = neue Prüfung
+      S.tarifEntwurf = null;
+      tarifAnwenden(); await saveSettings();
+      toast("Tarife gespeichert – bitte jetzt als geprüft bestätigen");
+      neuZeichnen();
+    };
+    return;
+  }
   $("#tarifOk").onclick = async () => {
     const ok = await modal({ title:"Tarife bestätigen", ok:"Bestätigen", body:`
       <p class="small">Bestätige, dass du die Tarifwerte gegen die amtlichen Grundlagen geprüft hast
         (ESTV für die Bundessteuer, § 35 / § 47 StG ZH und der Steuerfussbeschluss der Gemeinde).</p>
       <div class="grid g2">
         <div><label>Geprüft durch (Kürzel)</label><input name="durch" value="${esc(S.settings.bearbeiter || "")}"></div>
-        <div><label>Für Steuerjahr</label><select name="jahr">${yearOptions(S.settings.jahr)}</select></div>
-      </div>` });
+        <div><label>Für Steuerjahr</label><select name="jahr">${yearOptions(TARIFE.meta.steuerjahr)}</select></div>
+      </div>
+      <p class="small">Die Werte sind hinterlegt für Steuerjahr <b>${esc(TARIFE.meta.steuerjahr)}</b>.
+        Gilt die Prüfung für ein anderes Jahr, zuerst «Tarife bearbeiten» und dort das Steuerjahr anpassen.</p>` });
     if(!ok) return;
     S.settings.tarifGeprueft = { am:today(), durch:dlgVal("durch"), jahr:dlgVal("jahr") };
-    await saveSettings(); toast("Tarife als geprüft vermerkt"); render();
+    await saveSettings(); toast("Tarife als geprüft vermerkt"); neuZeichnen();
   };
   if($("#tarifWeg")) $("#tarifWeg").onclick = async () => {
-    delete S.settings.tarifGeprueft; await saveSettings(); toast("Bestätigung zurückgezogen"); render();
+    delete S.settings.tarifGeprueft; await saveSettings(); toast("Bestätigung zurückgezogen"); neuZeichnen();
+  };
+  if($("#tarifStd")) $("#tarifStd").onclick = async () => {
+    if(!confirmBox("Eigene Tarifwerte verwerfen und die mitgelieferten Ausgangswerte verwenden?")) return;
+    delete S.settings.steuerTarif; delete S.settings.tarifGeprueft;
+    tarifAnwenden(); await saveSettings(); toast("Ausgangswerte wiederhergestellt"); neuZeichnen();
   };
 }
 
@@ -4939,7 +5267,13 @@ function viewSettings(){
       const e = await navigator.storage?.estimate?.();
       if(!e || !e.quota){ el.textContent = "Speicherbelegung: vom Browser nicht auskunftsfähig."; return; }
       const pct = Math.round(e.usage / e.quota * 100);
-      el.textContent = `Speicher belegt: ${kb(e.usage)} von rund ${kb(e.quota)} (${pct} %).`;
+      const dauer = await speicherSichern();
+      el.textContent = `Speicher belegt: ${kb(e.usage)} von rund ${kb(e.quota)} (${pct} %). `
+        + (dauer === true ? "Dauerhafter Speicher: gesichert – der Browser löscht die Daten nicht von sich aus."
+          : dauer === false ? "Dauerhafter Speicher: NICHT zugesagt – bei Platzmangel dürfte der Browser Daten löschen. "
+            + "Abhilfe: Seite als Lesezeichen speichern bzw. als App installieren und regelmässig ein Backup ziehen."
+          : "");
+      if(dauer === false) el.style.color = "var(--warn)";
       if(pct >= 80){
         el.textContent += " Es wird eng – Backup exportieren und abgeschlossene Jahrgänge entfernen.";
         el.style.color = "var(--danger)";
@@ -4958,6 +5292,19 @@ function viewSettings(){
     S.clients = []; S.dossiers = []; S.docs = []; S.invoices = []; S.vergleiche = [];
     toast("Alle Daten gelöscht"); go("dashboard");
   };
+}
+
+/* ---------- Dauerhafter Speicher ----------
+   Ohne diese Zusage darf der Browser die Daten bei Platzmangel still
+   löschen ("best effort"). Mit ihr bleiben sie, bis man sie selbst
+   entfernt. Chrome/Edge gewähren das meist ohne Rückfrage, sobald die
+   Seite als Lesezeichen gespeichert oder regelmässig benutzt wird.     */
+async function speicherSichern(){
+  try{
+    if(!navigator.storage?.persist) { S.persist = null; return null; }
+    S.persist = await navigator.storage.persisted() || await navigator.storage.persist();
+  }catch(e){ S.persist = null; }
+  return S.persist;
 }
 
 /* ---------- Backup (auf Wunsch passwortgeschützt) ---------- */
@@ -5408,7 +5755,9 @@ async function afterUnlock(){
   }
   const st = await rawGet("kv","settings");
   if(st && st.v) S.settings = Object.assign(S.settings, st.v);
+  tarifAnwenden();
   applyBranding();
+  speicherSichern();
   $$("#nav button").forEach(b => b.onclick = () => go(b.dataset.view));
   $("#dlgForm").addEventListener("submit", () => {});
   window.addEventListener("keydown", e => { if(e.key === "Escape" && $("#dlg").open) $("#dlg").close("cancel"); });
