@@ -56,101 +56,107 @@ Von Hand bearbeitet wird dort nichts.
 |---|---|---|
 | 1. Kunde + Profil erfassen | Kunden | Checkliste entsteht automatisch |
 | 2. Unterlagen anfordern | E-Mail-Vorlagen → „Unterlagen anfordern" | E-Mail mit den offenen Punkten, in Gmail geöffnet |
-| 3. Belege ablegen | Dokumenten-Konverter (Drag & Drop) | Erkennung, Umbenennung, Register-Zuordnung |
+| 3. Belege ablegen | Dokumenten-Konverter → «Kundenordner öffnen» oder Drag & Drop | Stapel getrennt, erkannt, benannt, nach Kategorie 0–6 abgelegt |
 | 4. Fortschritt prüfen | Dossier & Checkliste | erledigte Punkte haken sich selbst ab |
-| 5. Dossier abgeben | Dossier → ZIP-Export | alle Belege sortiert benannt in einer Ebene + Inhaltsverzeichnis |
+| 5. Dossier abgeben | automatisch im Kundenordner, oder Dossier → ZIP | «Sortiert - <Kunde>» + «<Kunde>.zip», alle Belege als einzelne PDF |
 | 6. Status pflegen | Dossier → Status | Übersicht zeigt alle Mandate im Blick |
 
 ---
 
-## 4. Dokumenten-Konverter: was er macht
+## 4. Dokumenten-Konverter: Steuerdokumente sortieren
 
-Beim Hineinziehen einer Datei passiert dreierlei:
+Der Konverter setzt die Anleitung **«Steuerdokumente sortieren» (C Consulters)** um.
 
-1. **Erkennen** – Dateiname **und PDF-Inhalt** werden nach Stichwörtern durchsucht. Die Textextraktion
-   ist fest eingebaut und läuft **ohne Internet** – ein Beleg namens `Scan_0007.pdf` wird am Inhalt als
-   Bank-Steuerauszug erkannt, samt Steuerjahr, Institut, IBAN und Saldo.
-   Dabei werden auch die **Zeichensatz-Tabellen des PDF** (`/ToUnicode`) gelesen: Belege aus Word,
-   aus dem Browser oder von Banken betten oft nur die benutzten Zeichen mit eigenen Codes ein –
-   ohne diese Tabelle käme aus «Muster» der Buchstabensalat «0XVWHU». Liefert ein PDF trotzdem
-   keinen lesbaren Text, wird das erkannt und die Texterkennung (OCR) übernimmt. Lange Stichwörter gewinnen gegen kurze („Lohnausweis" schlägt
-   „Ausweis"). Unsichere Treffer bekommen den Hinweis **„bitte prüfen"** – ein Klick im Dropdown korrigiert sie.
-2. **Umbenennen** nach der Anleitung „Steuerdokumente sortieren" (Details gleich unten):
-   `Jahr_Register_Ziffer_Dokumenttyp_<Angaben zum Beleg>_Nr.pdf`
-   Beispiel: `2024_02_1.1_Lohnausweis_Muster-Anna_Migros-AG_1_01.01.-30.09.2024_CHF-52340_01.pdf`
-3. **Einsortieren** in die Register des Steuerdossiers (Aufbau der Steuererklärung Kanton Zürich):
+### Ablauf
 
-| Reg. | Inhalt | Ziffern |
-|---|---|---|
-| 00 | Steuererklärung & Formulare, Vollmacht, Zugangsdaten | – |
-| 01 | Personalien & Familienverhältnisse | Seite 1 |
-| 02 | Einkünfte (Lohn, Renten, Taggelder, Wertschriftenertrag) | 1–7 |
-| 03 | Abzüge (Schuldzinsen, Alimente, Säule 3a, PK-Einkauf) | 11–18 |
-| 04 | Einkommensberechnung (Spenden, Krankheitskosten, Kinderbetreuung) | 19–27 |
-| 05 | Vermögen (Rückkaufswerte, Fahrzeuge, Schulden, Erbschaft) | 30–37 |
-| 06 | Wertschriften- & Guthabenverzeichnis (Konti, Depot, Krypto) | 30.1 |
-| 07 | Berufsauslagen (Hilfsformular: Fahrkosten, Verpflegung, Weiterbildung) | 11 |
-| 08 | Versicherungsprämien (Hilfsformular) | 15 |
-| 09 | Liegenschaften (Eigenmietwert, Hypothek, Unterhalt) | 7 / 12 / 17 |
-| 10 | Aufstellungen & Bemerkungen | – |
-| 11 | Korrespondenz Steueramt (Fristerstreckung, Veranlagung) | – |
-| 99 | Unklar – manuell zuordnen | – |
+1. **Eingang** – ein gescanntes Kunden-PDF (ganzer Stapel) **oder** mehrere Einzeldateien.
+   Am schnellsten: **«📁 Kundenordner öffnen»** und den Ordner `AA Kundenscans\<Kunde>` wählen
+   (Chrome/Edge). Das CRM liest alle Dateien darin; Unterordner und ZIP-Dateien bleiben aussen vor.
+2. **Stapel trennen** – ein mehrseitiges PDF wird Seite für Seite gelesen (Scans per Texterkennung)
+   und in einzelne Belege getrennt. Ein neuer Beleg beginnt bei einer deutlich anderen Belegart,
+   bei «Seite 1 von …», bei anderer Rechnungsnummer oder bei anderem Institut / IBAN /
+   Arbeitgeber / Person. **Mehrseitige Belege** (Lohnausweis + Zusatzblatt, Bestätigung +
+   Detailliste, «Seite 2 von 3») bleiben **ein** PDF.
+3. **Leere Seiten** werden weggelassen, **Duplikate** nur einmal aufgenommen: identische Dateien,
+   dieselbe Seite doppelt gescannt, derselbe Inhalt als zweite Datei, dieselbe Rechnungsnummer –
+   auch gegenüber bereits abgelegten Belegen. Von zwei Fassungen bleibt die aussagekräftigere.
+   Belege mit **gleichen Angaben** (z.B. zweimal Säule 3a, gleiche Bank, gleicher Betrag) werden
+   nicht gelöscht, aber rot als «vermutlich doppelt» markiert.
+4. **Fahrtkosten**: monatliche ÖV-Abo-Rechnungen derselben Person werden zu **einem** PDF
+   zusammengefasst, das **Jahrestotal** steht im Namen.
+5. **Zugangsdaten**: das Deckblatt «Zugangsdaten Online-Steuererklärung» wird ein eigenes PDF
+   `0 Zugangsdaten Online-Steuererklärung <Jahr> - <Name>.pdf` – in keiner Rubrik.
+6. **Prüfen** – jeder erkannte Beleg erscheint mit Seitenvorschau, Art, Jahr, den Angaben für den
+   Namen und dem fertigen Dateinamen. Korrigieren geht direkt:
+   **✂** trennt ab dieser Seite einen neuen Beleg ab · **✕** lässt eine Seite weg (z.B. AGB-Seite
+   einer Abo-Rechnung) · **⤒** hängt einen Beleg an den vorherigen an.
+7. **Übernehmen** – jedes Dokument wird ein **einzelnes, benanntes PDF** (Fotos werden zu PDF).
+   War ein Kundenordner geöffnet, schreibt das CRM dorthin den Unterordner
+   **«Sortiert - <Kunde>»** mit allen PDF und die **«<Kunde>.zip»** – sonst über *Dossier → ZIP*.
+8. **Übersicht** – danach zeigt das Dossier, was erstellt wurde, was weggelassen wurde (leere
+   Seiten, Duplikate), wo Angaben fehlen, was unsicher oder vermutlich doppelt ist – und welche
+   Belege laut Checkliste noch **fehlen**. «Übersicht kopieren» gibt sie als Text für eine Notiz
+   oder E-Mail.
 
-**ZIP-Export** legt alle Belege **als einzelne PDF flach in eine Ebene** – keine Unterordner.
-Fotos und Bildscans werden dabei automatisch in eine PDF-Seite gelegt, damit im ZIP wirklich nur
-PDF liegen; die ZIP selbst trägt den Namen des Kunden. Weil jeder Dateiname mit
-Jahr, Register und Ziffer beginnt, stehen sie im Ordner bereits in der Reihenfolge des Steuerdossiers
-und lassen sich in einem Zug ausdrucken oder weiterreichen. Dazu kommen `00_Inhaltsverzeichnis.txt`
-(Deckblatt, Dokumentenliste je Register, offene Punkte) und `00_Checkliste.txt`.
-Trägt ein Beleg denselben Namen wie ein bereits enthaltener, erhält er automatisch eine Zählnummer.
-
-### Bezeichnung der Belege – Anleitung „Steuerdokumente sortieren"
-
-Der Dateiname trägt nicht nur den Dokumenttyp, sondern die Angaben, die zum jeweiligen Beleg gehören.
-Das CRM fragt sie im Konverter ab, füllt aus, was es im Belegtext findet, und baut den Namen daraus:
+### Bezeichnung der Belege
 
 ```
-Jahr_Register_Ziffer_Dokumenttyp_<Angaben>_Nr.pdf
+<Kategorie> <Titel>[ <Nr>] - <Angabe> - <Angabe> ….pdf
 
-2024_02_1.1_Lohnausweis_Muster-Anna_Migros-AG_1_01.01.-30.09.2024_CHF-52340_01.pdf
-2024_06_30.1_Bank-Postkonto-Steuerauszug_Muster-Anna_PostFinance_CH9300762011623852957_CHF-12500_Zins-12_01.pdf
-2024_09_30.3_Eigenmietwert-Katasterwert_01.pdf          ← «Neutral»: nur der Über-Titel
+0 Zugangsdaten Online-Steuererklärung 2024 - Beispiel Anna.pdf
+1 Lohnausweis 1 - Beispiel Anna - Migros AG - 01.01.-30.09.2024 - Nettolohn CHF 52'340 - F mit X - G ohne X.pdf
+2 Konto - Beispiel Anna - PostFinance - CH9300762011623852957 - Saldo CHF 42'318.55 - Zins CHF 126.40 - Kosten CHF 24.pdf
+3 Fahrtkosten - Beispiel Anna - Jahrestotal CHF 1'068.pdf
+4 Schulden - Cornèr Bank AG - Schuld CHF 1'845.20 - Schuldzinsen CHF 0.pdf
+5 Eigenmietwert.pdf                                   ← «Neutral»: nur Über-Titel
 ```
 
-| Gruppe | Beleg | Anzugeben |
-|---|---|---|
-| **1 Einkommen** | Lohnausweis | Person, Arbeitgeber, laufende Nummer bei mehreren, Zeitraum (z.B. 01.01.–30.09.), Nettolohn |
-| | Ersatzeinkünfte (IV/ALV/Unfall/Krankheit/Mutterschaft) | Person |
-| | AHV-/IV-/PK-Rente | Person |
-| | Nebenerwerb, VR-Honorar, Erwerbsausfall | Person |
-| **2 Wertschriften & Vermögen** | Zins-/Saldobescheinigung Bank & Post per 31.12. | Person, Institut, IBAN, Saldo, Zinsen, Kosten |
-| | Krypto-Bestände per 31.12. | Person |
-| | Darlehen, Beteiligungen, Lebensversicherung | Person, Institut/Versicherer, Schuld per 31.12., bezahlte Zinsen |
-| **3 Abzüge** | Säule 3a | Person, Versicherer, Höhe |
-| | Einkauf Pensionskasse | Person, Versicherer, Höhe |
-| | Krankenkassenprämien & Police | Person, Jahresbeiträge |
-| | Krankheits- & Unfallkosten | Person, Höhe (unklare Belege als «Krankheitskosten» bezeichnen) |
-| | Berufsauslagen / Fahrtkosten | Person, als «Fahrtkosten» bezeichnen wenn vorhanden |
-| | Weiterbildung | Person, Höhe (unklare Belege als «Weiterbildung» bezeichnen) |
-| | Spenden | Gesamtbetrag |
-| | Mitgliederbeiträge Parteien | Gesamtbetrag |
-| | Kinderbetreuung | als «Kita» bezeichnen, Höhe |
-| | Alimente / Unterhaltsbeiträge | Höhe |
-| **4 Schulden** | Schuldenverzeichnis & Schuldzinsen per 31.12. | Institut, Restschuld, Zinsen |
-| **5 Liegenschaften** | Eigenmietwert / Mieteinnahmen | **Neutral** – nur Über-Titel |
-| | Hypothekarzinsbescheinigung | Institut, IBAN, Schuld per 31.12., bezahlte Zinsen |
-| | Unterhalts- & Renovationskosten | **Neutral** – nur Über-Titel |
-| | Liegenschaftssteuer / Nebenkosten | Institut, IBAN |
+Umlaute bleiben erhalten; entfernt wird nur, was Windows in Dateinamen verbietet. Namen werden
+auf 150 Zeichen begrenzt, damit der ganze Pfad unter 260 Zeichen bleibt. Zwei gleiche Namen
+bekommen «(2)» – nichts wird überschrieben.
 
-**Automatisch gefüllt** wird, was sich sicher erkennen lässt: IBAN, bekannte Institute und
-Versicherer (PostFinance, ZKB, CSS, AXA …), Zeiträume der Form `01.01.–31.12.` und Beträge, die
-direkt hinter einem eindeutigen Stichwort stehen (Nettolohn, Saldo, Total Prämien …).
-Alles Übrige trägst du im Konverter nach – die Felder stehen direkt unter jeder Datei, der
-fertige Dateiname wird darunter live angezeigt. Fehlt eine Pflichtangabe, erscheint der Beleg im
-Dossier mit dem Hinweis **„Bezeichnung ergänzen"**; über *Umordnen* lässt sich alles nachtragen.
+| Kat. | Beleg | Titel im Namen | Angaben |
+|---|---|---|---|
+| **0** | Deckblatt Zugangsdaten | Zugangsdaten Online-Steuererklärung | Jahr, Name |
+| **1 Einkommen** | Lohnausweis | Lohnausweis (1, 2, 3 … bei mehreren pro Person) | Person, Arbeitgeber, gültig von–bis, Nettolohn, F mit/ohne X, G mit/ohne X |
+| | Taggelder IV/ALV/Unfall/Krankheit, Mutterschaft | Ersatzeinkünfte | Person |
+| | AHV-/IV- und PK-Rente | Rentenbescheinigung AHV-IV / Pensionskasse | Person, Betrag |
+| | Nebenerwerb, VR-Honorar, Erwerbsausfall | Nebenerwerb / Verwaltungsratshonorar / Erwerbsausfall | Person |
+| **2 Wertschriften / Vermögen** | Zins-/Saldobescheinigung Bank & Post | Konto | Person, Institut, IBAN, Saldo, Zins, Kosten |
+| | Krypto per 31.12. | Krypto | Person |
+| | Darlehen, Beteiligung, Lebensversicherung (Rückkaufswert) | Darlehen / Beteiligung / Lebensversicherung | Person, Institut, Schuld/Wert 31.12., Zinsen |
+| **3 Abzüge** | Säule 3a | Säule 3a | Person, Versicherer, Abzug |
+| | Einkauf Pensionskasse | Einkauf Pensionskasse | Person, Versicherer, Einkauf |
+| | Krankenkassen-Prämien & Police | Krankenkasse | Person, Jahresprämien |
+| | Krankheits- & Unfallkosten | Krankheitskosten | Person (wenn zuordenbar), Höhe |
+| | ÖV-Abo, Fahrtkosten, auswärtige Verpflegung | Fahrtkosten | Person, Jahrestotal |
+| | Weiterbildung | Weiterbildung | Person, Höhe |
+| | Spenden | Spenden | Gesamtspenden |
+| | Parteibeiträge | Mitgliederbeiträge | Gesamtbetrag |
+| | Kinderbetreuung | Kita | Beiträge |
+| | Alimente / Unterhaltsbeiträge | Alimente | Höhe |
+| **4 Schulden** | Kredite, Hypotheken, Kreditkarten per 31.12. (Saldo «zu Gunsten der Bank» = Schuld) | Schulden / Schuldzinsen | Institut, Schuld, Schuldzinsen |
+| **5 Liegenschaften** | Eigenmietwert, Mieteinnahmen | Eigenmietwert / Mieteinnahmen | **Neutral** |
+| | Hypothekarzinsbescheinigung | Hypothekarzinsbescheinigung | Institut, IBAN, Schuld 31.12., Zinsen (neutral) |
+| | Unterhalts- & Renovationskosten (auch Ausland) | Unterhalts- und Renovationskosten | **Neutral** |
+| | Liegenschaftssteuer / Nebenkosten | Liegenschaftssteuer | Institut, IBAN (neutral) |
+| **6 Weiteres** | Steuererklärung Vorjahr, Veranlagung, Korrespondenz, Vollmacht … | gemäss Beschreibung | – |
 
-**Regeln anpassen:** die Tabelle `BEZ` in `index.html` – ein Eintrag pro Dokumenttyp mit
-`felder` (Reihenfolge im Namen), `pflicht` (was verlangt wird) und `neutral` (ohne Personenname).
+> **Annahme zu Kategorie 6:** Die Vorlage wiederholt dort Punkte aus Kategorie 5. Umgesetzt ist:
+> die Hypothek trägt Institut, IBAN, Schuld am 31.12. **und** bezahlte Zinsen (Kategorie 5);
+> in Kategorie 6 liegen alle übrigen Unterlagen mit neutralem Titel.
+
+**Automatisch gefüllt** wird, was sich sicher erkennen lässt: Person (auch Partner/in und Kinder,
+am Vornamen), IBAN, Institute und Versicherer (bekannte Namen und Namen mit «Bank»,
+«Kantonalbank», «Versicherung» …), Arbeitgeber (mit Rechtsform oder «Stadt …/Gemeinde …»),
+Zeitraum, Beträge hinter eindeutigen Stichwörtern, Zinsen und Kosten getrennt, und beim
+Lohnausweis das **X bei Punkt F und G**. Was fehlt, zeigt der Beleg als «fehlt: …»; über
+**Bezeichnen** im Dossier lässt sich alles nachtragen.
+
+**Im Dossier** sind die Dokumente nach denselben **Kategorien 0–6** gruppiert und beschriftet;
+die Checkliste zeigt standardmässig dieselbe Gliederung (umschaltbar auf die Register der Steuererklärung).
+
+**Regeln anpassen:** Tabellen `BEZ` (Angaben je Typ) und `KAT_TITEL` (Kategorie und Titel) in `index.html`.
 
 ### Andere Kantone
 
@@ -453,7 +459,6 @@ bearbeitbare Steuertarife · Backup inkl. Belegen als ZIP · Demo-Modus.
 
 | Nächste Ausbaustufe | Aufwand | Vorteil |
 |---|---|---|
-| Mehrseitige Scans automatisch in Einzelbelege trennen | 2–3 Tage | ein Stapel-Scan wird zu mehreren Dokumenten |
 | Direkter Import in ZHprivateTax / eTax | offen – Schnittstelle prüfen | Doppelerfassung entfällt |
 | Mehrbenutzerbetrieb mit Rollen | 3–5 Tage | Kanzleien ab 3 Personen |
 | Tarife weiterer Kantone im Steuervergleich | ½ Tag pro Kanton | Tarifberechnung ausserhalb ZH |

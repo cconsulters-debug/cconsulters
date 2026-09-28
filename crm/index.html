@@ -126,6 +126,13 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
    Beschriftung zweizeilig umbricht. */
 .bez-feld span{font-size:11.5px;color:var(--ink-dim);font-weight:600;min-height:2.6em;display:block}
 .bez-feld input{padding:5px 8px;font-size:13px}
+/* Seiten eines Belegs (Stapel-Scan): Vorschau, trennen, weglassen */
+.seiten-leiste{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;padding-top:6px}
+.seite-chip{width:92px;border:1px solid var(--line);border-radius:8px;padding:4px;background:var(--panel-2);text-align:center;font-size:11.5px}
+.seite-chip img{width:100%;height:112px;object-fit:contain;background:#fff;border-radius:4px;display:block}
+.seite-chip .seite-leer{height:112px;display:grid;place-items:center;color:var(--ink-faint);font-size:10.5px;overflow:hidden}
+.seite-chip .btn-sm{padding:2px 6px}
+.kat-nr{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:6px;background:var(--navy);color:#fff;font-weight:700;font-size:12.5px}
 .reg-head{display:flex;align-items:center;gap:8px;margin:16px 0 8px;padding-bottom:5px;border-bottom:2px solid var(--navy)}
 .reg-head b{font-size:14px} .reg-head .badge{margin-left:auto}
 
@@ -408,6 +415,51 @@ const DOC_INFO = {
 DOCTYPES.forEach(t => { t.info = DOC_INFO[t.id] || ""; });
 
 /* ==================================================================
+   KATEGORIEN – Anleitung «Steuerdokumente sortieren» (C Consulters)
+   Die Kategorienummer ist das Präfix jedes Dateinamens; der Titel ist
+   das Wort, unter dem der Beleg abgelegt wird.
+   ================================================================== */
+const KATEGORIEN = [[0,"Zugangsdaten"],[1,"Einkommen"],[2,"Wertschriften / Vermögen"],[3,"Abzüge"],
+                    [4,"Schulden"],[5,"Liegenschaften"],[6,"Weiteres"]];
+const KAT_NAME = Object.fromEntries(KATEGORIEN);
+const KAT_TITEL = {
+  zugangsdaten:[0,"Zugangsdaten Online-Steuererklärung"],
+  lohnausweis:[1,"Lohnausweis"], lohnausweis_p:[1,"Lohnausweis"], taggeld:[1,"Ersatzeinkünfte"],
+  ahv_rente:[1,"Rentenbescheinigung AHV-IV"], pk_rente:[1,"Rentenbescheinigung Pensionskasse"],
+  lohnausweis_neben:[1,"Nebenerwerb"], vr_honorar:[1,"Verwaltungsratshonorar"], uebrige_eink:[1,"Erwerbsausfall"],
+  selbst_abschluss:[1,"Selbständige Erwerbstätigkeit"], quellensteuer:[1,"Quellensteuer"],
+  unterhalt_erhalten:[1,"Alimente erhalten"],
+  bankauszug:[2,"Konto"], depotauszug:[2,"Depot"], wertschriftenertrag:[2,"Ertragsausweis Wertschriften"],
+  krypto:[2,"Krypto"], darlehen_guthaben:[2,"Darlehen"], beteiligung:[2,"Beteiligung"],
+  rueckkaufswert:[2,"Lebensversicherung"], fahrzeug:[2,"Fahrzeug"], erbschaft:[2,"Erbschaft Schenkung"],
+  saeule3a:[3,"Säule 3a"], pk_einkauf:[3,"Einkauf Pensionskasse"], praemien_kk:[3,"Krankenkasse"],
+  praemien_leben:[3,"Lebensversicherung Prämien"], praemien_unfall:[3,"Unfallversicherung"],
+  krankheitskosten:[3,"Krankheitskosten"], behinderung:[3,"Behinderungskosten"],
+  fahrkosten:[3,"Fahrtkosten"], verpflegung:[3,"Fahrtkosten"], berufsauslagen:[3,"Fahrtkosten"],
+  weiterbildung:[3,"Weiterbildung"], spenden:[3,"Spenden"], parteispenden:[3,"Mitgliederbeiträge"],
+  kinderbetreuung:[3,"Kita"], unterhalt_bezahlt:[3,"Alimente"],
+  schulden:[4,"Schulden"], schuldzinsen:[4,"Schuldzinsen"],
+  eigenmietwert:[5,"Eigenmietwert"], mietertrag:[5,"Mieteinnahmen"], hypothek:[5,"Hypothekarzinsbescheinigung"],
+  unterhalt_liegen:[5,"Unterhalts- und Renovationskosten"], liegenschaft_aus:[5,"Liegenschaft Ausland"],
+  liegenschaftssteuer:[5,"Liegenschaftssteuer"],
+  steuererklaerung:[6,"Steuererklärung"], vorjahr:[6,"Steuererklärung Vorjahr"], vollmacht:[6,"Vollmacht"],
+  personalien:[6,"Personalien"], zivilstand:[6,"Zivilstand"], kinder:[6,"Kinder"], veranlagung:[6,"Veranlagung"],
+  fristerstreckung:[6,"Fristerstreckung"], einsprache:[6,"Korrespondenz Steueramt"], aufstellung:[6,"Aufstellung"],
+  bemerkungen:[6,"Bemerkungen"], sonstiges:[6,"Sonstiges"]
+};
+DOCTYPES.forEach(t => { const [k, titel] = KAT_TITEL[t.id] || [6, t.label]; t.kat = k; t.titel = titel; });
+/* Zusätzliche Erkennungsbegriffe aus der Anleitung */
+DT.zugangsdaten.keys.push("zugangsdaten online-steuererklärung","online-steuererklärung","persönlicher zugangscode","zugangscode");
+DT.schulden.keys.push("kreditkarte","kreditkartenabrechnung","zu gunsten der bank","zugunsten der bank","a nostro favore","en notre faveur");
+DT.fahrkosten.keys.push("swisspass","libero","ostwind","ga travelcard","streckenabo","monatsabo","jahresabo");
+DT.kinderbetreuung.keys.push("tagesfamilie","tagesstätte","betreuungsbeitrag");
+DT.parteispenden.keys.push("mitgliederbeitrag");
+/* Auswahllisten nach Kategorie sortiert: "1 Lohnausweis – Lohnausweis (alle Arbeitgeber)" */
+const TYPEN_SORTIERT = [...DOCTYPES].sort((a, b) => a.kat - b.kat);
+const typOption = (t, sel) => `<option value="${t.id}" ${t.id === sel ? "selected" : ""}>${t.kat} ${esc(t.titel)}${
+  t.titel !== t.label ? " – " + esc(t.label) : ""}</option>`;
+
+/* ==================================================================
    BENENNUNG DER BELEGE  –  Anleitung "Steuerdokumente sortieren"
    Jeder Dokumenttyp verlangt bestimmte Angaben im Dateinamen:
    Name der Person, Arbeitgeber/Institut, IBAN, Zeitraum, Betrag,
@@ -416,69 +468,88 @@ DOCTYPES.forEach(t => { t.info = DOC_INFO[t.id] || ""; });
    Über-Titel (Liegenschaften).
    ================================================================== */
 const BEZ_FELDER = {
-  person:   { label:"Name Person",                          platzhalter:"Muster Anna" },
-  stelle:   { label:"Arbeitgeber / Institut / Versicherer",  platzhalter:"Migros AG" },
-  iban:     { label:"IBAN",                                  platzhalter:"CH93 0076 2011 6238 5295 7" },
-  zeitraum: { label:"Zeitraum",                              platzhalter:"01.01.–30.09.2024" },
-  betrag:   { label:"Betrag CHF",                            platzhalter:"52340" },
-  zinsen:   { label:"Bezahlte Zinsen CHF",                   platzhalter:"1240" },
-  nr:       { label:"Nummer (bei mehreren gleichartigen)",   platzhalter:"1" }
+  person:   { label:"Name Person",                    platzhalter:"Beispiel Anna" },
+  stelle:   { label:"Arbeitgeber / Institut / Versicherer", platzhalter:"Migros AG" },
+  iban:     { label:"IBAN",                           platzhalter:"CH93 0076 2011 6238 5295 7" },
+  zeitraum: { label:"Gültig von–bis",                 platzhalter:"01.01.-30.09.2024" },
+  betrag:   { label:"Betrag CHF",                     platzhalter:"52340" },
+  zinsen:   { label:"Zins CHF",                       platzhalter:"126.40" },
+  kosten:   { label:"Kosten CHF",                     platzhalter:"12.00" },
+  f:        { label:"Punkt F (Beförderung)",          auswahl:["mit X","ohne X"] },
+  g:        { label:"Punkt G (Kantine)",              auswahl:["mit X","ohne X"] }
 };
-/* felder = Reihenfolge im Dateinamen · pflicht = ohne diese Angabe gilt
-   die Bezeichnung als unvollständig · neutral = ohne Personenname      */
+/* Regeln je Dokumenttyp nach der Anleitung «Steuerdokumente sortieren»
+   (C Consulters). felder = Reihenfolge im Namen · pflicht = ohne diese
+   Angabe gilt die Bezeichnung als unvollständig · neutral = Über-Titel
+   ohne Personennamen · betrag/zinsen = Wort vor dem Betrag im Namen ·
+   nummer = mehrere Belege derselben Person mit 1, 2, 3 … nummerieren.  */
 const BEZ = {
   /* 1 Einkommen */
-  lohnausweis:      { felder:["person","stelle","nr","zeitraum","betrag"], pflicht:["person","stelle","zeitraum","betrag"] },
-  lohnausweis_neben:{ felder:["person","stelle","nr","zeitraum","betrag"], pflicht:["person","stelle"] },
-  lohnausweis_p:    { felder:["person","stelle","nr","zeitraum","betrag"], pflicht:["person","stelle","zeitraum","betrag"] },
-  taggeld:          { felder:["person","stelle","zeitraum","betrag"],      pflicht:["person"] },
-  ahv_rente:        { felder:["person","stelle","betrag"],                 pflicht:["person"] },
-  pk_rente:         { felder:["person","stelle","betrag"],                 pflicht:["person"] },
-  vr_honorar:       { felder:["person","stelle","betrag"],                 pflicht:["person"] },
-  uebrige_eink:     { felder:["person","stelle","betrag"],                 pflicht:["person"] },
-  selbst_abschluss: { felder:["person","stelle","zeitraum","betrag"],      pflicht:["person"] },
-  quellensteuer:    { felder:["person","stelle","zeitraum","betrag"],      pflicht:["person"] },
+  lohnausweis:      { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag","f","g"], betrag:"Nettolohn", nummer:true },
+  lohnausweis_p:    { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag","f","g"], betrag:"Nettolohn", nummer:true },
+  taggeld:          { felder:["person"], pflicht:["person"] },
+  ahv_rente:        { felder:["person","betrag"], pflicht:["person"], betrag:"Rente" },
+  pk_rente:         { felder:["person","betrag"], pflicht:["person"], betrag:"Rente" },
+  lohnausweis_neben:{ felder:["person"], pflicht:["person"] },
+  vr_honorar:       { felder:["person"], pflicht:["person"] },
+  uebrige_eink:     { felder:["person"], pflicht:["person"] },
+  selbst_abschluss: { felder:["person"], pflicht:["person"] },
+  quellensteuer:    { felder:["person"], pflicht:["person"] },
+  unterhalt_erhalten:{ felder:["betrag"], pflicht:["betrag"] },
 
-  /* 2 Wertschriften & Vermögen */
-  bankauszug:       { felder:["person","stelle","iban","betrag","zinsen"], pflicht:["person","stelle","iban","betrag"] },
-  depotauszug:      { felder:["person","stelle","iban","betrag","zinsen"], pflicht:["person","stelle","betrag"] },
-  wertschriftenertrag:{ felder:["person","stelle","iban","betrag"],        pflicht:["person","stelle"] },
-  krypto:           { felder:["person","stelle","betrag"],                 pflicht:["person","betrag"] },
-  darlehen_guthaben:{ felder:["person","stelle","betrag","zinsen"],        pflicht:["person","stelle","betrag"] },
-  beteiligung:      { felder:["person","stelle","betrag"],                 pflicht:["person","stelle","betrag"] },
-  rueckkaufswert:   { felder:["person","stelle","betrag"],                 pflicht:["person","stelle","betrag"] },
+  /* 2 Wertschriften / Vermögen */
+  bankauszug:       { felder:["person","stelle","iban","betrag","zinsen","kosten"], pflicht:["person","stelle","iban","betrag"], betrag:"Saldo", zinsen:"Zins" },
+  depotauszug:      { felder:["person","stelle","betrag"], pflicht:["person","stelle"], betrag:"Steuerwert" },
+  wertschriftenertrag:{ felder:["person","stelle"], pflicht:["person"] },
+  krypto:           { felder:["person","betrag"], pflicht:["person"], betrag:"Bestand" },
+  darlehen_guthaben:{ felder:["person","stelle","betrag","zinsen"], pflicht:["person","stelle","betrag"], betrag:"Schuld 31.12.", zinsen:"Zinsen" },
+  beteiligung:      { felder:["person","stelle","betrag","zinsen"], pflicht:["person","stelle"], betrag:"Wert 31.12.", zinsen:"Zinsen" },
+  rueckkaufswert:   { felder:["person","stelle","betrag","zinsen"], pflicht:["person","stelle","betrag"], betrag:"Rückkaufswert", zinsen:"Zinsen" },
+  fahrzeug:         { felder:["person"], pflicht:[] },
+  erbschaft:        { felder:["person"], pflicht:[] },
 
   /* 3 Abzüge */
-  saeule3a:         { felder:["person","stelle","betrag"],                 pflicht:["person","stelle","betrag"] },
-  pk_einkauf:       { felder:["person","stelle","betrag"],                 pflicht:["person","stelle","betrag"] },
-  praemien_kk:      { felder:["person","stelle","betrag"],                 pflicht:["person","betrag"] },
-  praemien_leben:   { felder:["person","stelle","betrag"],                 pflicht:["person","stelle"] },
-  praemien_unfall:  { felder:["person","stelle","betrag"],                 pflicht:["person"] },
-  krankheitskosten: { felder:["person","betrag"],                          pflicht:["person","betrag"] },
-  behinderung:      { felder:["person","betrag"],                          pflicht:["person"] },
-  fahrkosten:       { felder:["person","betrag"],                          pflicht:["person"] },
-  verpflegung:      { felder:["person","betrag"],                          pflicht:["person"] },
-  berufsauslagen:   { felder:["person","betrag"],                          pflicht:["person"] },
-  weiterbildung:    { felder:["person","betrag"],                          pflicht:["person","betrag"] },
-  spenden:          { felder:["betrag"],                                   pflicht:["betrag"] },
-  parteispenden:    { felder:["betrag"],                                   pflicht:["betrag"] },
-  kinderbetreuung:  { felder:["stelle","betrag"],                          pflicht:["betrag"] },
-  unterhalt_bezahlt:{ felder:["person","betrag"],                          pflicht:["betrag"] },
-  unterhalt_erhalten:{ felder:["person","betrag"],                         pflicht:["betrag"] },
+  saeule3a:         { felder:["person","stelle","betrag"], pflicht:["person","stelle","betrag"], betrag:"Abzug" },
+  pk_einkauf:       { felder:["person","stelle","betrag"], pflicht:["person","stelle","betrag"], betrag:"Einkauf" },
+  praemien_kk:      { felder:["person","betrag"], pflicht:["person","betrag"], betrag:"Jahresprämien" },
+  praemien_leben:   { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"Prämien" },
+  praemien_unfall:  { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"Prämien" },
+  krankheitskosten: { felder:["person","betrag"], pflicht:["betrag"] },
+  behinderung:      { felder:["person","betrag"], pflicht:["person"] },
+  fahrkosten:       { felder:["person","betrag"], pflicht:["person"], betrag:"Jahrestotal" },
+  verpflegung:      { felder:["person","betrag"], pflicht:["person"], betrag:"Jahrestotal" },
+  berufsauslagen:   { felder:["person","betrag"], pflicht:["person"], betrag:"Jahrestotal" },
+  weiterbildung:    { felder:["person","betrag"], pflicht:[] },
+  spenden:          { felder:["betrag"], pflicht:["betrag"], betrag:"Gesamtspenden" },
+  parteispenden:    { felder:["betrag"], pflicht:["betrag"], betrag:"Gesamtbetrag" },
+  kinderbetreuung:  { felder:["betrag"], pflicht:["betrag"], betrag:"Beiträge" },
+  unterhalt_bezahlt:{ felder:["betrag"], pflicht:["betrag"] },
 
   /* 4 Schulden */
-  schulden:         { felder:["person","stelle","betrag","zinsen"],        pflicht:["betrag"] },
-  schuldzinsen:     { felder:["person","stelle","betrag","zinsen"],        pflicht:["zinsen"] },
+  schulden:         { felder:["stelle","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], betrag:"Schuld", zinsen:"Schuldzinsen" },
+  schuldzinsen:     { felder:["stelle","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], betrag:"Schuld", zinsen:"Schuldzinsen" },
 
-  /* 5 Liegenschaften – Über-Titel ohne Personenname, ausser wo verlangt */
+  /* 5 Liegenschaften – Über-Titel ohne Personenname */
   eigenmietwert:    { felder:[], neutral:true },
   mietertrag:       { felder:[], neutral:true },
   unterhalt_liegen: { felder:[], neutral:true },
-  hypothek:         { felder:["stelle","iban","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], neutral:true },
-  liegenschaftssteuer:{ felder:["stelle","iban","betrag"],        pflicht:["stelle"],                    neutral:true },
-  liegenschaft_aus: { felder:["stelle","betrag"],                 neutral:true }
+  liegenschaft_aus: { felder:[], neutral:true },
+  hypothek:         { felder:["stelle","iban","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], neutral:true, betrag:"Schuld 31.12.", zinsen:"Zinsen" },
+  liegenschaftssteuer:{ felder:["stelle","iban"], pflicht:["stelle"], neutral:true },
+
+  /* 6 Weiteres – gemäss Beschreibung */
+  personalien:      { felder:["person"], pflicht:[] }
 };
 const bezRegel = id => BEZ[id] || { felder:[], pflicht:[] };
+/* Feldbeschriftung je Typ: "Betrag" heisst beim Lohnausweis "Nettolohn". */
+const bezFeldLabel = (id, f) => {
+  const r = bezRegel(id);
+  if(f === "betrag" && r.betrag) return r.betrag + " CHF";
+  if(f === "zinsen" && r.zinsen) return r.zinsen + " CHF";
+  if(f === "stelle") return ({ lohnausweis:"Arbeitgeber", lohnausweis_p:"Arbeitgeber", saeule3a:"Versicherer / Bank",
+    pk_einkauf:"Versicherer / Pensionskasse" })[id] || "Institut / Versicherer";
+  return BEZ_FELDER[f].label;
+};
 /* Welche Angaben fehlen noch? */
 function bezFehlt(doc){
   const r = bezRegel(doc.docType);
@@ -486,10 +557,13 @@ function bezFehlt(doc){
 }
 /* Kurzfassung der Regel als Satz – erscheint im Konverter und im Dialog. */
 function bezRegelText(id){
-  const r = bezRegel(id);
-  if(!r.felder.length) return r.neutral ? "Über-Titel, ohne Personenname." : "Keine Zusatzangaben nötig.";
-  const namen = r.felder.map(f => BEZ_FELDER[f].label.split(" / ")[0]);
-  return (r.neutral ? "Über-Titel (ohne Personenname) mit " : "Zu bezeichnen mit ") + namen.join(", ") + ".";
+  const r = bezRegel(id), t = DT[id] || DT.sonstiges;
+  if(id === "zugangsdaten") return "Eigenes PDF «0 Zugangsdaten Online-Steuererklärung <Jahr> - <Name>», keine Rubrik.";
+  if(!r.felder.length) return r.neutral ? `Neutral: nur Über-Titel «${t.kat} ${t.titel}», ohne Personenname.`
+                                        : `Bezeichnung «${t.kat} ${t.titel}» – keine Zusatzangaben nötig.`;
+  const namen = r.felder.map(f => bezFeldLabel(id, f).replace(/ CHF$/, ""));
+  return `«${t.kat} ${t.titel}»${r.neutral ? " (neutral, ohne Personenname)" : ""} mit ${namen.join(", ")}`
+    + (r.nummer ? " – mehrere pro Person werden 1, 2, 3 … nummeriert." : ".");
 }
 
 /* Profil-Merkmale des Kunden – steuern Checkliste und Erkennung. */
@@ -531,21 +605,9 @@ function zifferFor(typeId, kanton){
    Kunden aus der Master-Checkliste kennen (Einkommen · Vermögen · Abzüge ·
    Schulden · Liegenschaften · Weiteres). Das Dossier selbst bleibt nach den
    Registern der Steuererklärung geordnet.                                   */
-const KUNDEN_GRUPPEN = [
-  ["Einkommen", ["lohnausweis","lohnausweis_neben","lohnausweis_p","vr_honorar","selbst_abschluss",
-                 "ahv_rente","pk_rente","taggeld","unterhalt_erhalten","uebrige_eink","quellensteuer"]],
-  ["Wertschriften & Vermögen", ["bankauszug","wertschriftenertrag","depotauszug","krypto","beteiligung",
-                 "darlehen_guthaben","rueckkaufswert","fahrzeug","erbschaft"]],
-  ["Abzüge", ["saeule3a","pk_einkauf","praemien_kk","praemien_leben","praemien_unfall","krankheitskosten",
-                 "behinderung","berufsauslagen","fahrkosten","verpflegung","weiterbildung","spenden",
-                 "parteispenden","kinderbetreuung","unterhalt_bezahlt"]],
-  ["Schulden", ["schulden","schuldzinsen"]],
-  ["Liegenschaften", ["eigenmietwert","hypothek","unterhalt_liegen","mietertrag","liegenschaft_aus","liegenschaftssteuer"]],
-  ["Weiteres", ["steuererklaerung","vollmacht","zugangsdaten","vorjahr","veranlagung","personalien",
-                 "zivilstand","kinder","aufstellung","bemerkungen","fristerstreckung","einsprache","sonstiges"]]
-];
+const KUNDEN_GRUPPEN = KATEGORIEN.map(([n, name]) => [`${n} ${name}`, DOCTYPES.filter(t => t.kat === n).map(t => t.id)]);
 const GRUPPE_VON = Object.fromEntries(KUNDEN_GRUPPEN.flatMap(([g, ids]) => ids.map(id => [id, g])));
-const gruppeFor = key => GRUPPE_VON[key] || "Weiteres";
+const gruppeFor = key => GRUPPE_VON[key] || "6 Weiteres";
 /* Checkliste in der Kundensicht gruppieren – leere Gruppen fallen weg. */
 function nachGruppen(list){
   return KUNDEN_GRUPPEN.map(([g]) => [g, list.filter(i => gruppeFor(i.key) === g)])
@@ -800,7 +862,7 @@ const S = {
              tarife:[["Steuererklärung natürliche Person","280"],["Wertschriftenverzeichnis","60"],
                      ["Liegenschaft / Eigenmietwert","90"],["Selbständige Erwerbstätigkeit","250"],
                      ["Fristerstreckung / Korrespondenz","40"],["Beratung (pro Stunde)","140"]] },
-  view:"dashboard", clientId:null, jahr:null, queue:[], convMsg:"", clView:"register", vglScan:null
+  view:"dashboard", clientId:null, jahr:null, queue:[], convMsg:"", clView:"kunde", vglScan:null, quellen:new Map(), sortInfo:null, sortBericht:null, ordner:null
 };
 
 async function loadAll(){
@@ -812,6 +874,7 @@ async function loadAll(){
   const st = await dbGet("kv","settings");
   if(st && st.v) S.settings = Object.assign(S.settings, st.v);
   tarifAnwenden();
+  await namenMigrieren();
 }
 const saveSettings = () => dbPut("kv", { k:"settings", v:S.settings });
 
@@ -1126,14 +1189,24 @@ function keyHit(hay, k){
 }
 /* Score: Treffer im Dateinamen wiegen 3×, Treffer im PDF-Text 1×.
    Lange Stichwörter schlagen kurze ("lohnausweis" gewinnt gegen "ausweis"). */
+/* Vordrucke, die auf jedem Lohnausweis stehen (Punkte F und G), sagen nichts
+   über die Belegart – sonst würde jeder Lohnausweis zu «Fahrtkosten».      */
+const FORMULAR_TEXT = /unentgeltliche befoerderung zwischen wohn-? ?und arbeitsort|kantinenverpflegung ?\/? ?lunch-?checks?|kantinenverpflegung|lunch-?checks?/g;
 function classify(filename, text){
-  const fn = normText(filename), tx = normText(text || "").slice(0, 20000);
+  const fn = normText(filename);
+  let tx = normText(text || "").slice(0, 20000);
+  if(/lohnausweis|rentenbescheinigung|certificat de salaire/.test(tx)) tx = tx.replace(FORMULAR_TEXT, " ");
+  /* Der Titel steht oben: Treffer im Kopf des Belegs zählen dreifach. So
+     bleibt ein Lohnausweis ein Lohnausweis, obwohl er unten die Wörter
+     «Beförderung» und «Kantinenverpflegung» (Punkte F und G) enthält.   */
+  const kopf = tx.slice(0, 180);
   let best = { id:"sonstiges", score:0, hits:[] }, second = 0;
   for(const d of DOCTYPES){
     let score = 0; const hits = [];
     for(const raw of d.keys){
       const k = normText(raw.trim());
       if(keyHit(fn, k)){ score += 3 * k.length; hits.push(k); }
+      else if(kopf && keyHit(kopf, k)){ score += 3 * k.length; hits.push(k); }
       else if(tx && keyHit(tx, k)){ score += k.length; hits.push(k); }
     }
     if(score > best.score){ second = best.score; best = { id:d.id, score, hits }; }
@@ -1151,16 +1224,20 @@ function classify(filename, text){
    weggelassen – der Beleg erscheint dann mit dem Hinweis
    "Bezeichnung ergänzen".                                            */
 const bezIban = v => String(v || "").replace(/\s+/g,"").toUpperCase();
-/* Betrag im Dateinamen: ganze Franken, abgeschnitten statt gerundet –
-   so stimmen die führenden Ziffern mit dem Beleg überein.             */
+/* Betrag im Namen: Schweizer Schreibweise mit Apostroph, Rappen nur wenn
+   vorhanden – "CHF 52'340", "CHF 42'318.55".                           */
 const bezBetrag = v => {
-  const n = vglNum(v);
-  return n ? "CHF-" + Math.trunc(n).toLocaleString("de-CH").replace(/[’']/g,"") : "";
+  const n = Math.round(Math.abs(vglNum(v)) * 100) / 100;
+  if(!n) return "";
+  return "CHF " + n.toLocaleString("de-CH", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits:2 })
+    .replace(/[’’]/g, "'");
 };
-/* Datumsangaben behalten ihre Punkte – "01.01.-30.09.2024" liest sich
-   im Ordner deutlich besser als "01-01-30-09-2024".                   */
-const bezZeitraum = v => String(v || "").replace(/[–—]/g, "-").replace(/[^0-9.\-]/g, "");
-function bezTeile(doc, client){
+/* Datumsangaben behalten ihre Punkte: "01.01.-30.09.2024" */
+const bezZeitraum = v => String(v || "").replace(/[–—]/g, "-").replace(/\s+/g, "").replace(/[^0-9.\-]/g, "");
+/* Umlaute bleiben – entfernt wird nur, was Windows in Dateinamen verbietet. */
+const dateiTeil = s => String(s || "").replace(/[<>:"/\\|?*\u0000-\u001f]/g, "").replace(/\s+/g, " ").trim();
+const kundeName = c => dateiTeil([c?.name, c?.vorname].filter(Boolean).join(" ")) || "Kunde";
+function bezTeile(doc){
   const r = bezRegel(doc.docType), b = doc.bez || {};
   const out = [];
   for(const f of (r.felder || [])){
@@ -1168,27 +1245,33 @@ function bezTeile(doc, client){
     if(!v) continue;
     if(f === "person" && r.neutral) continue;
     if(f === "iban")          out.push(bezIban(v));
-    else if(f === "betrag")   out.push(bezBetrag(v));
-    else if(f === "zinsen")   out.push("Zins-" + bezBetrag(v).replace("CHF-",""));
-    else if(f === "nr")       out.push(String(v).replace(/\D/g,"") || slug(v));
+    else if(f === "betrag"){  const x = bezBetrag(v); if(x) out.push((r.betrag ? r.betrag + " " : "") + x); }
+    else if(f === "zinsen"){  const x = bezBetrag(v) || (vglNum(v) === 0 ? "CHF 0" : ""); if(x) out.push((r.zinsen || "Zinsen") + " " + x); }
+    else if(f === "kosten"){  const x = bezBetrag(v); if(x) out.push("Kosten " + x); }
     else if(f === "zeitraum") out.push(bezZeitraum(v));
-    else out.push(slug(v));               // Person, Institut: nur Buchstaben
+    else if(f === "f" || f === "g") out.push(`${f.toUpperCase()} ${v}`);        // "F mit X" / "G ohne X"
+    else out.push(v);
   }
-  /* Ohne eigene Angaben bleibt es beim Kundennamen – ausser bei
-     Liegenschaftsbelegen, die nur den Über-Titel tragen. */
-  if(!out.length && !r.neutral) out.push(slug(clientName(client).replace(", ", "-")));
-  return out.filter(Boolean);
+  return out.map(dateiTeil).filter(Boolean);
 }
-function buildName(doc, client, index){
+/* Endung: Belege werden beim Ablegen zu PDF; nur Word/Excel & Co. behalten ihre. */
+const belegEndung = doc => (doc.istPdf || /\.pdf$/i.test(doc.origName || ""))
+  ? ".pdf" : (String(doc.origName || "").match(/\.[A-Za-z0-9]{1,5}$/) || [".pdf"])[0].toLowerCase();
+/* Dateiname nach der Anleitung «Steuerdokumente sortieren»:
+   "<Kategorie> <Titel>[ <Nr>] - <Angabe> - <Angabe> ….pdf"
+   Zugangsdaten: "0 Zugangsdaten Online-Steuererklärung <Jahr> - <Name>"  */
+function buildName(doc, client, nummer){
   const t = DT[doc.docType] || DT.sonstiges;
-  const r = REG[doc.register] || REG.R99;
-  const ext = (doc.origName.match(/\.[A-Za-z0-9]{1,5}$/) || [".pdf"])[0].toLowerCase();
-  const zif = (doc.ziffer && doc.ziffer !== "–") ? doc.ziffer + "_" : "";
-  const nr  = String(index).padStart(2,"0");
-  const teile = bezTeile(doc, client).join("_");
-  let stamm = `${doc.jahr}_${r.nr}_${zif}${slug(t.label)}${teile ? "_" + teile : ""}`;
-  if(stamm.length > 150) stamm = stamm.slice(0, 150).replace(/-+$/,"");   // Windows-Pfadgrenze
-  return `${stamm}_${nr}${ext}`;
+  let stamm;
+  if(t.id === "zugangsdaten") stamm = `0 ${t.titel} ${doc.jahr} - ${kundeName(client)}`;
+  else {
+    const teile = bezTeile(doc);
+    stamm = `${t.kat} ${t.titel}${nummer ? " " + nummer : ""}${teile.length ? " - " + teile.join(" - ") : ""}`;
+  }
+  stamm = dateiTeil(stamm);
+  /* Pfadgrenze von Windows (260 Zeichen) inkl. Kundenordner einhalten */
+  if(stamm.length > 150) stamm = stamm.slice(0, 150).replace(/[\s\-.,]+$/, "");
+  return stamm + belegEndung(doc);
 }
 
 /* ------------------------------------------------------------------
@@ -1212,11 +1295,21 @@ function bezAusText(text, docType, client){
   /* Institut / Versicherer / Krankenkasse aus bekannten Namen */
   const treffer = INSTITUTE.find(n => keyHit(t, normText(n)));
   if(treffer) b.stelle = treffer;
+  /* Unbekanntes Institut: Name mit Bank/Kantonalbank/Versicherung/Kasse im Kopf des Belegs */
+  if(!b.stelle && !["lohnausweis","lohnausweis_p","lohnausweis_neben","taggeld","vr_honorar"].includes(docType)){
+    const inst = roh.slice(0, 1500).match(/\b((?:[A-ZÄÖÜ][\wÄÖÜäöüéèàç'.\-]*\s+){0,3}(?:Kantonalbank|Raiffeisenbank|Bank|Banque|Banca|Versicherungen|Versicherung|Assurances|Krankenkasse|Pensionskasse|Vorsorgestiftung|Sparkasse|Leasing)(?:\s+(?:AG|SA|Genossenschaft))?)/);
+    if(inst && inst[1].trim().split(/\s+/).length > 1) b.stelle = inst[1].trim().replace(/\s+(AG|SA)$/, " $1");
+  }
   /* Arbeitgeber beim Lohnausweis: erste Firma mit Rechtsform im Kopf des Belegs. */
-  if(!b.stelle && ["lohnausweis","lohnausweis_neben","lohnausweis_p","taggeld","vr_honorar"].includes(docType)){
+  if(!b.stelle && (bezRegel(docType).felder || []).includes("stelle")){
     const firma = roh.slice(0, 1200)
       .match(/\b([A-ZÄÖÜ][\wÄÖÜäöüéèà&.\-]*(?:\s+[A-ZÄÖÜ0-9][\wÄÖÜäöüéèà&.\-]*){0,3}\s+(?:AG|GmbH|SA|S\.A\.|Sàrl|SARL|Genossenschaft|Stiftung|KLG|KmG))\b/);
     if(firma) b.stelle = firma[1].trim();
+    /* Öffentliche Arbeitgeber tragen keine Rechtsform: "Stadt Winterthur" */
+    if(!b.stelle){
+      const amt = roh.slice(0, 1200).match(/\b((?:Stadt|Gemeinde|Kanton|Spital|Universität|Schulgemeinde|Politische Gemeinde)\s+[A-ZÄÖÜ][\wÄÖÜäöü\-]+)/);
+      if(amt) b.stelle = amt[1].trim();
+    }
   }
   /* Zeitraum "01.01.-31.12.2024" oder "01.01.2024 bis 30.09.2024" */
   const zr = roh.match(/(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)\s*(?:-|–|—|bis)\s*(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)/);
@@ -1240,16 +1333,26 @@ function bezAusText(text, docType, client){
     krankheitskosten:["selbstbehalt","kostenbeteiligung","total","rechnungsbetrag"],
     weiterbildung:["total","kursgeld","rechnungsbetrag"],
     rueckkaufswert:["rueckkaufswert"],
-    krypto:["total","gesamtwert","steuerwert"]
+    krypto:["total","gesamtwert","steuerwert"],
+    ahv_rente:["jahresrente","total rente","rente total","rentenbetrag","total"],
+    pk_rente:["jahresrente","total rente","rente total","rentenbetrag","total"],
+    unterhalt_bezahlt:["total","unterhaltsbeitraege","alimente","betrag"],
+    unterhalt_erhalten:["total","unterhaltsbeitraege","alimente","betrag"],
+    parteispenden:["total","mitgliederbeitrag","jahresbeitrag","betrag"],
+    fahrkosten:["total","rechnungsbetrag","gesamtbetrag","preis","betrag"],
+    praemien_leben:["jahrespraemie","total praemien","praemie"],
+    praemien_unfall:["jahrespraemie","total praemien","praemie"],
+    behinderung:["total","rechnungsbetrag"],
+    beteiligung:["steuerwert","verkehrswert","nominalwert"]
   }[docType] || [];
   const regel = bezRegel(docType);
-  const erster = liste => {
+  const erster = (liste, nullOk = false) => {
     for(const k of liste){
       const kn = normText(k);
       let i = t.indexOf(kn);
       while(i !== -1){
         const f = vglFindBetrag(t, i + kn.length, 90);
-        if(f && f.wert > 0) return String(f.wert);
+        if(f && (f.wert > 0 || nullOk && f.wert === 0)) return String(f.wert);
         i = t.indexOf(kn, i + kn.length);
       }
     }
@@ -1261,10 +1364,41 @@ function bezAusText(text, docType, client){
      Schulden) – nie als "Betrag", der bei Hypotheken die Schuld meint. */
   if((regel.felder || []).includes("zinsen")){
     const zins = erster(["total zinsen","bezahlte zinsen","zinsbelastung","hypothekarzins","schuldzins",
-                         "bruttozins","zinsertrag","zinsgutschrift","zinsen"]);
+                         "bruttozins","zinsertrag","zinsgutschrift","zinsen"], true);
     if(zins && zins !== b.betrag) b.zinsen = zins;
   }
+  /* Kontokosten (Spesen, Gebühren) – nur beim Konto verlangt */
+  if((regel.felder || []).includes("kosten")){
+    const kosten = erster(["total spesen","spesen","kontofuehrungsgebuehr","kontofuehrung","gebuehren","kosten"]);
+    if(kosten && kosten !== b.betrag && kosten !== b.zinsen) b.kosten = kosten;
+  }
+  /* Lohnausweis Punkt F (unentgeltliche Beförderung) und G (Kantine,
+     Lunch-Checks): angekreuzt, wenn neben der Beschriftung ein "X" steht. */
+  if((regel.felder || []).includes("f")){
+    /* Das Kreuz steht direkt vor der Beschriftung ("F X Unentgeltliche …")
+       oder direkt danach ("… Arbeitsort X") – nie weiter weg, sonst würde
+       das X der Nachbarzeile mitgezählt. */
+    const kreuz = (...beschriftungen) => {
+      for(const k of beschriftungen){
+        const i = t.indexOf(k);
+        if(i === -1) continue;
+        const davor = t.slice(Math.max(0, i - 8), i), danach = t.slice(i + k.length, i + k.length + 8);
+        return /(^|\s)[\[(]?x[\])]?\s*$/.test(davor) || /^\s*[\[(]?x[\])]?(\s|$)/.test(danach) ? "mit X" : "ohne X";
+      }
+      return "";
+    };
+    const f = kreuz("unentgeltliche befoerderung zwischen wohn- und arbeitsort", "unentgeltliche befoerderung zwischen wohn und arbeitsort",
+                    "unentgeltliche befoerderung");
+    const g = kreuz("kantinenverpflegung / lunch-checks", "kantinenverpflegung/lunch-checks", "kantinenverpflegung / lunch-check",
+                    "kantinenverpflegung", "lunch-checks");
+    if(f) b.f = f;
+    if(g) b.g = g;
+  }
   b.person = bezPerson(t, docType, client) || undefined;
+  /* Einzelperson ohne Partner und Kinder: der Beleg kann nur ihr gehören. */
+  if(!b.person && (regel.felder || []).includes("person") && !regel.neutral && client?.name
+     && !(client.partner?.vorname || client.partner?.name) && !(client.kinder || []).length)
+    b.person = [client.name, client.vorname].filter(Boolean).join(" ");
   if(!b.person) delete b.person;
   return b;
 }
@@ -1303,17 +1437,44 @@ function bezErgaenzen(alt, neu){
   for(const [k, v] of Object.entries(neu || {})) if(v && !String(out[k] || "").trim()) out[k] = v;
   return out;
 }
+/* Beginn des Gültigkeitszeitraums als Sortierschlüssel (Monat, Tag). */
+const zeitraumStart = d => { const m = String(d.bez?.zeitraum || "").match(/(\d{1,2})\.(\d{1,2})\./);
+  return m ? +m[2] * 40 + +m[1] : 9999; };
 function renumber(clientId, jahr){
   const client = clientById(clientId);
   const list = docsOf(clientId, jahr).sort((a,b) =>
-    ((a.register||"")+(a.ziffer||"")).localeCompare((b.register||"")+(b.ziffer||"")) || String(a.added||"").localeCompare(String(b.added||"")));
-  const counter = {};
+    (DT[a.docType]?.kat ?? 9) - (DT[b.docType]?.kat ?? 9) || String(a.added||"").localeCompare(String(b.added||"")));
+  /* Mehrere Lohnausweise derselben Person: 1, 2, 3 … in zeitlicher Folge */
+  const gruppen = {};
   list.forEach(d => {
-    const k = d.register + d.docType;
-    counter[k] = (counter[k] || 0) + 1;
-    d.newName = buildName(d, client, counter[k]);
+    if(!bezRegel(d.docType).nummer) return;
+    const k = (DT[d.docType]?.titel || d.docType) + "|" + normText(d.bez?.person || "");
+    (gruppen[k] = gruppen[k] || []).push(d);
+  });
+  const nummer = new Map();
+  Object.values(gruppen).forEach(g => {
+    if(g.length < 2) return;
+    g.sort((a,b) => zeitraumStart(a) - zeitraumStart(b) || String(a.added||"").localeCompare(String(b.added||"")));
+    g.forEach((d, i) => nummer.set(d.id, i + 1));
+  });
+  /* Gleicher Name zweimal: zweiter Beleg erhält "(2)" – nichts wird überschrieben. */
+  const vergeben = new Set();
+  list.forEach(d => {
+    let name = buildName(d, client, nummer.get(d.id));
+    if(vergeben.has(name.toLowerCase())){
+      const p = name.lastIndexOf("."); let i = 2, k;
+      do { k = `${name.slice(0, p)} (${i++})${name.slice(p)}`; } while(vergeben.has(k.toLowerCase()));
+      name = k;
+    }
+    vergeben.add(name.toLowerCase());
+    d.newName = name;
   });
   return Promise.all(list.map(d => dbPut("docs", d)));
+}
+/* Bestehende Belege auf das neue Schema umbenennen (einmalig nach dem Update). */
+async function namenMigrieren(){
+  const paare = new Set(S.docs.filter(d => /^\d{4}_\d{2}_/.test(d.newName || "")).map(d => d.clientId + "|" + d.jahr));
+  for(const p of paare){ const [cid, j] = p.split("|"); if(clientById(cid)) await renumber(cid, j); }
 }
 
 /* ------------------------------------------------------------------
@@ -1608,24 +1769,31 @@ function textUsable(t){
   return buchstaben > 40 && vokale / buchstaben > 0.28;
 }
 
-/* Reserve: pdf.js (nur mit Internetverbindung, z.B. für PDFs mit
-   ungewöhnlicher Schrifteinbettung).                                     */
+/* pdf.js – liest, zerlegt und rendert PDF-Seiten. Mitgeliefert im Ordner
+   vendor/pdfjs/ (kein fremder Server nötig); das CDN ist nur Reserve.   */
+const PDFJS_LOKAL = "vendor/pdfjs/";
+const PDFJS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
 let pdfjsReady = null;
 function loadPdfJs(){
   if(pdfjsReady) return pdfjsReady;
-  pdfjsReady = new Promise(res => {
-    if(window.pdfjsLib) return res(window.pdfjsLib);
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-    s.onload = () => {
-      try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; }catch(e){}
-      res(window.pdfjsLib || null);
-    };
-    s.onerror = () => res(null);
-    document.head.appendChild(s);
-  });
+  pdfjsReady = (async () => {
+    if(window.pdfjsLib) return window.pdfjsLib;
+    for(const basis of [PDFJS_LOKAL, PDFJS_CDN]){
+      try{
+        await loadScript(basis + "pdf.min.js");
+        if(window.pdfjsLib){ window.pdfjsLib.GlobalWorkerOptions.workerSrc = basis + "pdf.worker.min.js"; return window.pdfjsLib; }
+      }catch(e){ /* nächste Quelle */ }
+    }
+    return null;
+  })();
   return pdfjsReady;
+}
+/* pdf-lib – setzt Seiten zu neuen PDF zusammen (Stapel trennen, mehrseitige
+   Belege und Monatsrechnungen zusammenfassen). Mitgeliefert, MIT-Lizenz. */
+let pdfLibReady = null;
+function loadPdfLib(){
+  if(window.PDFLib) return Promise.resolve(window.PDFLib);
+  return pdfLibReady = pdfLibReady || loadScript("vendor/pdf-lib/pdf-lib.min.js").then(() => window.PDFLib || null).catch(() => null);
 }
 async function pdfText(file, maxPages=3){
   if(!/\.pdf$/i.test(file.name)) return "";
@@ -1677,26 +1845,43 @@ async function loadTesseract(){
                         langPath:   OCR_LOCAL + "lang" } : {};
   return window.Tesseract;
 }
-/* Erste Seite eines PDF in ein Bild rendern (dafür wird pdf.js gebraucht). */
-async function pdfPageToCanvas(file, scale = 2){
+/* Eine Seite eines PDF in ein Bild rendern (pdf.js). */
+async function pdfPageToCanvas(file, scale = 2, seite = 1){
   const lib = await loadPdfJs();
-  if(!lib) throw new Error("PDF-Renderer nicht verfügbar – für OCR von PDFs ist eine Internetverbindung nötig.");
+  if(!lib) throw new Error("PDF-Werkzeug nicht verfügbar – Ordner vendor/pdfjs/ fehlt.");
   const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
-  const page = await pdf.getPage(1);
+  return seiteRendern(await pdf.getPage(seite), scale);
+}
+async function seiteRendern(page, scale){
   const vp = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
-  canvas.width = vp.width; canvas.height = vp.height;
-  await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+  canvas.width = Math.ceil(vp.width); canvas.height = Math.ceil(vp.height);
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
   return canvas;
 }
-async function ocrFile(file, onProgress = () => {}){
-  const T = await loadTesseract();
-  const src = isBild(file.name) ? file : await pdfPageToCanvas(file);
-  const res = await T.recognize(src, S.settings.ocrLang || "deu", {
-    ...(OCR.paths || {}),
-    logger: m => { if(m.status === "recognizing text") onProgress(Math.round((m.progress || 0) * 100)); }
-  });
+/* Ein Texterkennungs-Arbeiter für alle Seiten – bei einem Stapel von
+   40 Seiten spart das pro Seite das erneute Laden der Sprachdaten.     */
+const OCRW = { worker:null, lang:null, fortschritt:() => {} };
+async function ocrWorker(){
+  const T = await loadTesseract(), lang = S.settings.ocrLang || "deu";
+  if(OCRW.worker && OCRW.lang === lang) return OCRW.worker;
+  if(OCRW.worker){ try{ await OCRW.worker.terminate(); }catch(e){} }
+  OCRW.worker = await T.createWorker(lang, 1, { ...(OCR.paths || {}),
+    logger: m => { if(m.status === "recognizing text") OCRW.fortschritt(Math.round((m.progress || 0) * 100)); } });
+  OCRW.lang = lang;
+  return OCRW.worker;
+}
+async function ocrQuelle(src, onProgress = () => {}){
+  const w = await ocrWorker();
+  OCRW.fortschritt = onProgress;
+  const res = await w.recognize(src);
   return res?.data?.text || "";
+}
+async function ocrFile(file, onProgress = () => {}){
+  const src = isBild(file.name) ? file : await pdfPageToCanvas(file);
+  return ocrQuelle(src, onProgress);
 }
 
 /* ---------- ZIP (Store-Verfahren, ohne Bibliothek) ---------- */
@@ -3189,7 +3374,8 @@ async function vglInsDossier(file, c, jahr){
   const doc = { id:uid(), clientId:c.id, jahr:String(jahr), origName:file.name, size:file.size,
                 docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), unsicher:false,
                 blob:file, newName:file.name, added:new Date().toISOString() };
-  doc.newName = buildName(doc, c, 1);
+  doc.istPdf = /\.pdf$/i.test(file.name);
+  doc.newName = buildName(doc, c);
   await dbPut("docs", doc);
   delete doc.blob;
   S.docs.push(doc);
@@ -3624,17 +3810,20 @@ function viewDossier(){
     <div class="card-head"><h3>Dokumente im Dossier (${docs.length})</h3>
       <div class="row no-print">
         <button id="toConv" class="btn-teal">+ Dokumente hinzufügen</button>
-        <button id="zip" ${docs.length?"":"disabled"}>ZIP-Export</button>
+        <button id="zip" ${docs.length?"":"disabled"} title="Alle Belege als einzelne PDF in einer ZIP">ZIP «${esc(kundeName(c))}.zip»</button>
+        ${ordnerMoeglich() ? `<button id="inOrdner" ${docs.length?"":"disabled"} title="Schreibt «Sortiert - ${esc(kundeName(c))}» und «${esc(kundeName(c))}.zip» in den Kundenordner">📁 In Kundenordner speichern</button>` : ""}
         <button id="toc" ${docs.length?"":"disabled"}>Inhaltsverzeichnis</button></div></div>
-    ${docs.length ? REGISTERS.filter(r => docs.some(d => d.register === r.id)).map(r => `
-      <div class="reg-head"><b>${r.nr} · ${esc(r.label)}</b></div>
-      ${docs.filter(d => d.register === r.id).sort((a,b) => a.newName.localeCompare(b.newName)).map(d => `
+    ${S.sortBericht && S.sortBericht.clientId === c.id && String(S.sortBericht.jahr) === String(jahr) ? sortBerichtHtml(S.sortBericht) : ""}
+    ${docs.length ? KATEGORIEN.filter(([n]) => docs.some(d => (DT[d.docType]?.kat ?? 6) === n)).map(([n, name]) => `
+      <div class="reg-head"><span class="kat-nr">${n}</span><b>${esc(name)}</b>
+        <span class="badge grey">${docs.filter(d => (DT[d.docType]?.kat ?? 6) === n).length}</span></div>
+      ${docs.filter(d => (DT[d.docType]?.kat ?? 6) === n).sort((a,b) => a.newName.localeCompare(b.newName, "de", { numeric:true })).map(d => `
         <div class="doc-row">
           <div><div class="fn"><b>${esc(d.newName)}</b></div>
-               <div class="small">Original: ${esc(d.origName)} · ${kb(d.size)}${d.unsicher?' · <span class="badge warn">Zuordnung prüfen</span>':""}${
-                 bezFehlt(d).length ? ` · <span class="badge warn">Bezeichnung ergänzen: ${esc(bezFehlt(d).map(f => BEZ_FELDER[f].label.split(" / ")[0]).join(", "))}</span>` : ""}</div></div>
-          <div class="small">${esc(DT[d.docType]?.label || d.docType)}${d.ziffer !== "–" ? " · Ziff. " + esc(d.ziffer) : ""}</div>
-          <div class="no-print"><button class="btn-sm" data-redo="${d.id}">Umordnen</button></div>
+               <div class="small">Original: ${esc(d.origName)} · ${kb(d.size)}${d.seiten > 1 ? ` · ${d.seiten} Seiten` : ""}${d.unsicher?' · <span class="badge warn">Zuordnung prüfen</span>':""}${
+                 bezFehlt(d).length ? ` · <span class="badge warn">Bezeichnung ergänzen: ${esc(bezFehlt(d).map(f => bezFeldLabel(d.docType, f).replace(/ CHF$/, "")).join(", "))}</span>` : ""}</div></div>
+          <div class="small">${n} ${esc(DT[d.docType]?.titel || d.docType)}${d.ziffer && d.ziffer !== "–" ? " · Ziff. " + esc(d.ziffer) : ""}</div>
+          <div class="no-print"><button class="btn-sm" data-redo="${d.id}">Bezeichnen</button></div>
           <div class="no-print"><button class="btn-sm" data-dl="${d.id}">Öffnen</button>
                <button class="btn-sm btn-danger" data-rm="${d.id}">✕</button></div>
         </div>`).join("")}`).join("")
@@ -3712,27 +3901,40 @@ function viewDossier(){
   $$("[data-inv]").forEach(b => b.onclick = () => go("invoice", { invoiceId:b.dataset.inv }));
   $("#zip") && ($("#zip").onclick = () => exportZip(c, jahr));
   $("#toc") && ($("#toc").onclick = () => printToc(c, jahr));
+  $("#inOrdner") && ($("#inOrdner").onclick = async () => {
+    try{
+      let h = S.ordner && S.ordner.clientId === c.id ? S.ordner.handle : null;
+      if(!h){ h = await window.showDirectoryPicker({ id:"kundenscans", mode:"readwrite" }); S.ordner = { handle:h, name:h.name, clientId:c.id }; }
+      toast("Schreibe in den Kundenordner …");
+      const n = await ordnerSchreiben(c, jahr, h);
+      toast(`${n} PDF in «Sortiert - ${kundeName(c)}» und «${kundeName(c)}.zip» gespeichert`);
+    }catch(e){ if(e?.name !== "AbortError") toast("Speichern im Ordner nicht möglich: " + e.message); }
+  });
+  $("#sbX") && ($("#sbX").onclick = () => { S.sortBericht = null; render(); });
+  $("#sbCopy") && ($("#sbCopy").onclick = () => navigator.clipboard.writeText(sortBerichtText(S.sortBericht, c))
+    .then(() => toast("Übersicht kopiert")));
 }
 
 /* Dokument manuell einem anderen Register / Typ zuordnen. */
 async function reclassifyDialog(docId){
   const d = await dbGet("docs", docId); if(!d) return;
   const kt = clientById(d.clientId)?.kanton || S.settings.kanton;
-  const r = bezRegel(d.docType), b = d.bez || {};
+  const r = { ...bezRegel(d.docType), id:d.docType }, b = d.bez || {};
   const ok = await modal({ title:"Dokument zuordnen und bezeichnen", ok:"Übernehmen", wide:true, body:`
     <p class="small">${esc(d.origName)}</p>
     <div class="grid g2">
       <div><label>Dokumenttyp</label>
-        <select name="dt">${DOCTYPES.map(t => `<option value="${t.id}" ${t.id===d.docType?"selected":""}>
-          ${REG[t.reg].nr} · ${esc(t.label)}${zifferFor(t.id, kt)!=="–"?" (Ziff. "+zifferFor(t.id, kt)+")":""}</option>`).join("")}</select></div>
+        <select name="dt">${TYPEN_SORTIERT.map(t => typOption(t, d.docType)).join("")}</select></div>
       <div><label>Steuerjahr</label><select name="jahr">${yearOptions(d.jahr)}</select></div>
     </div>
     ${r.felder.length ? `<div class="hint" style="margin-top:12px">${esc(bezRegelText(d.docType))}</div>
       <div class="grid g3">${r.felder.map(f => `
-        <div><label>${esc(BEZ_FELDER[f].label)}</label>
-          <input name="b_${f}" value="${esc(b[f] || "")}" placeholder="${esc(BEZ_FELDER[f].platzhalter)}"></div>`).join("")}</div>
+        <div><label>${esc(bezFeldLabel(d.docType, f))}</label>${BEZ_FELDER[f].auswahl
+          ? `<select name="b_${f}"><option value="">– wählen –</option>${BEZ_FELDER[f].auswahl.map(o =>
+               `<option ${b[f] === o ? "selected" : ""}>${o}</option>`).join("")}</select>`
+          : `<input name="b_${f}" value="${esc(b[f] || "")}" placeholder="${esc(BEZ_FELDER[f].platzhalter)}">`}</div>`).join("")}</div>
       <p class="small">Der Dateiname entsteht daraus automatisch. Wird der Dokumenttyp oben geändert,
-        gelten beim nächsten Öffnen die Felder der neuen Regel.</p>` : ""}` });
+        öffnet sich der Dialog danach mit den Feldern der neuen Regel.</p>` : ""}` });
   if(!ok) return;
   const t = DT[dlgVal("dt")] || DT.sonstiges;
   const oldJahr = d.jahr;
@@ -3741,11 +3943,14 @@ async function reclassifyDialog(docId){
   Object.assign(d, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, clientById(d.clientId)?.kanton),
                      jahr:dlgVal("jahr"), unsicher:false, bez:neuBez });
   await dbPut("docs", d);
+  delete d.blob;                                 // Datei bleibt in der Datenbank, nicht im Arbeitsspeicher
   const i = S.docs.findIndex(x => x.id === d.id); if(i >= 0) S.docs[i] = d;
   await renumber(d.clientId, d.jahr);
   if(oldJahr !== d.jahr) await renumber(d.clientId, oldJahr);
   await ensureDossier(d.clientId, d.jahr);
   render(); toast("Zuordnung aktualisiert");
+  /* Neuer Typ mit anderen Angaben: gleich weiter bezeichnen */
+  if(t.id !== r.id && bezRegel(t.id).felder.some(f => !(r.felder || []).includes(f))) reclassifyDialog(d.id);
 }
 
 /* ------------------------------------------------------------------
@@ -3955,7 +4160,7 @@ async function checklistExportBeide(c, jahr){
 async function exportZip(c, jahr){
   const blob = await dossierZipBlob(c, jahr);
   if(!blob) return toast("Keine Dokumente");
-  download(blob, `Steuerdossier_${jahr}_${slug(clientName(c).replace(", ","-"))}.zip`);
+  download(blob, `${kundeName(c)}.zip`);
   toast("Dossier exportiert");
 }
 /* Ein Bild (Scan, Foto) in eine A4-PDF legen – das Bild füllt die Seite
@@ -3990,48 +4195,48 @@ async function bildAlsPdf(blob, titel){
 }
 /* Name im ZIP: Fotos und Scans werden dort zu PDF – das Inhaltsverzeichnis
    nennt deshalb dieselbe Endung wie die Datei im ZIP. */
-const zipName = d => isBild(d.origName) ? d.newName.replace(/\.[A-Za-z0-9]+$/, "") + ".pdf" : d.newName;
-async function dossierZipBlob(c, jahr){
+const zipName = d => isBild(d.origName) && !d.istPdf ? d.newName.replace(/\.[A-Za-z0-9]+$/, "") + ".pdf" : d.newName;
+/* Alle Belege eines Jahres als einzelne, benannte Dateien – Grundlage für
+   ZIP, Kundenordner und E-Mail-Anhang. Ältere Foto-Belege werden dabei zu PDF. */
+async function dossierDateien(c, jahr){
   const docs = docsOf(c.id, jahr);
-  if(!docs.length) return null;
-  toast("ZIP wird erstellt…");
   const files = [], vergeben = new Set();
-  /* Gleicher Dateiname zweimal ginge im flachen ZIP verloren – deshalb
-     erhält der zweite Beleg eine Zählnummer. */
   const eindeutig = name => {
-    if(!vergeben.has(name)){ vergeben.add(name); return name; }
+    if(!vergeben.has(name.toLowerCase())){ vergeben.add(name.toLowerCase()); return name; }
     const p = name.lastIndexOf(".");
     const stamm = p > 0 ? name.slice(0, p) : name, ext = p > 0 ? name.slice(p) : "";
     let i = 2, kandidat;
-    do { kandidat = `${stamm}_${i++}${ext}`; } while(vergeben.has(kandidat));
-    vergeben.add(kandidat); return kandidat;
+    do { kandidat = `${stamm} (${i++})${ext}`; } while(vergeben.has(kandidat.toLowerCase()));
+    vergeben.add(kandidat.toLowerCase()); return kandidat;
   };
-  for(const d of [...docs].sort((a,b) => a.newName.localeCompare(b.newName))){
+  for(const d of [...docs].sort((a,b) => a.newName.localeCompare(b.newName, "de", { numeric:true }))){
     const full = await dbGet("docs", d.id);
     if(!full?.blob) continue;
-    /* Jeder Beleg soll als einzelne PDF im ZIP liegen – Fotos und Scans
-       werden dafür in eine PDF-Seite gelegt, PDF bleiben unverändert. */
     let blob = full.blob, name = d.newName;
-    if(isBild(d.origName)){
-      const pdf = await bildAlsPdf(full.blob, d.newName);
+    if(isBild(d.origName) && !d.istPdf){
+      const pdf = await bildAlsPdf(full.blob, "");
       if(pdf){ blob = pdf; name = zipName(d); }
     }
-    files.push({ name:eindeutig(name), data:new Uint8Array(await blob.arrayBuffer()) });
+    files.push({ name:eindeutig(name), blob });
   }
-  const enc = new TextEncoder();
-  files.push({ name:eindeutig("00_Inhaltsverzeichnis.txt"), data:enc.encode(tocText(c, jahr)) });
-  files.push({ name:eindeutig("00_Checkliste.txt"), data:enc.encode(checklistText(c, jahr)) });
-  return makeZip(files);
+  return files;
+}
+/* ZIP «<Kunde>.zip»: alle Belege als einzelne PDF, flach in einer Ebene. */
+async function dossierZipBlob(c, jahr){
+  if(!docsOf(c.id, jahr).length) return null;
+  toast("ZIP wird erstellt…");
+  const files = await dossierDateien(c, jahr);
+  return files.length ? makeZip(files) : null;
 }
 function tocText(c, jahr){
   const docs = docsOf(c.id, jahr), list = buildChecklist(c, jahr), st = checklistStats(list);
   const m = marke();
   let out = `STEUERDOSSIER ${jahr}\n${clientName(c)}${c.mandat ? " · Mandat " + c.mandat : ""}\n` +
             `${[m.firma, m.claim].filter(Boolean).join(" – ")}\nErstellt am ${deAt(today())}\n\nINHALT\n`;
-  REGISTERS.filter(r => docs.some(d => d.register === r.id)).forEach(r => {
-    out += `\n${r.nr} · ${r.label}\n`;
-    docs.filter(d => d.register === r.id).sort((a,b) => a.newName.localeCompare(b.newName))
-        .forEach(d => out += `   ${zipName(d)}${d.ziffer !== "–" ? "   (Ziff. " + d.ziffer + ")" : ""}\n`);
+  KATEGORIEN.filter(([n]) => docs.some(d => (DT[d.docType]?.kat ?? 6) === n)).forEach(([n, name]) => {
+    out += `\n${n} ${name}\n`;
+    docs.filter(d => (DT[d.docType]?.kat ?? 6) === n).sort((a,b) => a.newName.localeCompare(b.newName, "de", { numeric:true }))
+        .forEach(d => out += `   ${zipName(d)}\n`);
   });
   out += `\n\nCHECKLISTE: ${st.done}/${st.total} erledigt\n`;
   st.open.forEach(i => out += `   OFFEN: ${i.label}${i.ziffer !== "–" ? " (Ziff. " + i.ziffer + ")" : ""}\n`);
@@ -4044,7 +4249,30 @@ function printToc(c, jahr){
   w.document.close(); w.print();
 }
 
-/* ---------- Dokumenten-Konverter ---------- */
+/* ---------- Dokumenten-Konverter ----------
+   Ablauf nach der Anleitung «Steuerdokumente sortieren»:
+   ein gescanntes Kunden-PDF (Stapel) ODER mehrere Einzeldateien →
+   leere Seiten und Duplikate weg → Stapel in Einzelbelege trennen,
+   mehrseitige Belege zusammenhalten → erkennen und benennen → jedes
+   Dokument als eigenes PDF, im Ordner «Sortiert - <Kunde>» und in
+   «<Kunde>.zip» → Übersicht mit Auffälligkeiten.                        */
+const ordnerMoeglich = () => typeof window.showDirectoryPicker === "function";
+const neueSortInfo = () => ({ duplikate:[], leer:[], hinweise:[] });
+const seitenText = liste => {
+  const nr = liste.map(t => t.seite).filter(n => n != null).map(n => n + 1);
+  if(!nr.length) return "";
+  const bereiche = []; let a = nr[0], b = nr[0];
+  for(const n of nr.slice(1)){ if(n === b + 1) b = n; else { bereiche.push(a === b ? a : `${a}–${b}`); a = b = n; } }
+  bereiche.push(a === b ? a : `${a}–${b}`);
+  return (nr.length > 1 ? "S. " : "S. ") + bereiche.join(", ");
+};
+const belegTitel = q => {
+  const quellen = [...new Set(q.teile.map(t => S.quellen.get(t.q)?.file?.name).filter(Boolean))];
+  if(quellen.length > 1) return `${quellen.length} Dateien zusammengefasst`;
+  const s = seitenText(q.teile), gesamt = S.quellen.get(q.teile[0]?.q)?.seiten;
+  return (quellen[0] || q.name) + (s && gesamt > 1 ? " · " + s : "");
+};
+
 function viewConverter(){
   if(!S.clientId && S.clients.length) S.clientId = S.clients[0].id;
   const c = clientById(S.clientId);
@@ -4052,66 +4280,90 @@ function viewConverter(){
   if(!c){ M().innerHTML = `<div class="empty">Bitte zuerst einen Kunden erfassen.
      <br><button class="btn-primary" id="n" style="margin-top:10px">+ Neuer Kunde</button></div>`;
      $("#n").onclick = () => newClient(); return; }
+  const info = S.sortInfo;
+  const ordnerAktiv = S.ordner && S.ordner.clientId === c.id;
   M().innerHTML = `
   <div class="page-head">
     <div><h1>Dokumenten-Konverter</h1>
-      <p>Belege hineinziehen – das CRM erkennt den Dokumenttyp, vergibt Register und Ziffer
-         nach dem Steuerdossier-Aufbau und benennt die Dateien einheitlich um.</p></div>
+      <p>Kundenscan (ein ganzer Stapel) oder Einzeldateien hineingeben – das CRM trennt die Belege, lässt leere
+         Seiten und Duplikate weg, erkennt die Art und benennt jedes Dokument nach der Anleitung
+         «Steuerdokumente sortieren».</p></div>
     <div class="row no-print">
       <select id="convClient" style="width:auto">${S.clients.map(x =>
         `<option value="${x.id}" ${x.id===c.id?"selected":""}>${esc(clientName(x))}</option>`).join("")}</select>
       <select id="convYear" style="width:auto">${yearOptions(jahr)}</select>
     </div>
   </div>
-  <div class="hint">Benennung nach der Anleitung «Steuerdokumente sortieren»:
-    <span class="mono">Jahr_Register_Ziffer_Dokumenttyp_Angaben_Nr.pdf</span> – die Angaben (Person, Arbeitgeber/Institut,
-    IBAN, Zeitraum, Betrag, Zinsen) liest das CRM aus dem Beleg; Fehlendes trägst du unten nach.
-    Beispiel <span class="mono">${jahr}_02_1.1_Lohnausweis-alle-Arbeitgeber_${esc(slug(clientName(c).replace(", ","-")))}_Migros-AG_01.01.-31.12.${jahr}_CHF-52340_01.pdf</span></div>
+  <div class="hint">Bezeichnung: <span class="mono">Kategorie Titel - Angaben.pdf</span>, z.B.
+    <span class="mono">1 Lohnausweis - ${esc(kundeName(c))} - Migros AG - 01.01.-31.12.${esc(jahr)} - Nettolohn CHF 52'340 - F ohne X - G mit X.pdf</span>.
+    Kategorien: 0 Zugangsdaten · 1 Einkommen · 2 Wertschriften / Vermögen · 3 Abzüge · 4 Schulden · 5 Liegenschaften · 6 Weiteres.</div>
   <div class="card">
     <div class="drop" id="drop">
-      <b>Dateien hierher ziehen</b>
-      <p class="small">PDF, Bilder, Excel – beliebig viele auf einmal. PDFs werden zusätzlich am Inhalt erkannt.</p>
-      <button class="btn-primary" id="pick">Dateien auswählen</button>
-      <button id="gmailImport" ${gmailReady() && c.email ? "" : "disabled"}>Belege aus Gmail holen</button>
+      <b>Kundenscan oder Dateien hierher ziehen</b>
+      <p class="small">Ein Stapel-PDF wird Seite für Seite gelesen und in einzelne Belege getrennt. Fotos, PDF, Excel – beliebig viele.</p>
+      <div class="row" style="justify-content:center">
+        ${ordnerMoeglich() ? `<button class="btn-primary" id="ordnerPick" title="Liest alle Dateien im Kundenordner und schreibt danach «Sortiert - ${esc(kundeName(c))}» und «${esc(kundeName(c))}.zip» dorthin">📁 Kundenordner öffnen</button>` : ""}
+        <button class="${ordnerMoeglich() ? "" : "btn-primary"}" id="pick">Dateien auswählen</button>
+        <button id="gmailImport" ${gmailReady() && c.email ? "" : "disabled"}>Belege aus Gmail holen</button>
+      </div>
       <input type="file" id="file" multiple class="hidden">
-      <p class="small" style="margin-top:8px">${S.settings.ocr
-        ? "OCR ist aktiv: Scans ohne Textebene werden automatisch gelesen (braucht Internet)."
-        : "Tipp: Für reine Bildscans OCR in den Einstellungen aktivieren – oder pro Datei den OCR-Knopf nutzen."}</p>
-      <p class="small">${gmailReady()
-        ? (c.email ? `Sucht Anhänge in Mails von ${esc(c.email)} (letzte 12 Monate).`
-                   : "Für den Gmail-Import beim Kunden eine E-Mail-Adresse hinterlegen.")
-        : esc(gmailWhyNot())}</p>
+      <p class="small" style="margin-top:8px">${ordnerAktiv
+        ? `Kundenordner: <b>${esc(S.ordner.name)}</b> – beim Übernehmen entstehen dort «Sortiert - ${esc(kundeName(c))}» und «${esc(kundeName(c))}.zip».`
+        : (ordnerMoeglich() ? "Tipp: «Kundenordner öffnen» (z.B. AA Kundenscans\\\\" + esc(kundeName(c)) + ") – dann legt das CRM die sortierten PDF und die ZIP direkt dort ab."
+                            : "Direktes Schreiben in den Kundenordner geht nur in Chrome oder Edge – hier wird die ZIP heruntergeladen.")}</p>
+      <p class="small">${S.settings.ocr ? "Texterkennung (OCR) ist aktiv: Scans ohne Textebene werden automatisch gelesen."
+        : "Texterkennung ist ausgeschaltet (Einstellungen) – Scans ohne Textebene werden nur am Dateinamen erkannt."}
+        ${gmailReady() ? (c.email ? ` Gmail: Anhänge aus Mails von ${esc(c.email)}.` : "") : ""}</p>
     </div>
     <div id="status" class="small" style="margin-top:10px"></div>
     ${S.convMsg ? `<div class="hint warn" style="margin-top:10px">${esc(S.convMsg)}
       <button class="btn-sm btn-ghost no-print" id="msgOk">verstanden</button></div>` : ""}
+    ${info && (info.duplikate.length || info.leer.length) ? `<div class="hint" style="margin-top:10px">
+      ${info.leer.length ? `<b>${info.leer.length} leere Seite(n) weggelassen:</b> ${esc(info.leer.join(", "))}<br>` : ""}
+      ${info.duplikate.length ? `<b>${info.duplikate.length} Duplikat(e) nur einmal aufgenommen:</b> ${esc(info.duplikate.join(" · "))}` : ""}</div>` : ""}
   </div>
   ${S.queue.length ? `<div class="card">
-    <div class="card-head"><h3>Erkannt (${S.queue.length}) – bitte kurz prüfen</h3>
+    <div class="card-head"><h3>Erkannt: ${S.queue.length} Belege – bitte kurz prüfen</h3>
       <div class="row"><button class="btn-ghost btn-sm" id="clearQ">Verwerfen</button>
-        <button class="btn-primary" id="apply">In Dossier übernehmen</button></div></div>
-    ${S.queue.map((q,i) => `
+        <button class="btn-primary" id="apply">${ordnerAktiv ? "Übernehmen und in Kundenordner schreiben" : "In Dossier übernehmen"}</button></div></div>
+    <p class="small">Seiten: <b>✂</b> trennt ab dieser Seite einen neuen Beleg ab, <b>✕</b> lässt die Seite weg.
+      «An vorherigen anhängen» fasst zwei Belege zu einem PDF zusammen.</p>
+    ${S.queue.map((q,i) => {
+      const t = DT[q.docType] || DT.sonstiges, regel = bezRegel(q.docType), fehlt = bezFehlt(q);
+      const mitSeiten = q.teile.some(x => x.seite != null) || q.teile.length > 1;
+      return `
       <div class="doc-row">
-        <div><div class="fn"><b>${esc(q.name)}</b></div>
-          <div class="small">${kb(q.size)} ·
+        <div><div class="fn"><b>${esc(belegTitel(q))}</b></div>
+          <div class="small">${q.doppelt ? `<span class="badge danger">vermutlich doppelt – gleiche Angaben wie ${esc(q.doppelt)}</span> · ` : ""}${q.zusammen ? `<span class="badge">${q.zusammen} Rechnungen zusammengefasst</span> · ` : ""}
           ${q.sicher ? '<span class="badge ok">sicher erkannt</span>' : '<span class="badge warn">bitte prüfen</span>'}
-          ${q.hits.length ? " · Treffer: " + esc(q.hits.join(", ")) : " · kein Stichwort gefunden"}</div></div>
-        <div><select data-q="${i}" class="qtype">${DOCTYPES.map(t =>
-          `<option value="${t.id}" ${t.id===q.docType?"selected":""}>${REG[t.reg].nr} · ${esc(t.label)}</option>`).join("")}</select></div>
+          ${q.hits?.length ? " · Treffer: " + esc(q.hits.join(", ")) : " · kein Stichwort gefunden"}</div></div>
+        <div><select data-q="${i}" class="qtype">${TYPEN_SORTIERT.map(x => typOption(x, q.docType)).join("")}</select></div>
         <div><select data-qy="${i}" class="qyear">${yearOptions(q.jahr)}</select></div>
-        <div class="num">${q.sicher ? "" : `<button class="btn-sm" data-ocr="${i}" title="Text per OCR lesen">OCR</button> `}
-          <button class="btn-sm btn-danger" data-qx="${i}">✕</button></div>
-        ${bezRegel(q.docType).felder.length ? `<div class="bez-zeile">
+        <div class="num">${i > 0 && [...q.teile, ...S.queue[i-1].teile].every(x => S.quellen.get(x.q)?.typ !== "andere") ? `<button class="btn-sm" data-qmerge="${i}" title="An vorherigen Beleg anhängen">⤒</button> ` : ""}${
+          q.sicher || q.teile.length !== 1 ? "" : `<button class="btn-sm" data-ocr="${i}" title="Text per OCR lesen">OCR</button> `}
+          <button class="btn-sm btn-danger" data-qx="${i}" title="Beleg weglassen">✕</button></div>
+        ${mitSeiten ? `<div class="seiten-leiste">${q.teile.map((x, k) => `<div class="seite-chip">
+            ${x.thumb ? `<img src="${x.thumb}" alt="">` : `<div class="seite-leer">${esc((S.quellen.get(x.q)?.file?.name || "").slice(0, 14))}</div>`}
+            <span>${x.seite != null ? "S. " + (x.seite + 1) : "Datei"}</span>
+            <div class="row" style="gap:2px;justify-content:center">
+              ${k > 0 ? `<button class="btn-sm btn-ghost" data-split="${i}:${k}" title="Ab hier neuer Beleg">✂</button>` : ""}
+              ${q.teile.length > 1 ? `<button class="btn-sm btn-ghost" data-pdel="${i}:${k}" title="Seite weglassen">✕</button>` : ""}
+            </div></div>`).join("")}</div>` : ""}
+        <div class="bez-zeile">
           <div class="small" style="margin-bottom:4px">${esc(bezRegelText(q.docType))}
-            ${bezFehlt(q).length ? `<span class="badge warn">fehlt: ${esc(bezFehlt(q).map(f => BEZ_FELDER[f].label.split(" / ")[0]).join(", "))}</span>` : '<span class="badge ok">vollständig</span>'}</div>
-          <div class="bez-felder">${bezRegel(q.docType).felder.map(f => `
-            <label class="bez-feld"><span>${esc(BEZ_FELDER[f].label)}</span>
+            ${regel.felder.length ? (fehlt.length ? `<span class="badge warn">fehlt: ${esc(fehlt.map(f => bezFeldLabel(q.docType, f).replace(/ CHF$/, "")).join(", "))}</span>`
+                                                  : '<span class="badge ok">vollständig</span>') : ""}</div>
+          ${regel.felder.length ? `<div class="bez-felder">${regel.felder.map(f => BEZ_FELDER[f].auswahl
+            ? `<label class="bez-feld"><span>${esc(bezFeldLabel(q.docType, f))}</span>
+                 <select data-qb="${i}" data-f="${f}"><option value="">– wählen –</option>${BEZ_FELDER[f].auswahl.map(o =>
+                   `<option ${(q.bez || {})[f] === o ? "selected" : ""}>${o}</option>`).join("")}</select></label>`
+            : `<label class="bez-feld"><span>${esc(bezFeldLabel(q.docType, f))}</span>
               <input data-qb="${i}" data-f="${f}" value="${esc((q.bez || {})[f] || "")}"
-                     placeholder="${esc(BEZ_FELDER[f].platzhalter)}"></label>`).join("")}</div>
+                     placeholder="${esc(BEZ_FELDER[f].platzhalter)}"></label>`).join("")}</div>` : ""}
           <div class="small mono" style="margin-top:5px">Dateiname: ${esc(buildName(
-            { ...q, origName:q.name }, clientById(S.clientId) || {}, 1))}</div>
-        </div>` : ""}
-      </div>`).join("")}
+            { ...q, origName:q.name, istPdf:q.teile.every(x => S.quellen.get(x.q)?.typ !== "andere") }, c))}</div>
+        </div>
+      </div>`; }).join("")}
     </div>` : ""}
   <div class="card"><div class="card-head"><h3>Bereits abgelegt: ${docsOf(c.id, jahr).length} Dokumente (${jahr})</h3>
     <button class="btn-teal btn-sm" id="toDos">Dossier öffnen</button></div>
@@ -4123,6 +4375,7 @@ function viewConverter(){
   $("#msgOk") && ($("#msgOk").onclick = () => { S.convMsg = ""; render(); });
   $("#pick").onclick        = () => $("#file").click();
   $("#file").onchange       = e => intake([...e.target.files], jahr);
+  $("#ordnerPick") && ($("#ordnerPick").onclick = () => kundenordnerOeffnen(c, jahr));
   $("#gmailImport") && ($("#gmailImport").onclick = () => gmailImportDialog(c, jahr));
   const drop = $("#drop");
   ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
@@ -4141,21 +4394,24 @@ function viewConverter(){
   });
   $$(".qyear").forEach(sel => sel.onchange = () => { S.queue[+sel.dataset.qy].jahr = sel.value; render(); });
   $$("[data-qx]").forEach(b => b.onclick = () => { S.queue.splice(+b.dataset.qx,1); render(); });
+  $$("[data-qmerge]").forEach(b => b.onclick = () => { belegeZusammenfuegen(+b.dataset.qmerge, c); render(); });
+  $$("[data-split]").forEach(b => b.onclick = () => { const [i, k] = b.dataset.split.split(":").map(Number);
+    belegTrennen(i, k, c, jahr); render(); });
+  $$("[data-pdel]").forEach(b => b.onclick = () => { const [i, k] = b.dataset.pdel.split(":").map(Number);
+    const q = S.queue[i]; q.teile.splice(k, 1); belegNeuLesen(q, c, jahr, false); render(); });
   $$("[data-ocr]").forEach(b => b.onclick = async () => {
-    const q = S.queue[+b.dataset.ocr], stat = $("#status");
+    const q = S.queue[+b.dataset.ocr], stat = $("#status"), src = S.quellen.get(q.teile[0].q);
     try{
-      b.disabled = true; stat.textContent = `Texterkennung läuft: ${q.name} …`;
-      const text = await ocrFile(q.file, pct => stat.textContent = `OCR ${q.name}: ${pct}%`);
-      const cl = classify(q.name, text), t = DT[cl.docType];
-      Object.assign(q, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton),
-                         sicher:cl.sicher, hits:cl.hits, jahr: detectYear(text, q.name) || q.jahr,
-                         text:String(text || "").slice(0, 30000),
-                         bez:bezErgaenzen(q.bez, bezAusText(text, t.id, c)) });
-      stat.textContent = cl.sicher ? "OCR erfolgreich erkannt." : "OCR gelesen – Zuordnung bitte prüfen.";
+      b.disabled = true; stat.textContent = `Texterkennung läuft: ${src.file.name} …`;
+      const bild = src.typ === "bild" ? src.file : await pdfPageToCanvas(src.file, 2, (q.teile[0].seite ?? 0) + 1);
+      const text = await ocrQuelle(bild, pct => stat.textContent = `OCR ${src.file.name}: ${pct}%`);
+      q.teile[0].text = text;
+      belegNeuLesen(q, c, jahr, true);
+      stat.textContent = q.sicher ? "OCR erfolgreich erkannt." : "OCR gelesen – Zuordnung bitte prüfen.";
       render();
     }catch(e){ S.convMsg = e.message; stat.textContent = e.message; b.disabled = false; render(); }
   });
-  $("#clearQ") && ($("#clearQ").onclick = () => { S.queue = []; render(); });
+  $("#clearQ") && ($("#clearQ").onclick = () => { S.queue = []; S.quellen.clear(); S.sortInfo = null; render(); });
   $("#apply")  && ($("#apply").onclick  = () => applyQueue(c, jahr));
 }
 
@@ -4183,53 +4439,349 @@ async function gmailImportDialog(c, jahr){
   }catch(e){ if(stat) stat.textContent = ""; toast("Gmail: " + e.message); }
 }
 
-/* Dateien einlesen, Text extrahieren, klassifizieren. */
+/* ---------- Kundenordner (Chrome/Edge) ---------- */
+async function kundenordnerOeffnen(c, jahr){
+  let h;
+  try{ h = await window.showDirectoryPicker({ id:"kundenscans", mode:"readwrite" }); }
+  catch(e){ if(e?.name !== "AbortError") toast("Ordner nicht zugänglich: " + e.message); return; }
+  const files = [];
+  for await (const [name, e] of h.entries()){
+    /* Unterordner (auch ein früheres «Sortiert - …») und die ZIP bleiben aussen vor. */
+    if(e.kind !== "file" || /\.zip$/i.test(name) || /^\.|^desktop\.ini$|^thumbs\.db$/i.test(name)) continue;
+    files.push(await e.getFile());
+  }
+  S.ordner = { handle:h, name:h.name, clientId:c.id };
+  if(!files.length){ toast("Im Ordner liegen keine Dateien"); render(); return; }
+  files.sort((a, b) => a.name.localeCompare(b.name, "de", { numeric:true }));
+  await intake(files, jahr);
+}
+/* Sortierte PDF in «Sortiert - <Kunde>» und «<Kunde>.zip» in den Kundenordner schreiben. */
+async function ordnerSchreiben(c, jahr, handle){
+  const recht = { mode:"readwrite" };
+  if(await handle.queryPermission(recht) !== "granted" && await handle.requestPermission(recht) !== "granted")
+    throw new Error("Kein Schreibrecht für den Kundenordner");
+  const kunde = kundeName(c);
+  const ziel = await handle.getDirectoryHandle(`Sortiert - ${kunde}`, { create:true });
+  const dateien = await dossierDateien(c, jahr);
+  for(const f of dateien){
+    const fh = await ziel.getFileHandle(f.name, { create:true });
+    const w = await fh.createWritable(); await w.write(f.blob); await w.close();
+  }
+  const zip = await makeZip(dateien.map(f => ({ name:f.name, blob:f.blob })));
+  const zh = await handle.getFileHandle(`${kunde}.zip`, { create:true });
+  const w = await zh.createWritable(); await w.write(zip); await w.close();
+  return dateien.length;
+}
+
+/* ---------- Einlesen ---------- */
+async function dateiHash(blob){
+  const h = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+  return [...new Uint8Array(h)].slice(0, 16).map(x => x.toString(16).padStart(2, "0")).join("");
+}
+/* Rechnungsnummer – zwei Belege mit derselben Nummer sind ein Duplikat. */
+function rechnungsNr(text){
+  const m = String(text || "").match(/(?:rechnungs?[\s\-]?(?:nummer|nr\.?|no\.?)|rechnung\s+nr\.?|facture\s+n[o°º]\.?|fattura\s+n[.°º]?)\s*[:#]?\s*([A-Z0-9][A-Z0-9\-\/.]{3,24})/i);
+  return m && /\d/.test(m[1]) ? m[1].replace(/[.\-\/]+$/, "").toUpperCase() : "";
+}
+/* Leere Seite: kaum Tinte und kein lesbarer Text. */
+function tintenAnteil(canvas){
+  const d = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+  let dunkel = 0;
+  for(let i = 0; i < d.length; i += 4) if(d[i] * 0.3 + d[i+1] * 0.59 + d[i+2] * 0.11 < 160) dunkel++;
+  return dunkel / (d.length / 4);
+}
+const textZeichen = t => normText(t || "").replace(/[^a-z0-9]/g, "").length;
+/* Queue-Beleg aus seinen Teilen (neu) bestimmen: Art, Jahr, Angaben. */
+function belegNeuLesen(q, c, jahr, typNeu = true){
+  q.text = q.teile.map(t => t.text || "").join("\n");
+  const quelleName = q.teile.length === 1 && q.teile[0].seite == null ? (S.quellen.get(q.teile[0].q)?.file?.name || "") : "";
+  if(typNeu){
+    const cl = classify(quelleName, q.text), t = DT[cl.docType];
+    Object.assign(q, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), sicher:cl.sicher, hits:cl.hits });
+    q.bez = bezAusText(q.text, t.id, c);
+  } else q.bez = bezErgaenzen(q.bez, bezAusText(q.text, q.docType, c));
+  /* Lohnausweis der Partnerin / des Partners: eigener Checklistenpunkt */
+  const partnerName = [c.partner?.name || c.name, c.partner?.vorname].filter(Boolean).join(" ");
+  if(q.docType === "lohnausweis" && c.partner?.vorname && normText(q.bez?.person || "") === normText(partnerName)){
+    const tp = DT.lohnausweis_p; Object.assign(q, { docType:tp.id, register:tp.reg, ziffer:zifferFor(tp.id, c.kanton) });
+  }
+  q.jahr = detectYear(q.text, quelleName) || q.jahr || String(jahr);
+  q.rnr = rechnungsNr(q.text);
+  return q;
+}
+const neuerBeleg = (teile, c, jahr, name = "") => belegNeuLesen({ id:uid(), teile, name, bez:{}, jahr:String(jahr) }, c, jahr, true);
+
+/* Stapel-PDF: Seite für Seite lesen, leere Seiten erkennen, in Belege trennen. */
+async function stapelLesen(file, qid, c, jahr, setStat){
+  const lib = await loadPdfJs();
+  if(!lib) return null;
+  let pdf;
+  try{ pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise; }catch(e){ return null; }
+  const quelle = S.quellen.get(qid);
+  quelle.seiten = pdf.numPages;
+  const seiten = [], gesehen = new Map();
+  for(let i = 1; i <= pdf.numPages; i++){
+    setStat(`${file.name}: Seite ${i} von ${pdf.numPages} wird gelesen …`);
+    const page = await pdf.getPage(i);
+    let text = "";
+    try{ text = (await page.getTextContent()).items.map(it => it.str + (it.hasEOL ? "\n" : " ")).join(""); }catch(e){}
+    const klein = await seiteRendern(page, 0.35);
+    const tinte = tintenAnteil(klein);
+    if(!textUsable(text) && tinte >= 0.004 && S.settings.ocr){
+      try{
+        setStat(`${file.name}: Texterkennung Seite ${i} von ${pdf.numPages} …`);
+        text = await ocrQuelle(await seiteRendern(page, 2), p => setStat(`${file.name}: Texterkennung Seite ${i} von ${pdf.numPages} – ${p} %`));
+      }catch(e){ S.convMsg = e.message; }
+    }
+    const thumb = klein.toDataURL("image/jpeg", 0.6);
+    if(tinte < 0.004 && textZeichen(text) < 15){ S.sortInfo.leer.push(`${file.name} S. ${i}`); continue; }
+    /* Dieselbe Seite doppelt gescannt → nur einmal */
+    const schluessel = normText(text).replace(/\s+/g, " ").trim();
+    if(schluessel.length > 80 && gesehen.has(schluessel)){
+      S.sortInfo.duplikate.push(`${file.name} S. ${i} (gleich wie S. ${gesehen.get(schluessel)})`); continue;
+    }
+    if(schluessel.length > 80) gesehen.set(schluessel, i);
+    seiten.push({ q:qid, seite:i - 1, text, thumb });
+  }
+  return stapelTrennen(seiten, c, jahr);
+}
+/* Wo beginnt ein neuer Beleg? Deutlich erkannte neue Belegart, "Seite 1",
+   oder gleiche Art mit anderem Institut/IBAN/Arbeitgeber/Person.
+   Unklare Seiten, "Seite 2 von 3", Zusatzblatt, Detailliste → gehören
+   zum vorherigen Beleg (mehrseitige Belege bleiben EIN PDF).            */
+function stapelTrennen(seiten, c, jahr){
+  const belege = [];
+  let cur = null;
+  const anders = (a, b) => ["iban","stelle","person"].some(k => a[k] && b[k] && normText(a[k]) !== normText(b[k]));
+  /* Neue Rechnungsnummer = neue Rechnung (z.B. Monatsabo Januar, Februar …) */
+  const andereRechnung = (q, text) => { const r = rechnungsNr(text); return !!(r && q.rnr && r !== q.rnr); };
+  for(const s of seiten){
+    const t = normText(s.text);
+    const cl = classify("", s.text);
+    const folge = /seite\s*[2-9]\d?\s*(von|\/)|\b[2-9]\s*\/\s*[2-9]\b|zusatzblatt|beiblatt|detailliste|fortsetzung|uebertrag/.test(t);
+    const erste = /seite\s*1\s*(von|\/)|\b1\s*\/\s*[2-9]\b/.test(t);
+    let neu;
+    if(!cur) neu = true;
+    else if(cur.docType === "zugangsdaten" || cl.docType === "zugangsdaten") neu = true;   // Deckblatt: eigenes PDF
+    else if(erste) neu = true;
+    else if(folge) neu = false;
+    else if(cl.docType === "sonstiges" || cl.score < 6) neu = false;
+    else if(cl.docType !== cur.docType) neu = true;
+    else neu = andereRechnung(cur, s.text) || anders(cur.bez || {}, bezAusText(s.text, cl.docType, c));
+    if(neu){ cur = neuerBeleg([s], c, jahr); belege.push(cur); }
+    else { cur.teile.push(s); belegNeuLesen(cur, c, jahr, cur.docType === "sonstiges"); }
+  }
+  return belege;
+}
+/* Zwei Belege zusammenfügen (z.B. Lohnausweis + Zusatzblatt). */
+function belegeZusammenfuegen(i, c){
+  const vor = S.queue[i - 1], q = S.queue[i];
+  if(!vor || !q) return;
+  vor.teile.push(...q.teile);
+  S.queue.splice(i, 1);
+  belegNeuLesen(vor, c, vor.jahr, false);
+}
+/* Beleg ab Seite k in einen neuen Beleg abtrennen. */
+function belegTrennen(i, k, c, jahr){
+  const q = S.queue[i];
+  const rest = q.teile.splice(k);
+  belegNeuLesen(q, c, jahr, true);
+  S.queue.splice(i + 1, 0, neuerBeleg(rest, c, jahr));
+}
+/* Monatliche ÖV-Abo-Rechnungen derselben Person zu EINEM Beleg mit Jahrestotal. */
+function fahrtkostenZusammenfassen(c){
+  const gruppen = {};
+  S.queue.forEach(q => {
+    if(q.docType !== "fahrkosten" || q.teile.some(t => S.quellen.get(t.q)?.typ === "andere")) return;
+    (gruppen[normText(q.bez?.person || "")] = gruppen[normText(q.bez?.person || "")] || []).push(q);
+  });
+  for(const g of Object.values(gruppen)){
+    if(g.length < 2) continue;
+    const erst = g[0];
+    const summe = g.reduce((a, q) => a + vglNum(q.bez?.betrag), 0);
+    const anzahl = g.reduce((a, q) => a + (q.zusammen || 1), 0);
+    g.slice(1).forEach(q => { erst.teile.push(...q.teile); S.queue.splice(S.queue.indexOf(q), 1); });
+    erst.text = erst.teile.map(t => t.text || "").join("\n");
+    erst.zusammen = anzahl;
+    erst.bez = { ...erst.bez, betrag: summe ? String(Math.round(summe * 100) / 100) : "" };
+  }
+}
+/* Duplikate über Rechnungsnummer – in der Warteschlange und im Dossier. */
+/* Inhalts-Fingerabdruck: derselbe Beleg zweimal gescannt oder als zweite
+   Datei geliefert hat denselben Text, auch wenn die Dateien verschieden sind. */
+const textFinger = t => {
+  const n = normText(t || "").replace(/[^a-z0-9]/g, "");
+  if(n.length <= 80) return "";
+  /* Nur eine Prüfsumme (53 Bit) speichern, nie den Belegtext selbst. */
+  let h1 = 0xdeadbeef ^ n.length, h2 = 0x41c6ce57 ^ n.length;
+  for(let i = 0; i < n.length; i++){ const ch = n.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+};
+function duplikateEntfernen(c){
+  const eigene = S.docs.filter(d => d.clientId === c.id);
+  const rnr = new Map(eigene.filter(d => d.rnr).map(d => [d.docType + "|" + d.rnr, d.newName]));
+  const finger = new Map(eigene.filter(d => d.fp).map(d => [d.fp, d.newName]));
+  /* Von zwei Fassungen desselben Belegs bleibt die aussagekräftigere
+     (mehr erkannte Angaben, mehr Text) – z.B. das Original statt der «Kopie». */
+  const gehalt = q => Object.values(q.bez || {}).filter(v => String(v || "").trim()).length * 1000 + (q.text || "").length;
+  const behalten = [], inListe = new Map();
+  for(const q of S.queue){
+    q.fp = textFinger(q.text);
+    const k = q.rnr ? q.docType + "|" + q.rnr : "";
+    const abgelegt = (k && rnr.get(k)) || (q.fp && finger.get(q.fp));
+    if(abgelegt){ S.sortInfo.duplikate.push(`${belegTitel(q)} (bereits abgelegt als ${abgelegt})`); continue; }
+    const frueher = (k && inListe.get(k)) || (q.fp && inListe.get(q.fp));
+    if(frueher){
+      const grund = k && inListe.get(k) ? `Rechnungsnummer ${q.rnr}` : "gleicher Inhalt";
+      if(gehalt(q) > gehalt(frueher)){
+        behalten[behalten.indexOf(frueher)] = q;
+        S.sortInfo.duplikate.push(`${belegTitel(frueher)} (${grund} wie ${belegTitel(q)})`);
+        [frueher.fp, frueher.rnr ? frueher.docType + "|" + frueher.rnr : ""].filter(Boolean).forEach(x => inListe.set(x, q));
+      } else S.sortInfo.duplikate.push(`${belegTitel(q)} (${grund} wie ${belegTitel(frueher)})`);
+      if(k) inListe.set(k, inListe.get(k) === frueher ? q : inListe.get(k));
+      continue;
+    }
+    if(k) inListe.set(k, q);
+    if(q.fp) inListe.set(q.fp, q);
+    behalten.push(q);
+  }
+  S.queue = behalten;
+  vermutlichDoppelt(c);
+}
+/* Gleiche Art und gleiche Angaben (Person, Institut, Betrag, IBAN) – sehr
+   wahrscheinlich derselbe Beleg in anderer Fassung. Nicht automatisch
+   weglassen (zwei 3a-Konten mit gleichem Betrag gibt es), aber deutlich zeigen. */
+function vermutlichDoppelt(c){
+  const sig = x => { const r = bezRegel(x.docType), b = x.bez || {};
+    const teile = ["person","stelle","iban","betrag","zeitraum"].filter(f => r.felder.includes(f)).map(f => normText(b[f] || ""));
+    return teile.filter(Boolean).length >= 2 ? x.docType + "|" + teile.join("|") : ""; };
+  const gesehen = new Map(S.docs.filter(d => d.clientId === c.id).map(d => [sig(d), d.newName]).filter(([k]) => k));
+  S.queue.forEach(q => { const k = sig(q); q.doppelt = "";
+    if(!k) return;
+    if(gesehen.has(k)) q.doppelt = gesehen.get(k) || "einem anderen Beleg in dieser Liste";
+    else gesehen.set(k, ""); });
+}
 async function intake(files, jahr){
   if(!files.length) return;
-  const stat = $("#status");
+  const c = clientById(S.clientId) || {};
+  const setStat = m => { const el = $("#status"); if(el) el.textContent = m; };
+  S.sortInfo = S.sortInfo || neueSortInfo();
+  /* Identische Dateien nur einmal – auch gegenüber bereits Abgelegtem. */
+  const bekannt = new Set(S.docs.filter(d => d.clientId === c.id).flatMap(d => [d.hash, ...(d.quellHashes || [])]).filter(Boolean));
+  for(const src of S.quellen.values()) if(src.hash) bekannt.add(src.hash);
   for(let i = 0; i < files.length; i++){
     const f = files[i];
-    if(stat) stat.textContent = `Lese ${i+1}/${files.length}: ${f.name} …`;
-    let text = await pdfText(f);
-    if(S.settings.ocr && !textUsable(text) && (isBild(f.name) || /\.pdf$/i.test(f.name))){
-      try{
-        if(stat) stat.textContent = `Texterkennung (OCR) läuft: ${f.name} …`;
-        text = await ocrFile(f, pct => { if(stat) stat.textContent = `OCR ${f.name}: ${pct}%`; });
-      }catch(e){ S.convMsg = e.message; if(stat) stat.textContent = e.message; }
+    setStat(`Lese ${i+1}/${files.length}: ${f.name} …`);
+    const hash = await dateiHash(f);
+    if(bekannt.has(hash)){ S.sortInfo.duplikate.push(`${f.name} (identische Datei)`); continue; }
+    bekannt.add(hash);
+    const qid = uid(), istPdf = /\.pdf$/i.test(f.name) || f.type === "application/pdf";
+    S.quellen.set(qid, { file:f, hash, typ: istPdf ? "pdf" : isBild(f.name) ? "bild" : "andere", seiten: istPdf ? null : 1 });
+    let belege = null;
+    if(istPdf){
+      try{ belege = await stapelLesen(f, qid, c, jahr, setStat); }catch(e){ belege = null; }
+      /* Einseitige Datei: der eigene PDF-Leser ist oft genauer als pdf.js */
+      if(belege && belege.length === 1 && S.quellen.get(qid).seiten === 1 && !textUsable(belege[0].text)){
+        const t = await pdfText(f); if(textUsable(t)){ belege[0].teile[0].text = t; belegNeuLesen(belege[0], c, jahr, true); }
+      }
+      if(belege && belege.length === 1 && S.quellen.get(qid).seiten === 1){
+        const b = belege[0]; const cl = classify(f.name, b.text);   // Dateiname darf bei Einzeldateien mitzählen
+        if(cl.score > (classify("", b.text).score)) { const t = DT[cl.docType];
+          Object.assign(b, { docType:t.id, register:t.reg, ziffer:zifferFor(t.id, c.kanton), sicher:cl.sicher, hits:cl.hits,
+                             bez:bezAusText(b.text, t.id, c) }); }
+      }
     }
-    const cl = classify(f.name, text);
-    const t = DT[cl.docType];
-    const kunde = clientById(S.clientId) || {};
-    S.queue.push({ file:f, name:f.name, size:f.size, docType:t.id, register:t.reg,
-                   ziffer:zifferFor(t.id, kunde.kanton),
-                   jahr: detectYear(text, f.name) || String(jahr),
-                   bez: bezAusText(text, t.id, kunde),
-                   /* Text bleibt erhalten: wählt man einen anderen Typ, werden
-                      dessen Angaben daraus nachgelesen, ohne erneutes Einlesen. */
-                   text: String(text || "").slice(0, 30000),
-                   sicher:cl.sicher, hits:cl.hits });
+    if(!belege){
+      let text = await pdfText(f);
+      if(S.settings.ocr && !textUsable(text) && (isBild(f.name) || istPdf)){
+        try{ setStat(`Texterkennung (OCR) läuft: ${f.name} …`);
+             text = await ocrFile(f, pct => setStat(`OCR ${f.name}: ${pct}%`)); }
+        catch(e){ S.convMsg = e.message; setStat(e.message); }
+      }
+      const b = neuerBeleg([{ q:qid, seite:null, text, thumb: isBild(f.name) ? await bildVorschau(f) : null }], c, jahr, f.name);
+      b.name = f.name;
+      belege = [b];
+    }
+    belege.forEach(b => { if(!b.jahr) b.jahr = String(jahr); S.queue.push(b); });
   }
-  if(stat) stat.textContent = "";
+  duplikateEntfernen(c);
+  fahrtkostenZusammenfassen(c);
+  /* Prüfliste in der Reihenfolge der Kategorien 0–6 – wie später im Ordner */
+  const reihe = new Map(S.queue.map((q, i) => [q, i]));
+  S.queue.sort((a, b) => (DT[a.docType]?.kat ?? 9) - (DT[b.docType]?.kat ?? 9) || reihe.get(a) - reihe.get(b));
+  setStat("");
   render();
 }
-async function applyQueue(c, jahr){
-  const years = new Set(), proJahr = {}, offen = [];
-  let fehler = null;
-  for(const q of S.queue){
-    const doc = { id:uid(), clientId:c.id, jahr:String(q.jahr), origName:q.name, size:q.size,
-                  docType:q.docType, register:q.register, ziffer:q.ziffer, unsicher:!q.sicher,
-                  bez:q.bez || {},
-                  blob:q.file, newName:q.name, added:new Date().toISOString() };
-    doc.newName = buildName(doc, c, 1);
+async function bildVorschau(file){
+  try{
+    const url = URL.createObjectURL(file);
     try{
-      await dbPut("docs", doc);
-    }catch(e){
+      const img = await ladeBild(url), f = Math.min(1, 160 / Math.max(img.width, img.height));
+      const cv = document.createElement("canvas"); cv.width = Math.round(img.width * f); cv.height = Math.round(img.height * f);
+      cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+      return cv.toDataURL("image/jpeg", 0.6);
+    } finally { URL.revokeObjectURL(url); }
+  }catch(e){ return null; }
+}
+
+/* ---------- Beleg als PDF bauen ---------- */
+async function belegBauen(q){
+  const teile = q.teile, src0 = S.quellen.get(teile[0].q);
+  /* Unveränderte Einzeldatei: Original behalten (Signaturen, Qualität). */
+  if(teile.length === 1 && teile[0].seite == null){
+    if(src0.typ === "bild"){ const pdf = await bildAlsPdf(src0.file, ""); return pdf ? { blob:pdf, istPdf:true } : { blob:src0.file, istPdf:false }; }
+    return { blob:src0.file, istPdf: src0.typ === "pdf" };
+  }
+  if(src0.typ === "pdf" && teile.every((t, i) => t.q === teile[0].q && t.seite === i) && teile.length === src0.seiten)
+    return { blob:src0.file, istPdf:true };
+  const L = await loadPdfLib();
+  if(!L) throw new Error("PDF-Werkzeug fehlt (Ordner vendor/pdf-lib/)");
+  const neu = await L.PDFDocument.create(), cache = new Map();
+  for(const t of teile){
+    const src = S.quellen.get(t.q);
+    if(src.typ === "andere") throw new Error(`${src.file.name} ist kein PDF oder Bild und lässt sich nicht zusammenfügen`);
+    if(!cache.has(t.q)){
+      const bytes = src.typ === "pdf" ? await src.file.arrayBuffer() : await (await bildAlsPdf(src.file, ""))?.arrayBuffer();
+      if(!bytes) throw new Error(`${src.file.name} konnte nicht gelesen werden`);
+      cache.set(t.q, await L.PDFDocument.load(bytes, { ignoreEncryption:true }));
+    }
+    const quelle = cache.get(t.q);
+    const idx = t.seite == null ? quelle.getPageIndices() : [t.seite];
+    (await neu.copyPages(quelle, idx)).forEach(p => neu.addPage(p));
+  }
+  return { blob:new Blob([await neu.save()], { type:"application/pdf" }), istPdf:true };
+}
+
+async function applyQueue(c, jahr){
+  const years = new Set(), proJahr = {}, offen = [], neueIds = [];
+  let fehler = null;
+  const stat = $("#status");
+  for(let i = 0; i < S.queue.length; i++){
+    const q = S.queue[i];
+    if(stat) stat.textContent = `Lege Beleg ${i + 1} von ${S.queue.length} ab …`;
+    let gebaut;
+    try{ gebaut = await belegBauen(q); }
+    catch(e){ fehler = e; offen.push(q); continue; }
+    const einzel = q.teile.length === 1 && q.teile[0].seite == null;
+    const doc = { id:uid(), clientId:c.id, jahr:String(q.jahr), origName:belegTitel(q), size:gebaut.blob.size,
+                  docType:q.docType, register:q.register, ziffer:q.ziffer, unsicher:!q.sicher,
+                  bez:q.bez || {}, istPdf:gebaut.istPdf, rnr:q.rnr || "", fp:q.fp || textFinger(q.text), seiten:q.teile.length, doppelt:q.doppelt || "",
+                  hash: einzel ? S.quellen.get(q.teile[0].q)?.hash : "",
+                  quellHashes: [...new Set(q.teile.map(t => S.quellen.get(t.q)?.hash).filter(Boolean))],
+                  blob:gebaut.blob, newName:"", added:new Date().toISOString() };
+    if(!gebaut.istPdf) doc.origName = S.quellen.get(q.teile[0].q)?.file?.name || doc.origName;
+    doc.newName = buildName(doc, c);
+    try{ await dbPut("docs", doc); }
+    catch(e){
       /* Nicht stillschweigend verlieren: der Beleg bleibt in der
          Warteschlange, damit er nach dem Aufräumen erneut abgelegt wird. */
       fehler = e; offen.push(q); continue;
     }
-    delete doc.blob;                 // Datei liegt in der Datenbank, nicht im Arbeitsspeicher
-    S.docs.push(doc);
+    delete doc.blob;
+    S.docs.push(doc); neueIds.push(doc.id);
     years.add(String(q.jahr));
     proJahr[q.jahr] = (proJahr[q.jahr] || 0) + 1;
   }
@@ -4242,20 +4794,77 @@ async function applyQueue(c, jahr){
       ? `${offen.length} Beleg(e) konnten nicht abgelegt werden: der Browserspeicher ist voll. `
         + "Zuerst ein Backup inkl. Dateien exportieren, danach abgeschlossene Steuerjahre über "
         + "das Dossier entfernen – die Belege bleiben in der Warteschlange und lassen sich dann erneut übernehmen."
-      : `${offen.length} Beleg(e) konnten nicht abgelegt werden: ${fehler.message}. `
-        + "Sie bleiben in der Warteschlange.";
+      : `${offen.length} Beleg(e) konnten nicht abgelegt werden: ${fehler.message}. Sie bleiben in der Warteschlange.`;
     toast("Nicht alle Belege konnten abgelegt werden");
     render();
     if(!n) return;
   }
-  const jahre = [...years].sort();
-  /* Angezeigt wird das Jahr, in dem die meisten Belege gelandet sind –
-     das ist das Dossier, an dem gerade gearbeitet wird. */
-  const hauptJahr = Object.entries(proJahr).sort((a,b) => b[1]-a[1] || b[0].localeCompare(a[0]))[0]?.[0];
-  toast(jahre.length > 1
-    ? `${n} Dokumente abgelegt – verteilt auf die Steuerjahre ${jahre.join(" und ")}`
-    : `${n} Dokumente abgelegt`);
-  go("dossier", { clientId:c.id, jahr:hauptJahr || jahr });
+  const hauptJahr = Object.entries(proJahr).sort((a,b) => b[1]-a[1] || b[0].localeCompare(a[0]))[0]?.[0] || String(jahr);
+  /* In den Kundenordner schreiben (falls geöffnet) */
+  let ordnerMeldung = "";
+  if(S.ordner && S.ordner.clientId === c.id){
+    try{
+      if(stat) stat.textContent = "Schreibe in den Kundenordner …";
+      const anz = await ordnerSchreiben(c, hauptJahr, S.ordner.handle);
+      ordnerMeldung = `${anz} PDF in «${S.ordner.name}\\Sortiert - ${kundeName(c)}» und «${kundeName(c)}.zip» geschrieben.`;
+    }catch(e){ ordnerMeldung = "Schreiben in den Kundenordner fehlgeschlagen: " + e.message; }
+  }
+  S.sortBericht = sortBerichtErstellen(c, hauptJahr, neueIds, S.sortInfo, ordnerMeldung);
+  if(!offen.length){ S.quellen.clear(); S.sortInfo = null; }
+  toast(`${n} Dokumente abgelegt`);
+  go("dossier", { clientId:c.id, jahr:hauptJahr });
+}
+
+/* Übersicht nach dem Sortieren: was entstanden ist, was auffällt, was fehlt. */
+function sortBerichtErstellen(c, jahr, neueIds, info, ordnerMeldung){
+  const neu = S.docs.filter(d => neueIds.includes(d.id));
+  const unvollstaendig = neu.filter(d => bezFehlt(d).length)
+    .map(d => `${d.newName}: fehlt ${bezFehlt(d).map(f => bezFeldLabel(d.docType, f).replace(/ CHF$/, "")).join(", ")}`);
+  const unsicher = neu.filter(d => d.unsicher).map(d => d.newName);
+  const keinPdf = neu.filter(d => !d.istPdf).map(d => d.newName);
+  const lang = neu.filter(d => d.newName.length > 140).map(d => d.newName);
+  const doppelt = neu.filter(d => d.doppelt).map(d => `${d.newName} (gleiche Angaben wie ${d.doppelt})`);
+  const andereJahre = neu.filter(d => String(d.jahr) !== String(jahr)).map(d => `${d.newName} → Steuerjahr ${d.jahr}`);
+  const offen = checklistStats(buildChecklist(c, jahr)).open.map(i => i.label);
+  return { clientId:c.id, jahr:String(jahr), am:new Date().toISOString(), erstellt:neu.map(d => d.newName).sort((a,b) => a.localeCompare(b, "de", { numeric:true })),
+           duplikate:info?.duplikate || [], leer:info?.leer || [], unvollstaendig, unsicher, keinPdf, lang, andereJahre, doppelt, offen, ordnerMeldung };
+}
+function sortBerichtHtml(b){
+  const liste = (titel, arr, warn) => arr.length ? `<div style="margin-top:8px"><b>${esc(titel)} (${arr.length})</b>
+    <ul class="small" style="margin:4px 0 0;padding-left:18px">${arr.map(x => `<li${warn ? ' style="color:var(--warn)"' : ""}>${esc(x)}</li>`).join("")}</ul></div>` : "";
+  return `<div class="card no-print" style="background:var(--panel-2)"><div class="card-head">
+      <h3>Übersicht der Sortierung</h3>
+      <div class="row"><button class="btn-sm" id="sbCopy">Übersicht kopieren</button>
+        <button class="btn-sm btn-ghost" id="sbX">Schliessen</button></div></div>
+    ${b.ordnerMeldung ? `<div class="hint">${esc(b.ordnerMeldung)}</div>` : ""}
+    <p class="small"><b>${b.erstellt.length} Dokumente erstellt.</b>
+      ${b.leer.length ? ` ${b.leer.length} leere Seite(n) weggelassen.` : ""}
+      ${b.duplikate.length ? ` ${b.duplikate.length} Duplikat(e) nur einmal aufgenommen.` : ""}</p>
+    ${liste("Bezeichnung unvollständig – bitte ergänzen", b.unvollstaendig, true)}
+    ${liste("Zuordnung unsicher – bitte prüfen", b.unsicher, true)}
+    ${liste("Vermutlich doppelt (gleiche Angaben) – bitte prüfen", b.doppelt || [], true)}
+    ${liste("In einem anderen Steuerjahr abgelegt", b.andereJahre, true)}
+    ${liste("Duplikate (nur einmal aufgenommen)", b.duplikate)}
+    ${liste("Nicht als PDF (Originalformat behalten)", b.keinPdf, true)}
+    ${liste("Sehr lange Namen – Pfadlänge im Ordner prüfen", b.lang, true)}
+    ${b.offen.length ? liste("Fehlende Belege laut Checkliste", b.offen, true) : '<p class="small" style="margin-top:8px">Laut Checkliste fehlen keine Belege.</p>'}
+  </div>`;
+}
+function sortBerichtText(b, c){
+  const z = [`Sortierung ${kundeName(c)} – Steuerjahr ${b.jahr} (${new Date(b.am).toLocaleString("de-CH")})`, ""];
+  z.push(`Erstellt (${b.erstellt.length}):`, ...b.erstellt.map(n => "  " + n), "");
+  if(b.leer.length) z.push(`Leere Seiten weggelassen (${b.leer.length}): ${b.leer.join(", ")}`);
+  if(b.duplikate.length) z.push(`Duplikate nur einmal aufgenommen (${b.duplikate.length}):`, ...b.duplikate.map(n => "  " + n));
+  if(b.unvollstaendig.length) z.push("", "Bezeichnung unvollständig:", ...b.unvollstaendig.map(n => "  " + n));
+  if(b.unsicher.length) z.push("", "Zuordnung bitte prüfen:", ...b.unsicher.map(n => "  " + n));
+  if((b.doppelt || []).length) z.push("", "Vermutlich doppelt (gleiche Angaben) – bitte prüfen:", ...b.doppelt.map(n => "  " + n));
+  if(b.andereJahre.length) z.push("", "In einem anderen Steuerjahr abgelegt:", ...b.andereJahre.map(n => "  " + n));
+  if(b.keinPdf.length) z.push("", "Nicht als PDF (Originalformat behalten):", ...b.keinPdf.map(n => "  " + n));
+  if(b.lang.length) z.push("", "Sehr lange Namen (Pfadlänge im Ordner prüfen):", ...b.lang.map(n => "  " + n));
+  z.push("", b.offen.length ? `Fehlende Belege laut Checkliste (${b.offen.length}):` : "Laut Checkliste fehlen keine Belege.",
+         ...b.offen.map(n => "  - " + n));
+  if(b.ordnerMeldung) z.push("", b.ordnerMeldung);
+  return z.join("\n");
 }
 
 /* ==================================================================
@@ -4990,7 +5599,7 @@ function viewMail(){
       const attachments = [];
       if($("#attachZip").checked){
         const blob = await dossierZipBlob(c, jahr);
-        if(blob) attachments.push({ name:`Steuerdossier_${jahr}_${slug(clientName(c).replace(", ","-"))}.zip`, blob });
+        if(blob) attachments.push({ name:`${kundeName(c)}.zip`, blob });
       }
       await gmailSend({ to, subject:su, body:bo, from:S.settings.gmailFrom || S.settings.email, attachments });
       msg.textContent = "Gesendet – die Mail liegt in deinem Gmail-Ordner «Gesendet».";

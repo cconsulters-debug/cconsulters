@@ -49,7 +49,10 @@ Stundenansatz von CHF 120 sind das CHF 6'000 – das Paket amortisiert sich im e
 
 1. **Frage statt Pitch:** „Wie kommen die Belege heute bei Ihnen an – und wer benennt sie?"
 2. **Demo-Daten laden** (Einstellungen → Demo-Daten) → Übersicht mit drei Mandaten zeigen.
-3. **Der Moment, der verkauft:** Belege in den Konverter ziehen – am besten **frisch eingescannt**
+3. **Der Moment, der verkauft:** einen **ganzen Kundenscan-Stapel** über «Kundenordner öffnen»
+   einlesen – das CRM trennt die Belege, lässt leere Seiten und Duplikate weg, benennt nach den
+   Kategorien 0–6 und legt «Sortiert - Kunde» plus «Kunde.zip» in den Ordner. Alternativ Belege
+   in den Konverter ziehen – am besten **frisch eingescannt**
    mit Namen wie `IMG_20250115_0001.png`, damit sichtbar wird, dass der **Inhalt** gelesen wird und
    nicht der Dateiname. Zusehen, wie sie erkannt, umbenannt und einsortiert werden; danach ZIP
    exportieren und den Ordner öffnen. Das ist der Moment, in dem Treuhänder nicken.
