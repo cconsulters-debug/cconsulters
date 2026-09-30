@@ -1,0 +1,3 @@
+# Privates Steuer-CRM - nicht indexieren.
+User-agent: *
+Disallow: /
