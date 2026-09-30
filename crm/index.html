@@ -422,13 +422,15 @@ DOCTYPES.forEach(t => { t.info = DOC_INFO[t.id] || ""; });
 const KATEGORIEN = [[0,"Zugangsdaten"],[1,"Einkommen"],[2,"Wertschriften / Vermögen"],[3,"Abzüge"],
                     [4,"Schulden"],[5,"Liegenschaften"],[6,"Weiteres"]];
 const KAT_NAME = Object.fromEntries(KATEGORIEN);
+/* Kategoriename im Dateinamen – kurz, ohne Schrägstrich (in Windows verboten) */
+const KAT_DATEI = { 0:"Zugangsdaten", 1:"Einkommen", 2:"Wertschriften", 3:"Abzüge", 4:"Schulden", 5:"Liegenschaften", 6:"Weiteres" };
 const KAT_TITEL = {
   zugangsdaten:[0,"Zugangsdaten Online-Steuererklärung"],
   lohnausweis:[1,"Lohnausweis"], lohnausweis_p:[1,"Lohnausweis"], taggeld:[1,"Ersatzeinkünfte"],
   ahv_rente:[1,"Rentenbescheinigung AHV-IV"], pk_rente:[1,"Rentenbescheinigung Pensionskasse"],
   lohnausweis_neben:[1,"Nebenerwerb"], vr_honorar:[1,"Verwaltungsratshonorar"], uebrige_eink:[1,"Erwerbsausfall"],
   selbst_abschluss:[1,"Selbständige Erwerbstätigkeit"], quellensteuer:[1,"Quellensteuer"],
-  unterhalt_erhalten:[1,"Alimente erhalten"],
+  unterhalt_erhalten:[1,"Alimente Unterhaltsbeiträge erhalten"],
   bankauszug:[2,"Konto"], depotauszug:[2,"Depot"], wertschriftenertrag:[2,"Ertragsausweis Wertschriften"],
   krypto:[2,"Krypto"], darlehen_guthaben:[2,"Darlehen"], beteiligung:[2,"Beteiligung"],
   rueckkaufswert:[2,"Lebensversicherung"], fahrzeug:[2,"Fahrzeug"], erbschaft:[2,"Erbschaft Schenkung"],
@@ -437,7 +439,7 @@ const KAT_TITEL = {
   krankheitskosten:[3,"Krankheitskosten"], behinderung:[3,"Behinderungskosten"],
   fahrkosten:[3,"Fahrtkosten"], verpflegung:[3,"Fahrtkosten"], berufsauslagen:[3,"Fahrtkosten"],
   weiterbildung:[3,"Weiterbildung"], spenden:[3,"Spenden"], parteispenden:[3,"Mitgliederbeiträge"],
-  kinderbetreuung:[3,"Kita"], unterhalt_bezahlt:[3,"Alimente"],
+  kinderbetreuung:[3,"Kita"], unterhalt_bezahlt:[3,"Alimente Unterhaltsbeiträge"],
   schulden:[4,"Schulden"], schuldzinsen:[4,"Schuldzinsen"],
   eigenmietwert:[5,"Eigenmietwert"], mietertrag:[5,"Mieteinnahmen"], hypothek:[5,"Hypothekarzinsbescheinigung"],
   unterhalt_liegen:[5,"Unterhalts- und Renovationskosten"], liegenschaft_aus:[5,"Liegenschaft Ausland"],
@@ -450,7 +452,8 @@ const KAT_TITEL = {
 DOCTYPES.forEach(t => { const [k, titel] = KAT_TITEL[t.id] || [6, t.label]; t.kat = k; t.titel = titel; });
 /* Zusätzliche Erkennungsbegriffe aus der Anleitung */
 DT.zugangsdaten.keys.push("zugangsdaten online-steuererklärung","online-steuererklärung","persönlicher zugangscode","zugangscode");
-DT.schulden.keys.push("kreditkarte","kreditkartenabrechnung","zu gunsten der bank","zugunsten der bank","a nostro favore","en notre faveur");
+DT.bankauszug.keys.push("privatkonto","sparkonto","lohnkonto","kontostand","vermoegensausweis");
+DT.schulden.keys.push("kartenkonto","kreditkartenkonto","kreditkarte","kreditkartenabrechnung","zu gunsten der bank","zugunsten der bank","a nostro favore","en notre faveur");
 DT.fahrkosten.keys.push("swisspass","libero","ostwind","ga travelcard","streckenabo","monatsabo","jahresabo");
 DT.kinderbetreuung.keys.push("tagesfamilie","tagesstätte","betreuungsbeitrag");
 DT.parteispenden.keys.push("mitgliederbeitrag");
@@ -468,73 +471,85 @@ const typOption = (t, sel) => `<option value="${t.id}" ${t.id === sel ? "selecte
    Über-Titel (Liegenschaften).
    ================================================================== */
 const BEZ_FELDER = {
-  person:   { label:"Name Person",                    platzhalter:"Beispiel Anna" },
-  stelle:   { label:"Arbeitgeber / Institut / Versicherer", platzhalter:"Migros AG" },
+  person:   { label:"Name Person",                    platzhalter:"Anna Beispiel" },
+  fuer:     { label:"für (Empfänger/in)",             platzhalter:"Lea Maurer" },
+  stelle:   { label:"Arbeitgeber / Institut / Versicherer", platzhalter:"UBS" },
+  art:      { label:"Kontoart",                       platzhalter:"Privatkonto" },
   iban:     { label:"IBAN",                           platzhalter:"CH93 0076 2011 6238 5295 7" },
-  zeitraum: { label:"Gültig von–bis",                 platzhalter:"01.01.-30.09.2024" },
-  betrag:   { label:"Betrag CHF",                     platzhalter:"52340" },
-  zinsen:   { label:"Zins CHF",                       platzhalter:"126.40" },
-  kosten:   { label:"Kosten CHF",                     platzhalter:"12.00" },
+  zeitraum: { label:"Gültig von–bis",                 platzhalter:"01.01.-31.12.2025" },
+  betrag:   { label:"Betrag CHF",                     platzhalter:"48316" },
+  zinsen:   { label:"Zins CHF",                       platzhalter:"2.85" },
+  kosten:   { label:"Kosten CHF",                     platzhalter:"39.00" },
+  kk:       { label:"Krankheitskosten CHF",           platzhalter:"357.25" },
   f:        { label:"Punkt F (Beförderung)",          auswahl:["mit X","ohne X"] },
   g:        { label:"Punkt G (Kantine)",              auswahl:["mit X","ohne X"] }
 };
 /* Regeln je Dokumenttyp nach der Anleitung «Steuerdokumente sortieren»
-   (C Consulters). felder = Reihenfolge im Namen · pflicht = ohne diese
-   Angabe gilt die Bezeichnung als unvollständig · neutral = Über-Titel
-   ohne Personennamen · betrag/zinsen = Wort vor dem Betrag im Namen ·
-   nummer = mehrere Belege derselben Person mit 1, 2, 3 … nummerieren.  */
+   (C Consulters) und den bereits sortierten Kundenordnern:
+
+     1 Einkommen - Lohnausweis 1 - Mike Münzner - SV (Schweiz) AG - 01.01.-31.12.2025 - Nettolohn 48316
+     2 Wertschriften - Mike Münzner - UBS Privatkonto CH23 0029 … - Saldo -298.60, Zins 2.85, Kosten 39.00
+     3 Abzüge - Krankenkasse - Mike Münzner - Concordia - Prämien 6011.40, Krankheitskosten 357.25
+     4 Schulden - Mike Münzner - UBS Kartenkonto - Schuld 2866.18, Schuldzinsen 359.91
+
+   felder = Angaben (Reihenfolge im Namen) · pflicht = ohne diese Angabe ist
+   die Bezeichnung unvollständig · neutral = Über-Titel ohne Personennamen ·
+   betrag/zinsen/kosten/kk = Wort vor dem Betrag ("" = Betrag ohne Wort) ·
+   nummer = mehrere Belege derselben Person 1, 2, 3 … · ohneTitel = der
+   Kategoriename genügt (Konten, Schulden).                                */
 const BEZ = {
   /* 1 Einkommen */
-  lohnausweis:      { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag","f","g"], betrag:"Nettolohn", nummer:true },
-  lohnausweis_p:    { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag","f","g"], betrag:"Nettolohn", nummer:true },
-  taggeld:          { felder:["person"], pflicht:["person"] },
-  ahv_rente:        { felder:["person","betrag"], pflicht:["person"], betrag:"Rente" },
-  pk_rente:         { felder:["person","betrag"], pflicht:["person"], betrag:"Rente" },
-  lohnausweis_neben:{ felder:["person"], pflicht:["person"] },
-  vr_honorar:       { felder:["person"], pflicht:["person"] },
+  lohnausweis:      { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag"], betrag:"Nettolohn", nummer:true, ganzeFranken:true },
+  lohnausweis_p:    { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag"], betrag:"Nettolohn", nummer:true, ganzeFranken:true },
+  taggeld:          { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"" },
+  ahv_rente:        { felder:["person","betrag"], pflicht:["person"], betrag:"" },
+  pk_rente:         { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"" },
+  lohnausweis_neben:{ felder:["person","stelle"], pflicht:["person"] },
+  vr_honorar:       { felder:["person","stelle"], pflicht:["person"] },
   uebrige_eink:     { felder:["person"], pflicht:["person"] },
   selbst_abschluss: { felder:["person"], pflicht:["person"] },
   quellensteuer:    { felder:["person"], pflicht:["person"] },
-  unterhalt_erhalten:{ felder:["betrag"], pflicht:["betrag"] },
+  unterhalt_erhalten:{ felder:["person","fuer","betrag"], pflicht:["betrag"], betrag:"" },
 
-  /* 2 Wertschriften / Vermögen */
-  bankauszug:       { felder:["person","stelle","iban","betrag","zinsen","kosten"], pflicht:["person","stelle","iban","betrag"], betrag:"Saldo", zinsen:"Zins" },
-  depotauszug:      { felder:["person","stelle","betrag"], pflicht:["person","stelle"], betrag:"Steuerwert" },
+  /* 2 Wertschriften / Vermögen – Institut, Kontoart und IBAN in einem Teil */
+  bankauszug:       { felder:["person","stelle","art","iban","betrag","zinsen","kosten"], pflicht:["person","stelle","iban","betrag"],
+                      betrag:"Saldo", zinsen:"Zins", kosten:"Kosten", ohneTitel:true, mitVorzeichen:true },
+  depotauszug:      { felder:["person","stelle","art","iban","betrag"], pflicht:["person","stelle"], betrag:"Steuerwert", ohneTitel:true },
   wertschriftenertrag:{ felder:["person","stelle"], pflicht:["person"] },
-  krypto:           { felder:["person","betrag"], pflicht:["person"], betrag:"Bestand" },
-  darlehen_guthaben:{ felder:["person","stelle","betrag","zinsen"], pflicht:["person","stelle","betrag"], betrag:"Schuld 31.12.", zinsen:"Zinsen" },
-  beteiligung:      { felder:["person","stelle","betrag","zinsen"], pflicht:["person","stelle"], betrag:"Wert 31.12.", zinsen:"Zinsen" },
+  krypto:           { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"Bestand" },
+  darlehen_guthaben:{ felder:["person","stelle","betrag","zinsen"], pflicht:["person","stelle","betrag"], betrag:"Schuld", zinsen:"Zinsen" },
+  beteiligung:      { felder:["person","stelle","betrag","zinsen"], pflicht:["person","stelle"], betrag:"Wert", zinsen:"Zinsen" },
   rueckkaufswert:   { felder:["person","stelle","betrag","zinsen"], pflicht:["person","stelle","betrag"], betrag:"Rückkaufswert", zinsen:"Zinsen" },
   fahrzeug:         { felder:["person"], pflicht:[] },
   erbschaft:        { felder:["person"], pflicht:[] },
 
   /* 3 Abzüge */
-  saeule3a:         { felder:["person","stelle","betrag"], pflicht:["person","stelle","betrag"], betrag:"Abzug" },
-  pk_einkauf:       { felder:["person","stelle","betrag"], pflicht:["person","stelle","betrag"], betrag:"Einkauf" },
-  praemien_kk:      { felder:["person","betrag"], pflicht:["person","betrag"], betrag:"Jahresprämien" },
+  saeule3a:         { felder:["person","stelle","betrag"], pflicht:["person","stelle","betrag"], betrag:"" },
+  pk_einkauf:       { felder:["person","stelle","betrag"], pflicht:["person","stelle","betrag"], betrag:"" },
+  praemien_kk:      { felder:["person","stelle","betrag","kk"], pflicht:["person","betrag"], betrag:"Prämien", kk:"Krankheitskosten" },
   praemien_leben:   { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"Prämien" },
   praemien_unfall:  { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"Prämien" },
-  krankheitskosten: { felder:["person","betrag"], pflicht:["betrag"] },
-  behinderung:      { felder:["person","betrag"], pflicht:["person"] },
-  fahrkosten:       { felder:["person","betrag"], pflicht:["person"], betrag:"Jahrestotal" },
-  verpflegung:      { felder:["person","betrag"], pflicht:["person"], betrag:"Jahrestotal" },
-  berufsauslagen:   { felder:["person","betrag"], pflicht:["person"], betrag:"Jahrestotal" },
-  weiterbildung:    { felder:["person","betrag"], pflicht:[] },
-  spenden:          { felder:["betrag"], pflicht:["betrag"], betrag:"Gesamtspenden" },
-  parteispenden:    { felder:["betrag"], pflicht:["betrag"], betrag:"Gesamtbetrag" },
-  kinderbetreuung:  { felder:["betrag"], pflicht:["betrag"], betrag:"Beiträge" },
-  unterhalt_bezahlt:{ felder:["betrag"], pflicht:["betrag"] },
+  krankheitskosten: { felder:["person","betrag"], pflicht:["betrag"], betrag:"" },
+  behinderung:      { felder:["person","betrag"], pflicht:["person"], betrag:"" },
+  fahrkosten:       { felder:["person","betrag"], pflicht:["person"], betrag:"" },
+  verpflegung:      { felder:["person","betrag"], pflicht:["person"], betrag:"" },
+  berufsauslagen:   { felder:["person","betrag"], pflicht:["person"], betrag:"" },
+  weiterbildung:    { felder:["person","betrag"], pflicht:[], betrag:"" },
+  spenden:          { felder:["betrag"], pflicht:["betrag"], betrag:"" },
+  parteispenden:    { felder:["betrag"], pflicht:["betrag"], betrag:"" },
+  kinderbetreuung:  { felder:["betrag"], pflicht:["betrag"], betrag:"" },
+  unterhalt_bezahlt:{ felder:["person","fuer","betrag"], pflicht:["betrag"], betrag:"" },
 
-  /* 4 Schulden */
-  schulden:         { felder:["stelle","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], betrag:"Schuld", zinsen:"Schuldzinsen" },
-  schuldzinsen:     { felder:["stelle","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], betrag:"Schuld", zinsen:"Schuldzinsen" },
+  /* 4 Schulden – Institut und Kontoart ("UBS Kartenkonto") in einem Teil */
+  schulden:         { felder:["person","stelle","art","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], betrag:"Schuld", zinsen:"Schuldzinsen", ohneTitel:true },
+  schuldzinsen:     { felder:["person","stelle","art","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], betrag:"Schuld", zinsen:"Schuldzinsen", ohneTitel:true },
 
   /* 5 Liegenschaften – Über-Titel ohne Personenname */
   eigenmietwert:    { felder:[], neutral:true },
   mietertrag:       { felder:[], neutral:true },
   unterhalt_liegen: { felder:[], neutral:true },
   liegenschaft_aus: { felder:[], neutral:true },
-  hypothek:         { felder:["stelle","iban","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], neutral:true, betrag:"Schuld 31.12.", zinsen:"Zinsen" },
+  hypothek:         { felder:["stelle","iban","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], neutral:true, betrag:"Schuld", zinsen:"Zinsen" },
   liegenschaftssteuer:{ felder:["stelle","iban"], pflicht:["stelle"], neutral:true },
 
   /* 6 Weiteres – gemäss Beschreibung */
@@ -544,10 +559,12 @@ const bezRegel = id => BEZ[id] || { felder:[], pflicht:[] };
 /* Feldbeschriftung je Typ: "Betrag" heisst beim Lohnausweis "Nettolohn". */
 const bezFeldLabel = (id, f) => {
   const r = bezRegel(id);
-  if(f === "betrag" && r.betrag) return r.betrag + " CHF";
-  if(f === "zinsen" && r.zinsen) return r.zinsen + " CHF";
-  if(f === "stelle") return ({ lohnausweis:"Arbeitgeber", lohnausweis_p:"Arbeitgeber", saeule3a:"Versicherer / Bank",
-    pk_einkauf:"Versicherer / Pensionskasse" })[id] || "Institut / Versicherer";
+  if(["betrag","zinsen","kosten","kk"].includes(f) && r[f]) return r[f] + " CHF";
+  if(f === "betrag") return ({ saeule3a:"Abzug CHF", pk_einkauf:"Einkauf CHF", unterhalt_bezahlt:"Alimente CHF",
+    unterhalt_erhalten:"Alimente CHF", spenden:"Gesamtspenden CHF", parteispenden:"Gesamtbetrag CHF",
+    kinderbetreuung:"Beiträge CHF", fahrkosten:"Jahrestotal CHF", verpflegung:"Jahrestotal CHF", berufsauslagen:"Jahrestotal CHF" })[id] || "Betrag CHF";
+  if(f === "stelle") return ({ lohnausweis:"Arbeitgeber", lohnausweis_p:"Arbeitgeber", lohnausweis_neben:"Arbeitgeber",
+    saeule3a:"Versicherer / Bank", pk_einkauf:"Pensionskasse", praemien_kk:"Krankenkasse" })[id] || "Institut / Versicherer";
   return BEZ_FELDER[f].label;
 };
 /* Welche Angaben fehlen noch? */
@@ -558,11 +575,12 @@ function bezFehlt(doc){
 /* Kurzfassung der Regel als Satz – erscheint im Konverter und im Dialog. */
 function bezRegelText(id){
   const r = bezRegel(id), t = DT[id] || DT.sonstiges;
-  if(id === "zugangsdaten") return "Eigenes PDF «0 Zugangsdaten Online-Steuererklärung <Jahr> - <Name>», keine Rubrik.";
-  if(!r.felder.length) return r.neutral ? `Neutral: nur Über-Titel «${t.kat} ${t.titel}», ohne Personenname.`
-                                        : `Bezeichnung «${t.kat} ${t.titel}» – keine Zusatzangaben nötig.`;
-  const namen = r.felder.map(f => bezFeldLabel(id, f).replace(/ CHF$/, ""));
-  return `«${t.kat} ${t.titel}»${r.neutral ? " (neutral, ohne Personenname)" : ""} mit ${namen.join(", ")}`
+  if(id === "zugangsdaten") return "Eigenes PDF «0 Zugangsdaten Online-Steuererklärung <Jahr> - <Vorname Name>», keine Rubrik.";
+  const kopf = `«${t.kat} ${KAT_DATEI[t.kat]}${r.ohneTitel ? "" : " - " + t.titel}»`;
+  if(!r.felder.length) return r.neutral ? `Neutral: nur Über-Titel ${kopf}, ohne Personenname.` : `Bezeichnung ${kopf} – keine Zusatzangaben nötig.`;
+  const namen = r.felder.filter(f => f !== "f" && f !== "g").map(f => bezFeldLabel(id, f).replace(/ CHF$/, ""));
+  return `${kopf}${r.neutral ? " (neutral, ohne Personenname)" : ""} mit ${namen.join(", ")}`
+    + (r.felder.includes("f") ? "; Punkt F/G nur wenn angekreuzt" : "")
     + (r.nummer ? " – mehrere pro Person werden 1, 2, 3 … nummeriert." : ".");
 }
 
@@ -1192,10 +1210,13 @@ function keyHit(hay, k){
 /* Vordrucke, die auf jedem Lohnausweis stehen (Punkte F und G), sagen nichts
    über die Belegart – sonst würde jeder Lohnausweis zu «Fahrtkosten».      */
 const FORMULAR_TEXT = /unentgeltliche befoerderung zwischen wohn-? ?und arbeitsort|kantinenverpflegung ?\/? ?lunch-?checks?|kantinenverpflegung|lunch-?checks?/g;
+const NUR_TITEL = new Set(["steuererklaerung","vorjahr","veranlagung","vollmacht"]);
 function classify(filename, text){
   const fn = normText(filename);
   let tx = normText(text || "").slice(0, 20000);
   if(/lohnausweis|rentenbescheinigung|certificat de salaire/.test(tx)) tx = tx.replace(FORMULAR_TEXT, " ");
+  /* "für Ihre Steuererklärung" beschreibt den Zweck, nicht die Belegart */
+  tx = tx.replace(/\b(?:fuer|zur|zu|in|mit|ihre[rnms]?|die|der|ihrer)\s+(?:ihre[rnms]?\s+|die\s+)?steuererklaerung(?:en)?\b/g, " ");
   /* Der Titel steht oben: Treffer im Kopf des Belegs zählen dreifach. So
      bleibt ein Lohnausweis ein Lohnausweis, obwohl er unten die Wörter
      «Beförderung» und «Kantinenverpflegung» (Punkte F und G) enthält.   */
@@ -1207,7 +1228,9 @@ function classify(filename, text){
       const k = normText(raw.trim());
       if(keyHit(fn, k)){ score += 3 * k.length; hits.push(k); }
       else if(kopf && keyHit(kopf, k)){ score += 3 * k.length; hits.push(k); }
-      else if(tx && keyHit(tx, k)){ score += k.length; hits.push(k); }
+      /* "für Ihre Steuererklärung" steht auf fast jedem Bank- und Versicherungsbeleg –
+         als Steuererklärung gilt ein Beleg nur, wenn es im Titel steht. */
+      else if(tx && !NUR_TITEL.has(d.id) && keyHit(tx, k)){ score += k.length; hits.push(k); }
     }
     if(score > best.score){ second = best.score; best = { id:d.id, score, hits }; }
     else if(score > second) second = score;
@@ -1224,49 +1247,80 @@ function classify(filename, text){
    weggelassen – der Beleg erscheint dann mit dem Hinweis
    "Bezeichnung ergänzen".                                            */
 const bezIban = v => String(v || "").replace(/\s+/g,"").toUpperCase();
-/* Betrag im Namen: Schweizer Schreibweise mit Apostroph, Rappen nur wenn
-   vorhanden – "CHF 52'340", "CHF 42'318.55".                           */
-const bezBetrag = v => {
-  const n = Math.round(Math.abs(vglNum(v)) * 100) / 100;
-  if(!n) return "";
-  return "CHF " + n.toLocaleString("de-CH", { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits:2 })
-    .replace(/[’’]/g, "'");
-};
 /* Datumsangaben behalten ihre Punkte: "01.01.-30.09.2024" */
-const bezZeitraum = v => String(v || "").replace(/[–—]/g, "-").replace(/\s+/g, "").replace(/[^0-9.\-]/g, "");
+/* Zeitraum wie in der Vorlage: "01.01.-31.12.2025" – Jahr nur am Ende */
+const bezZeitraum = v => {
+  const roh = String(v || "").replace(/[–—]/g, "-").replace(/\s+/g, "");
+  const m = roh.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})?-(\d{1,2})\.(\d{1,2})\.(\d{2,4})?$/);
+  if(!m) return roh.replace(/[^0-9.\-]/g, "");
+  const zwei = x => String(x).padStart(2, "0");
+  const jahr = j => !j ? "" : (j.length === 2 ? "20" + j : j);
+  const j1 = jahr(m[3]), j2 = jahr(m[6]) || j1;
+  const erstesJahr = j1 && j1 !== j2 ? j1 : "";        // über den Jahreswechsel: beide Jahre
+  return `${zwei(m[1])}.${zwei(m[2])}.${erstesJahr}-${zwei(m[4])}.${zwei(m[5])}.${j2}`;
+};
 /* Umlaute bleiben – entfernt wird nur, was Windows in Dateinamen verbietet. */
 const dateiTeil = s => String(s || "").replace(/[<>:"/\\|?*\u0000-\u001f]/g, "").replace(/\s+/g, " ").trim();
-const kundeName = c => dateiTeil([c?.name, c?.vorname].filter(Boolean).join(" ")) || "Kunde";
+/* Namen wie in den sortierten Kundenordnern: "Mike Münzner" (Vorname Name) */
+const personName = c => dateiTeil([c?.vorname, c?.name].filter(Boolean).join(" "));
+const kundeName = c => personName(c) || "Kunde";
+/* Beträge wie in der Vorlage: ohne "CHF", ohne Tausender-Apostroph, mit
+   Rappen ("Saldo -298.60", "Prämien 6011.40"); Nettolohn in ganzen Franken
+   wie auf dem Lohnausweis ("Nettolohn 48316"). Minus nur beim Saldo.     */
+function betragText(v, r, feld){
+  const roh = String(v ?? "").trim();
+  if(roh === "") return "";
+  let n = vglNum(roh);
+  if(!(r.mitVorzeichen && feld === "betrag")) n = Math.abs(n);
+  if(r.ganzeFranken && feld === "betrag") return String(Math.trunc(n));
+  return n.toFixed(2);
+}
 function bezTeile(doc){
-  const r = bezRegel(doc.docType), b = doc.bez || {};
+  const r = bezRegel(doc.docType), b = doc.bez || {}, t = DT[doc.docType] || DT.sonstiges;
+  const v = f => String(b[f] || "").trim();
+  const hat = f => (r.felder || []).includes(f);
   const out = [];
-  for(const f of (r.felder || [])){
-    const v = String(b[f] || "").trim();
-    if(!v) continue;
-    if(f === "person" && r.neutral) continue;
-    if(f === "iban")          out.push(bezIban(v));
-    else if(f === "betrag"){  const x = bezBetrag(v); if(x) out.push((r.betrag ? r.betrag + " " : "") + x); }
-    else if(f === "zinsen"){  const x = bezBetrag(v) || (vglNum(v) === 0 ? "CHF 0" : ""); if(x) out.push((r.zinsen || "Zinsen") + " " + x); }
-    else if(f === "kosten"){  const x = bezBetrag(v); if(x) out.push("Kosten " + x); }
-    else if(f === "zeitraum") out.push(bezZeitraum(v));
-    else if(f === "f" || f === "g") out.push(`${f.toUpperCase()} ${v}`);        // "F mit X" / "G ohne X"
-    else out.push(v);
+  /* Person, bei Alimenten mit Empfänger/in: "Mike Münzner (für Lea Maurer)" */
+  if(hat("person") && !r.neutral && v("person")) out.push(v("person") + (hat("fuer") && v("fuer") ? ` (für ${v("fuer")})` : ""));
+  else if(hat("fuer") && v("fuer")) out.push(`für ${v("fuer")}`);
+  /* Institut, Kontoart und IBAN in einem Teil: "UBS Privatkonto CH23 0029 …" */
+  const inst = [];
+  if(hat("stelle") && v("stelle")) inst.push(v("stelle"));
+  const art = hat("art") ? (v("art") || (doc.docType === "depotauszug" ? "Depot" : "")) : "";
+  if(art && !normText(v("stelle")).includes(normText(art))) inst.push(art);
+  if(hat("iban") && v("iban")) inst.push(ibanFormat(v("iban")));
+  if(inst.length) out.push(inst.join(" "));
+  if(hat("zeitraum") && v("zeitraum")) out.push(bezZeitraum(v("zeitraum")));
+  /* Alle Beträge in einem Teil: "Saldo -298.60, Zins 2.85, Kosten 39.00".
+     Nullbeträge nur, wo die Angabe verlangt ist (Schuldzinsen 0.00). */
+  const betraege = [];
+  for(const f of ["betrag","zinsen","kosten","kk"]){
+    if(!hat(f) || v(f) === "") continue;
+    if(!vglNum(v(f)) && !(r.pflicht || []).includes(f)) continue;
+    const x = betragText(v(f), r, f);
+    const wort = r[f] !== undefined ? r[f] : ({ zinsen:"Zinsen", kosten:"Kosten", kk:"Krankheitskosten" })[f] || "";
+    if(x) betraege.push((wort ? wort + " " : "") + x);
   }
+  if(betraege.length) out.push(betraege.join(", "));
+  /* Lohnausweis: Punkt F / G nur erwähnen, wenn angekreuzt */
+  for(const f of ["f","g"]) if(hat(f) && v(f) === "mit X") out.push(`${f.toUpperCase()} mit X`);
   return out.map(dateiTeil).filter(Boolean);
 }
 /* Endung: Belege werden beim Ablegen zu PDF; nur Word/Excel & Co. behalten ihre. */
 const belegEndung = doc => (doc.istPdf || /\.pdf$/i.test(doc.origName || ""))
   ? ".pdf" : (String(doc.origName || "").match(/\.[A-Za-z0-9]{1,5}$/) || [".pdf"])[0].toLowerCase();
-/* Dateiname nach der Anleitung «Steuerdokumente sortieren»:
-   "<Kategorie> <Titel>[ <Nr>] - <Angabe> - <Angabe> ….pdf"
-   Zugangsdaten: "0 Zugangsdaten Online-Steuererklärung <Jahr> - <Name>"  */
+/* Dateiname nach der Anleitung «Steuerdokumente sortieren» (C Consulters):
+   "<Nr> <Kategorie> - <Titel>[ <Nr>] - <Person> - <Institut> - <Zeitraum> - <Beträge>.pdf"
+   Konten und Schulden ohne Titel ("2 Wertschriften - Mike Münzner - UBS …").
+   Zugangsdaten: "0 Zugangsdaten Online-Steuererklärung <Jahr> - <Vorname Name>" */
 function buildName(doc, client, nummer){
-  const t = DT[doc.docType] || DT.sonstiges;
+  const t = DT[doc.docType] || DT.sonstiges, r = bezRegel(doc.docType);
   let stamm;
-  if(t.id === "zugangsdaten") stamm = `0 ${t.titel} ${doc.jahr} - ${kundeName(client)}`;
+  if(t.id === "zugangsdaten") stamm = `0 ${t.titel} ${doc.jahr} - ${personName(client)}`;
   else {
     const teile = bezTeile(doc);
-    stamm = `${t.kat} ${t.titel}${nummer ? " " + nummer : ""}${teile.length ? " - " + teile.join(" - ") : ""}`;
+    const kopf = `${t.kat} ${KAT_DATEI[t.kat]}` + (r.ohneTitel ? "" : ` - ${t.titel}${nummer ? " " + nummer : ""}`);
+    stamm = kopf + (teile.length ? " - " + teile.join(" - ") : "");
   }
   stamm = dateiTeil(stamm);
   /* Pfadgrenze von Windows (260 Zeichen) inkl. Kundenordner einhalten */
@@ -1300,16 +1354,30 @@ function bezAusText(text, docType, client){
     const inst = roh.slice(0, 1500).match(/\b((?:[A-ZÄÖÜ][\wÄÖÜäöüéèàç'.\-]*\s+){0,3}(?:Kantonalbank|Raiffeisenbank|Bank|Banque|Banca|Versicherungen|Versicherung|Assurances|Krankenkasse|Pensionskasse|Vorsorgestiftung|Sparkasse|Leasing)(?:\s+(?:AG|SA|Genossenschaft))?)/);
     if(inst && inst[1].trim().split(/\s+/).length > 1) b.stelle = inst[1].trim().replace(/\s+(AG|SA)$/, " $1");
   }
-  /* Arbeitgeber beim Lohnausweis: erste Firma mit Rechtsform im Kopf des Belegs. */
+  /* Arbeitgeber / Stelle: Firma mit Rechtsform – auch mit Klammern wie
+     "SV (Schweiz) AG" oder "Coople (Schweiz) AG". Beim Lohnausweis steht der
+     Arbeitgeber oft erst unten beim Stempel, darum im ganzen Text suchen. */
   if(!b.stelle && (bezRegel(docType).felder || []).includes("stelle")){
-    const firma = roh.slice(0, 1200)
-      .match(/\b([A-ZÄÖÜ][\wÄÖÜäöüéèà&.\-]*(?:\s+[A-ZÄÖÜ0-9][\wÄÖÜäöüéèà&.\-]*){0,3}\s+(?:AG|GmbH|SA|S\.A\.|Sàrl|SARL|Genossenschaft|Stiftung|KLG|KmG))\b/);
+    const lohn = /^lohnausweis/.test(docType);
+    const bereich = lohn ? roh : roh.slice(0, 1500);
+    const firma = bereich.match(/\b([A-ZÄÖÜ][\wÄÖÜäöüéèà&.\-]*(?:\s+(?:\([A-ZÄÖÜ][\wÄÖÜäöüéèà.\-]*\)|[A-ZÄÖÜ0-9&][\wÄÖÜäöüéèà&.\-]*)){0,4}\s+(?:AG|GmbH|SA|S\.A\.|Sàrl|SARL|Genossenschaft|Stiftung|KLG|KmG))(?![\wäöü])/);
     if(firma) b.stelle = firma[1].trim();
-    /* Öffentliche Arbeitgeber tragen keine Rechtsform: "Stadt Winterthur" */
+    /* Öffentliche Arbeitgeber und Kliniken tragen keine Rechtsform:
+       "Stadt Winterthur", "Universitätsklinik Balgrist", "Kantonsspital Baden" */
     if(!b.stelle){
-      const amt = roh.slice(0, 1200).match(/\b((?:Stadt|Gemeinde|Kanton|Spital|Universität|Schulgemeinde|Politische Gemeinde)\s+[A-ZÄÖÜ][\wÄÖÜäöü\-]+)/);
+      const amt = bereich.match(/\b((?:Universitätsklinik|Universitätsspital|Kantonsspital|Stadtspital|Spital|Klinik|Stadt|Gemeinde|Kanton|Universität|Schulgemeinde|Politische Gemeinde)\s+[A-ZÄÖÜ][\wÄÖÜäöü\-]+)/);
       if(amt) b.stelle = amt[1].trim();
     }
+  }
+  /* Kontoart für Konten und Schulden: "UBS Privatkonto", "UBS Kartenkonto" –
+     die zuerst genannte gilt. */
+  if((bezRegel(docType).felder || []).includes("art")){
+    const ARTEN = ["Privatkonto","Sparkonto","Lohnkonto","Kontokorrent","Mietkautionskonto","Mietzinskautionskonto","Jugendsparkonto",
+      "Anlagekonto","Vorsorgekonto","Zahlungskonto","Geschäftskonto","Freizügigkeitskonto","Kreditkartenkonto","Kartenkonto",
+      "Kreditkarte","Fremdwährungskonto","Festgeldkonto","Sparplan","Privatkredit","Leasing","Depot"];
+    let best = null;
+    for(const a of ARTEN){ const i = t.indexOf(normText(a)); if(i !== -1 && (!best || i < best.i)) best = { a, i }; }
+    if(best) b.art = best.a;
   }
   /* Zeitraum "01.01.-31.12.2024" oder "01.01.2024 bis 30.09.2024" */
   const zr = roh.match(/(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)\s*(?:-|–|—|bis)\s*(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)/);
@@ -1321,7 +1389,7 @@ function bezAusText(text, docType, client){
     lohnausweis_neben:["nettolohn total","nettolohn"],
     saeule3a:["total der beitraege","beitraege","einzahlung","total einzahlungen"],
     pk_einkauf:["einkaufssumme","einkauf","total einkauf"],
-    praemien_kk:["total praemien","praemien total","jahrespraemie","total der praemien"],
+    praemien_kk:["total praemien","praemien total","jahrespraemie","total der praemien","praemien"],
     bankauszug:["saldo per","saldo","steuerwert","kontostand"],
     depotauszug:["total steuerwert","steuerwert","depotwert"],
     hypothek:["hypothekarschuld","schuld per","saldo per","restschuld","hypothek total","kapital"],
@@ -1346,19 +1414,20 @@ function bezAusText(text, docType, client){
     beteiligung:["steuerwert","verkehrswert","nominalwert"]
   }[docType] || [];
   const regel = bezRegel(docType);
-  const erster = (liste, nullOk = false) => {
+  const erster = (liste, nullOk = false, vorzeichen = false) => {
     for(const k of liste){
       const kn = normText(k);
       let i = t.indexOf(kn);
       while(i !== -1){
         const f = vglFindBetrag(t, i + kn.length, 90);
-        if(f && (f.wert > 0 || nullOk && f.wert === 0)) return String(f.wert);
+        if(f && (f.wert > 0 || nullOk && f.wert === 0)) return (vorzeichen && f.neg ? "-" : "") + String(f.wert);
         i = t.indexOf(kn, i + kn.length);
       }
     }
     return "";
   };
-  const betrag = erster(stichwort);
+  /* Saldo mit Vorzeichen: ein überzogenes Konto steht als "Saldo -298.60" im Namen */
+  const betrag = erster(stichwort, docType === "bankauszug", !!regel.mitVorzeichen);
   if(betrag) b.betrag = betrag;
   /* Bezahlte Zinsen: eigenes Feld, wo die Regel es verlangt (Konto, Hypothek,
      Schulden) – nie als "Betrag", der bei Hypotheken die Schuld meint. */
@@ -1371,6 +1440,20 @@ function bezAusText(text, docType, client){
   if((regel.felder || []).includes("kosten")){
     const kosten = erster(["total spesen","spesen","kontofuehrungsgebuehr","kontofuehrung","gebuehren","kosten"]);
     if(kosten && kosten !== b.betrag && kosten !== b.zinsen) b.kosten = kosten;
+  }
+  /* Krankenkasse: selbst getragene Krankheitskosten (Franchise, Selbstbehalt) */
+  if((regel.felder || []).includes("kk")){
+    const kk = erster(["total kostenbeteiligung","kostenbeteiligung total","kostenbeteiligung","franchise und selbstbehalt",
+                       "selbstbehalt und franchise","krankheitskosten","selbstbehalt"]);
+    if(kk && kk !== b.betrag) b.kk = kk;
+  }
+  /* Alimente: für wen ("für Lea Barbara Maurer") */
+  if((regel.felder || []).includes("fuer")){
+    const kind = (client?.kinder || []).find(k => k.name && keyHit(t, normText(k.name)));
+    const m = roh.match(/(?:\bfür|zugunsten(?:\s+von)?|Empfänger(?:in)?:?|Kind:?)\s+((?:[A-ZÄÖÜ][a-zäöüéè\-]+\s+){1,2}[A-ZÄÖÜ][a-zäöüéè\-]+)/);
+    const nein = /^(Ihre|Ihren|Ihr|Sie|Die|Der|Das|Den|Steuer|Jahr|Periode|Monat|Kinder|Unterhalt)/;
+    if(m && !nein.test(m[1])) b.fuer = m[1].trim();
+    else if(kind) b.fuer = [kind.name, client.name].filter(Boolean).join(" ");
   }
   /* Lohnausweis Punkt F (unentgeltliche Beförderung) und G (Kantine,
      Lunch-Checks): angekreuzt, wenn neben der Beschriftung ein "X" steht. */
@@ -1398,7 +1481,7 @@ function bezAusText(text, docType, client){
   /* Einzelperson ohne Partner und Kinder: der Beleg kann nur ihr gehören. */
   if(!b.person && (regel.felder || []).includes("person") && !regel.neutral && client?.name
      && !(client.partner?.vorname || client.partner?.name) && !(client.kinder || []).length)
-    b.person = [client.name, client.vorname].filter(Boolean).join(" ");
+    b.person = [client.vorname, client.name].filter(Boolean).join(" ");
   if(!b.person) delete b.person;
   return b;
 }
@@ -1416,7 +1499,7 @@ function bezPerson(t, docType, client){
     ...(client.kinder || []).map(k => ({ vor:k.name, nach:client.name, rolle:"kind" }))
   ].filter(p => p.vor || p.nach);
   const hat = w => { const n = normText(w || ""); return n.length > 1 && keyHit(t, n); };
-  const name = p => [p.nach, p.vor].filter(Boolean).join(" ");
+  const name = p => [p.vor, p.nach].filter(Boolean).join(" ");      // "Mike Münzner"
   /* "Elena & Paul" im Vornamenfeld: jeder Vorname zählt einzeln. */
   const vornamen = p => String(p.vor || "").split(/\s*(?:&|\+|,|\bund\b)\s*/).filter(Boolean);
   const treffer = pers.filter(p => hat(p.nach) && vornamen(p).some(hat));
@@ -1454,7 +1537,8 @@ function renumber(clientId, jahr){
   const nummer = new Map();
   Object.values(gruppen).forEach(g => {
     if(g.length < 2) return;
-    g.sort((a,b) => zeitraumStart(a) - zeitraumStart(b) || String(a.added||"").localeCompare(String(b.added||"")));
+    /* Reihenfolge wie im Scan bzw. wie abgelegt – so wie in den sortierten Kundenordnern */
+    g.sort((a,b) => String(a.added||"").localeCompare(String(b.added||"")) || (a.reihe ?? 0) - (b.reihe ?? 0));
     g.forEach((d, i) => nummer.set(d.id, i + 1));
   });
   /* Gleicher Name zweimal: zweiter Beleg erhält "(2)" – nichts wird überschrieben. */
@@ -1472,9 +1556,21 @@ function renumber(clientId, jahr){
   return Promise.all(list.map(d => dbPut("docs", d)));
 }
 /* Bestehende Belege auf das neue Schema umbenennen (einmalig nach dem Update). */
+const NAMEN_VERSION = 3;          // bei jeder Änderung des Namensschemas erhöhen
 async function namenMigrieren(){
-  const paare = new Set(S.docs.filter(d => /^\d{4}_\d{2}_/.test(d.newName || "")).map(d => d.clientId + "|" + d.jahr));
+  const alt = (S.settings.namenVersion || 0) < NAMEN_VERSION;
+  const paare = new Set(S.docs.filter(d => alt || /^\d{4}_\d{2}_/.test(d.newName || "")).map(d => d.clientId + "|" + d.jahr));
+  if(alt){
+    /* Personennamen neu als "Vorname Name" (wie in den sortierten Kundenordnern) */
+    for(const d of S.docs){
+      const c = clientById(d.clientId), p = String(d.bez?.person || "");
+      if(!c || !p) continue;
+      for(const [vor, nach] of [[c.vorname, c.name], [c.partner?.vorname, c.partner?.name || c.name]])
+        if(vor && nach && normText(p) === normText(`${nach} ${vor}`)) d.bez.person = `${vor} ${nach}`;
+    }
+  }
   for(const p of paare){ const [cid, j] = p.split("|"); if(clientById(cid)) await renumber(cid, j); }
+  if(alt){ S.settings.namenVersion = NAMEN_VERSION; await saveSettings(); }
 }
 
 /* ------------------------------------------------------------------
@@ -3260,7 +3356,10 @@ function vglFindBetrag(t, ab, fenster = 120){
     const wert = vglNum(roh);
     if(!trenner && !rappen && wert >= 1900 && wert <= 2100) continue;   // Jahreszahl, kein Betrag
     if(!(wert >= 0)) continue;                                         // eine erfasste 0 ist ein Wert
-    return { wert, pos: ab + m.index, kontext: seg.slice(0, m.index + roh.length).trim().slice(-70) };
+    /* Minus davor ("-298.60", "– 298.60") oder dahinter ("298.60-", Bankschreibweise) */
+    const z = m.index + m[0].indexOf(roh);
+    const neg = /[-–−]\s?$/.test(seg.slice(Math.max(0, z - 2), z)) || /^[-–−]/.test(seg.slice(z + roh.length, z + roh.length + 1));
+    return { wert, neg, pos: ab + m.index, kontext: seg.slice(0, m.index + roh.length).trim().slice(-70) };
   }
   return null;
 }
@@ -4294,9 +4393,10 @@ function viewConverter(){
       <select id="convYear" style="width:auto">${yearOptions(jahr)}</select>
     </div>
   </div>
-  <div class="hint">Bezeichnung: <span class="mono">Kategorie Titel - Angaben.pdf</span>, z.B.
-    <span class="mono">1 Lohnausweis - ${esc(kundeName(c))} - Migros AG - 01.01.-31.12.${esc(jahr)} - Nettolohn CHF 52'340 - F ohne X - G mit X.pdf</span>.
-    Kategorien: 0 Zugangsdaten · 1 Einkommen · 2 Wertschriften / Vermögen · 3 Abzüge · 4 Schulden · 5 Liegenschaften · 6 Weiteres.</div>
+  <div class="hint">Bezeichnung nach der Anleitung «Steuerdokumente sortieren»
+    (<span class="mono">crm/Steuerdokumente-sortieren.md</span>), z.B.
+    <span class="mono">1 Einkommen - Lohnausweis 1 - ${esc(kundeName(c))} - SV (Schweiz) AG - 01.01.-31.12.${esc(jahr)} - Nettolohn 48316.pdf</span> ·
+    <span class="mono">2 Wertschriften - ${esc(kundeName(c))} - UBS Privatkonto CH23 0029 … - Saldo -298.60, Zins 2.85, Kosten 39.00.pdf</span></div>
   <div class="card">
     <div class="drop" id="drop">
       <b>Kundenscan oder Dateien hierher ziehen</b>
@@ -4501,7 +4601,7 @@ function belegNeuLesen(q, c, jahr, typNeu = true){
     q.bez = bezAusText(q.text, t.id, c);
   } else q.bez = bezErgaenzen(q.bez, bezAusText(q.text, q.docType, c));
   /* Lohnausweis der Partnerin / des Partners: eigener Checklistenpunkt */
-  const partnerName = [c.partner?.name || c.name, c.partner?.vorname].filter(Boolean).join(" ");
+  const partnerName = [c.partner?.vorname, c.partner?.name || c.name].filter(Boolean).join(" ");
   if(q.docType === "lohnausweis" && c.partner?.vorname && normText(q.bez?.person || "") === normText(partnerName)){
     const tp = DT.lohnausweis_p; Object.assign(q, { docType:tp.id, register:tp.reg, ziffer:zifferFor(tp.id, c.kanton) });
   }
@@ -4552,7 +4652,11 @@ async function stapelLesen(file, qid, c, jahr, setStat){
 function stapelTrennen(seiten, c, jahr){
   const belege = [];
   let cur = null;
-  const anders = (a, b) => ["iban","stelle","person"].some(k => a[k] && b[k] && normText(a[k]) !== normText(b[k]));
+  const anders = (a, b, typ) => ["iban","stelle","person", ...(/^lohnausweis/.test(typ) ? ["zeitraum","betrag"] : [])]
+    .some(k => a[k] && b[k] && normText(a[k]) !== normText(b[k]));
+  /* Einseitige Formulare: steht der Titel oben auf der Seite, beginnt ein neuer Beleg
+     (drei Lohnausweise hintereinander sind drei Belege, nicht einer). */
+  const neuerTitel = (typ, text) => /^lohnausweis/.test(typ) && /lohnausweis|certificat de salaire/.test(normText(text).slice(0, 400));
   /* Neue Rechnungsnummer = neue Rechnung (z.B. Monatsabo Januar, Februar …) */
   const andereRechnung = (q, text) => { const r = rechnungsNr(text); return !!(r && q.rnr && r !== q.rnr); };
   for(const s of seiten){
@@ -4567,7 +4671,8 @@ function stapelTrennen(seiten, c, jahr){
     else if(folge) neu = false;
     else if(cl.docType === "sonstiges" || cl.score < 6) neu = false;
     else if(cl.docType !== cur.docType) neu = true;
-    else neu = andereRechnung(cur, s.text) || anders(cur.bez || {}, bezAusText(s.text, cl.docType, c));
+    else neu = andereRechnung(cur, s.text) || neuerTitel(cl.docType, s.text)
+               || anders(cur.bez || {}, bezAusText(s.text, cl.docType, c), cl.docType);
     if(neu){ cur = neuerBeleg([s], c, jahr); belege.push(cur); }
     else { cur.teile.push(s); belegNeuLesen(cur, c, jahr, cur.docType === "sonstiges"); }
   }
@@ -4757,6 +4862,7 @@ async function belegBauen(q){
 
 async function applyQueue(c, jahr){
   const years = new Set(), proJahr = {}, offen = [], neueIds = [];
+  const ablageZeit = new Date().toISOString();         // ein Zeitpunkt, Reihenfolge über "reihe"
   let fehler = null;
   const stat = $("#status");
   for(let i = 0; i < S.queue.length; i++){
@@ -4771,7 +4877,7 @@ async function applyQueue(c, jahr){
                   bez:q.bez || {}, istPdf:gebaut.istPdf, rnr:q.rnr || "", fp:q.fp || textFinger(q.text), seiten:q.teile.length, doppelt:q.doppelt || "",
                   hash: einzel ? S.quellen.get(q.teile[0].q)?.hash : "",
                   quellHashes: [...new Set(q.teile.map(t => S.quellen.get(t.q)?.hash).filter(Boolean))],
-                  blob:gebaut.blob, newName:"", added:new Date().toISOString() };
+                  blob:gebaut.blob, newName:"", added:ablageZeit, reihe:i };
     if(!gebaut.istPdf) doc.origName = S.quellen.get(q.teile[0].q)?.file?.name || doc.origName;
     doc.newName = buildName(doc, c);
     try{ await dbPut("docs", doc); }

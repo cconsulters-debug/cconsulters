@@ -100,51 +100,34 @@ Der Konverter setzt die Anleitung **«Steuerdokumente sortieren» (C Consulters)
 
 ### Bezeichnung der Belege
 
+**Verbindliche Regel ist `crm/Steuerdokumente-sortieren.md`** – die Anweisung von C Consulters.
+Sie wird bei jeder Weiterentwicklung automatisch gelesen (`CLAUDE.md`) und kann jederzeit im
+Texteditor angepasst werden. Das Ergebnis entspricht den bereits sortierten Kundenordnern:
+
 ```
-<Kategorie> <Titel>[ <Nr>] - <Angabe> - <Angabe> ….pdf
-
-0 Zugangsdaten Online-Steuererklärung 2024 - Beispiel Anna.pdf
-1 Lohnausweis 1 - Beispiel Anna - Migros AG - 01.01.-30.09.2024 - Nettolohn CHF 52'340 - F mit X - G ohne X.pdf
-2 Konto - Beispiel Anna - PostFinance - CH9300762011623852957 - Saldo CHF 42'318.55 - Zins CHF 126.40 - Kosten CHF 24.pdf
-3 Fahrtkosten - Beispiel Anna - Jahrestotal CHF 1'068.pdf
-4 Schulden - Cornèr Bank AG - Schuld CHF 1'845.20 - Schuldzinsen CHF 0.pdf
-5 Eigenmietwert.pdf                                   ← «Neutral»: nur Über-Titel
+0 Zugangsdaten Online-Steuererklärung 2025 - Mike Münzner.pdf
+1 Einkommen - Lohnausweis 1 - Mike Münzner - SV (Schweiz) AG - 01.01.-31.12.2025 - Nettolohn 48316.pdf
+1 Einkommen - Lohnausweis 2 - Mike Münzner - Universitätsklinik Balgrist - 16.06.-31.12.2025 - Nettolohn 1355.pdf
+2 Wertschriften - Mike Münzner - UBS Privatkonto CH23 0029 1291 8175 3740 M - Saldo -298.60, Zins 2.85, Kosten 39.00.pdf
+2 Wertschriften - Mike Münzner - UBS Sparkonto CH12 0029 1291 8175 37M1 D - Saldo 0.10.pdf
+3 Abzüge - Alimente Unterhaltsbeiträge - Mike Münzner (für Lea Barbara Maurer) - 3000.00.pdf
+3 Abzüge - Krankenkasse - Mike Münzner - Concordia - Prämien 6011.40, Krankheitskosten 357.25.pdf
+4 Schulden - Mike Münzner - UBS Kartenkonto - Schuld 2866.18, Schuldzinsen 359.91.pdf
+5 Liegenschaften - Eigenmietwert.pdf                               ← «Neutral»: nur Über-Titel
 ```
 
-Umlaute bleiben erhalten; entfernt wird nur, was Windows in Dateinamen verbietet. Namen werden
-auf 150 Zeichen begrenzt, damit der ganze Pfad unter 260 Zeichen bleibt. Zwei gleiche Namen
-bekommen «(2)» – nichts wird überschrieben.
+- Aufbau: `<Nr> <Kategorie> - <Titel>[ <Nr>] - <Vorname Name> - <Institut Kontoart IBAN> - <Zeitraum> - <Beträge>`
+- Konten und Schulden ohne eigenen Titel; Institut, Kontoart und IBAN (in Vierergruppen) als ein Teil.
+- Beträge ohne «CHF», ohne Tausender-Apostroph, mit Rappen; Nettolohn in ganzen Franken; Saldo
+  mit Vorzeichen; mehrere Beträge durch Komma getrennt.
+- Mehrere Lohnausweise: 1, 2, 3 … in der Reihenfolge des Scans. Punkt F/G erscheint nur, wenn
+  angekreuzt («F mit X»).
+- Zeitraum `01.01.-31.12.2025` – das Jahr steht nur am Ende.
+- Umlaute bleiben; entfernt wird nur, was Windows verbietet; höchstens 150 Zeichen (Pfad < 260).
+  Zwei gleiche Namen bekommen «(2)» – nichts wird überschrieben.
 
-| Kat. | Beleg | Titel im Namen | Angaben |
-|---|---|---|---|
-| **0** | Deckblatt Zugangsdaten | Zugangsdaten Online-Steuererklärung | Jahr, Name |
-| **1 Einkommen** | Lohnausweis | Lohnausweis (1, 2, 3 … bei mehreren pro Person) | Person, Arbeitgeber, gültig von–bis, Nettolohn, F mit/ohne X, G mit/ohne X |
-| | Taggelder IV/ALV/Unfall/Krankheit, Mutterschaft | Ersatzeinkünfte | Person |
-| | AHV-/IV- und PK-Rente | Rentenbescheinigung AHV-IV / Pensionskasse | Person, Betrag |
-| | Nebenerwerb, VR-Honorar, Erwerbsausfall | Nebenerwerb / Verwaltungsratshonorar / Erwerbsausfall | Person |
-| **2 Wertschriften / Vermögen** | Zins-/Saldobescheinigung Bank & Post | Konto | Person, Institut, IBAN, Saldo, Zins, Kosten |
-| | Krypto per 31.12. | Krypto | Person |
-| | Darlehen, Beteiligung, Lebensversicherung (Rückkaufswert) | Darlehen / Beteiligung / Lebensversicherung | Person, Institut, Schuld/Wert 31.12., Zinsen |
-| **3 Abzüge** | Säule 3a | Säule 3a | Person, Versicherer, Abzug |
-| | Einkauf Pensionskasse | Einkauf Pensionskasse | Person, Versicherer, Einkauf |
-| | Krankenkassen-Prämien & Police | Krankenkasse | Person, Jahresprämien |
-| | Krankheits- & Unfallkosten | Krankheitskosten | Person (wenn zuordenbar), Höhe |
-| | ÖV-Abo, Fahrtkosten, auswärtige Verpflegung | Fahrtkosten | Person, Jahrestotal |
-| | Weiterbildung | Weiterbildung | Person, Höhe |
-| | Spenden | Spenden | Gesamtspenden |
-| | Parteibeiträge | Mitgliederbeiträge | Gesamtbetrag |
-| | Kinderbetreuung | Kita | Beiträge |
-| | Alimente / Unterhaltsbeiträge | Alimente | Höhe |
-| **4 Schulden** | Kredite, Hypotheken, Kreditkarten per 31.12. (Saldo «zu Gunsten der Bank» = Schuld) | Schulden / Schuldzinsen | Institut, Schuld, Schuldzinsen |
-| **5 Liegenschaften** | Eigenmietwert, Mieteinnahmen | Eigenmietwert / Mieteinnahmen | **Neutral** |
-| | Hypothekarzinsbescheinigung | Hypothekarzinsbescheinigung | Institut, IBAN, Schuld 31.12., Zinsen (neutral) |
-| | Unterhalts- & Renovationskosten (auch Ausland) | Unterhalts- und Renovationskosten | **Neutral** |
-| | Liegenschaftssteuer / Nebenkosten | Liegenschaftssteuer | Institut, IBAN (neutral) |
-| **6 Weiteres** | Steuererklärung Vorjahr, Veranlagung, Korrespondenz, Vollmacht … | gemäss Beschreibung | – |
-
-> **Annahme zu Kategorie 6:** Die Vorlage wiederholt dort Punkte aus Kategorie 5. Umgesetzt ist:
-> die Hypothek trägt Institut, IBAN, Schuld am 31.12. **und** bezahlte Zinsen (Kategorie 5);
-> in Kategorie 6 liegen alle übrigen Unterlagen mit neutralem Titel.
+**Prüfstein:** Ein Nachbau des Kundenordners oben (9 Belege in einem Scan-Stapel, inklusive
+«Für Ihre Steuererklärung» auf den Bankauszügen) ergibt alle 9 Namen exakt wie in der Referenz.
 
 **Automatisch gefüllt** wird, was sich sicher erkennen lässt: Person (auch Partner/in und Kinder,
 am Vornamen), IBAN, Institute und Versicherer (bekannte Namen und Namen mit «Bank»,
