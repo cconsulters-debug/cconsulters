@@ -499,8 +499,8 @@ const BEZ_FELDER = {
    Kategoriename genügt (Konten, Schulden).                                */
 const BEZ = {
   /* 1 Einkommen */
-  lohnausweis:      { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag"], betrag:"Nettolohn", nummer:true, ganzeFranken:true },
-  lohnausweis_p:    { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag"], betrag:"Nettolohn", nummer:true, ganzeFranken:true },
+  lohnausweis:      { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag","f","g"], betrag:"Nettolohn", nummer:true, ganzeFranken:true },
+  lohnausweis_p:    { felder:["person","stelle","zeitraum","betrag","f","g"], pflicht:["person","stelle","zeitraum","betrag","f","g"], betrag:"Nettolohn", nummer:true, ganzeFranken:true },
   taggeld:          { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"" },
   ahv_rente:        { felder:["person","betrag"], pflicht:["person"], betrag:"" },
   pk_rente:         { felder:["person","stelle","betrag"], pflicht:["person"], betrag:"" },
@@ -549,7 +549,7 @@ const BEZ = {
   mietertrag:       { felder:[], neutral:true },
   unterhalt_liegen: { felder:[], neutral:true },
   liegenschaft_aus: { felder:[], neutral:true },
-  hypothek:         { felder:["stelle","iban","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], neutral:true, betrag:"Schuld", zinsen:"Zinsen" },
+  hypothek:         { felder:["stelle","iban","betrag","zinsen"], pflicht:["stelle","betrag","zinsen"], neutral:true, betrag:"Schuld", zinsen:"Hypothekarzinsen" },
   liegenschaftssteuer:{ felder:["stelle","iban"], pflicht:["stelle"], neutral:true },
 
   /* 6 Weiteres – gemäss Beschreibung */
@@ -578,9 +578,9 @@ function bezRegelText(id){
   if(id === "zugangsdaten") return "Eigenes PDF «0 Zugangsdaten Online-Steuererklärung <Jahr> - <Vorname Name>», keine Rubrik.";
   const kopf = `«${t.kat} ${KAT_DATEI[t.kat]}${r.ohneTitel ? "" : " - " + t.titel}»`;
   if(!r.felder.length) return r.neutral ? `Neutral: nur Über-Titel ${kopf}, ohne Personenname.` : `Bezeichnung ${kopf} – keine Zusatzangaben nötig.`;
-  const namen = r.felder.filter(f => f !== "f" && f !== "g").map(f => bezFeldLabel(id, f).replace(/ CHF$/, ""));
+  const namen = r.felder.filter(f => f !== "f" && f !== "g").map(f => bezFeldLabel(id, f).replace(/ CHF$/, ""));   // F/G folgen unten
   return `${kopf}${r.neutral ? " (neutral, ohne Personenname)" : ""} mit ${namen.join(", ")}`
-    + (r.felder.includes("f") ? "; Punkt F/G nur wenn angekreuzt" : "")
+    + (r.felder.includes("f") ? "; Punkt F und G jeweils mit oder ohne X" : "")
     + (r.nummer ? " – mehrere pro Person werden 1, 2, 3 … nummeriert." : ".");
 }
 
@@ -1302,8 +1302,8 @@ function bezTeile(doc){
     if(x) betraege.push((wort ? wort + " " : "") + x);
   }
   if(betraege.length) out.push(betraege.join(", "));
-  /* Lohnausweis: Punkt F / G nur erwähnen, wenn angekreuzt */
-  for(const f of ["f","g"]) if(hat(f) && v(f) === "mit X") out.push(`${f.toUpperCase()} mit X`);
+  /* Lohnausweis: Punkt F und G immer – "F mit X" oder "F ohne X" */
+  for(const f of ["f","g"]) if(hat(f) && v(f)) out.push(`${f.toUpperCase()} ${v(f)}`);
   return out.map(dateiTeil).filter(Boolean);
 }
 /* Endung: Belege werden beim Ablegen zu PDF; nur Word/Excel & Co. behalten ihre. */
@@ -1556,7 +1556,7 @@ function renumber(clientId, jahr){
   return Promise.all(list.map(d => dbPut("docs", d)));
 }
 /* Bestehende Belege auf das neue Schema umbenennen (einmalig nach dem Update). */
-const NAMEN_VERSION = 3;          // bei jeder Änderung des Namensschemas erhöhen
+const NAMEN_VERSION = 4;          // bei jeder Änderung des Namensschemas erhöhen
 async function namenMigrieren(){
   const alt = (S.settings.namenVersion || 0) < NAMEN_VERSION;
   const paare = new Set(S.docs.filter(d => alt || /^\d{4}_\d{2}_/.test(d.newName || "")).map(d => d.clientId + "|" + d.jahr));

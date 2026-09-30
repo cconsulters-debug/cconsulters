@@ -12,14 +12,15 @@ Das Zielformat der Dateinamen ist durch bereits sortierte Kundenordner belegt (R
 
 ```
 0 Zugangsdaten Online-Steuererklärung 2025 - Mike Münzner
-1 Einkommen - Lohnausweis 1 - Mike Münzner - SV (Schweiz) AG - 01.01.-31.12.2025 - Nettolohn 48316
-1 Einkommen - Lohnausweis 2 - Mike Münzner - Universitätsklinik Balgrist - 16.06.-31.12.2025 - Nettolohn 1355
-1 Einkommen - Lohnausweis 3 - Mike Münzner - Coople (Schweiz) AG - 11.04.-03.12.2025 - Nettolohn 3363
+1 Einkommen - Lohnausweis 1 - Mike Münzner - SV (Schweiz) AG - 01.01.-31.12.2025 - Nettolohn 48316 - F ohne X - G ohne X
+1 Einkommen - Lohnausweis 2 - Mike Münzner - Universitätsklinik Balgrist - 16.06.-31.12.2025 - Nettolohn 1355 - F ohne X - G ohne X
+1 Einkommen - Lohnausweis 3 - Mike Münzner - Coople (Schweiz) AG - 11.04.-03.12.2025 - Nettolohn 3363 - F ohne X - G ohne X
 2 Wertschriften - Mike Münzner - UBS Privatkonto CH23 0029 1291 8175 3740 M - Saldo -298.60, Zins 2.85, Kosten 39.00
 2 Wertschriften - Mike Münzner - UBS Sparkonto CH12 0029 1291 8175 37M1 D - Saldo 0.10
 3 Abzüge - Alimente Unterhaltsbeiträge - Mike Münzner (für Lea Barbara Maurer) - 3000.00
 3 Abzüge - Krankenkasse - Mike Münzner - Concordia - Prämien 6011.40, Krankheitskosten 357.25
 4 Schulden - Mike Münzner - UBS Kartenkonto - Schuld 2866.18, Schuldzinsen 359.91
+5 Liegenschaften - Hypothekarzinsbescheinigung - Zürcher Kantonalbank CH12 0070 0110 0012 3456 7 - Schuld 480000.00, Hypothekarzinsen 7920.00
 ```
 
 Daraus abgeleitete Regeln (umgesetzt in `BEZ`, `KAT_TITEL`, `KAT_DATEI`, `bezTeile`, `buildName`):
@@ -32,7 +33,10 @@ Daraus abgeleitete Regeln (umgesetzt in `BEZ`, `KAT_TITEL`, `KAT_DATEI`, `bezTei
   Saldo mit Vorzeichen. Mehrere Beträge in einem Teil, durch Komma getrennt.
 - Personen als «Vorname Name»; Alimente mit «(für <Empfänger/in>)».
 - Mehrere Lohnausweise pro Person: «Lohnausweis 1, 2, 3 …», je ein eigenes PDF.
-- Lohnausweis Punkt F/G: erscheint im Namen nur, wenn angekreuzt («F mit X») – so wie in der Referenz.
+- Lohnausweis Punkt F und G: immer im Namen, «F mit X» / «F ohne X», «G mit X» / «G ohne X»
+  (Entscheid der Kundin, 30.09.2026; die Referenz-Ordner oben stammen aus der Zeit davor).
+- Hypothek: Institut / IBAN + Schuld + bezahlte Hypothekarzinsen («Hypothekarzinsen …»).
+- Kita, Spenden, Mitgliederbeiträge: ohne Personennamen (bestätigt).
 - «Neutral» (Liegenschaften): nur Über-Titel, ohne Personennamen.
 
 Bei Abweichungen zwischen Anweisung und Referenz: nachfragen, nicht raten.

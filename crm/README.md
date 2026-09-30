@@ -106,13 +106,14 @@ Texteditor angepasst werden. Das Ergebnis entspricht den bereits sortierten Kund
 
 ```
 0 Zugangsdaten Online-Steuererklärung 2025 - Mike Münzner.pdf
-1 Einkommen - Lohnausweis 1 - Mike Münzner - SV (Schweiz) AG - 01.01.-31.12.2025 - Nettolohn 48316.pdf
-1 Einkommen - Lohnausweis 2 - Mike Münzner - Universitätsklinik Balgrist - 16.06.-31.12.2025 - Nettolohn 1355.pdf
+1 Einkommen - Lohnausweis 1 - Mike Münzner - SV (Schweiz) AG - 01.01.-31.12.2025 - Nettolohn 48316 - F ohne X - G ohne X.pdf
+1 Einkommen - Lohnausweis 2 - Mike Münzner - Universitätsklinik Balgrist - 16.06.-31.12.2025 - Nettolohn 1355 - F ohne X - G mit X.pdf
 2 Wertschriften - Mike Münzner - UBS Privatkonto CH23 0029 1291 8175 3740 M - Saldo -298.60, Zins 2.85, Kosten 39.00.pdf
 2 Wertschriften - Mike Münzner - UBS Sparkonto CH12 0029 1291 8175 37M1 D - Saldo 0.10.pdf
 3 Abzüge - Alimente Unterhaltsbeiträge - Mike Münzner (für Lea Barbara Maurer) - 3000.00.pdf
 3 Abzüge - Krankenkasse - Mike Münzner - Concordia - Prämien 6011.40, Krankheitskosten 357.25.pdf
 4 Schulden - Mike Münzner - UBS Kartenkonto - Schuld 2866.18, Schuldzinsen 359.91.pdf
+5 Liegenschaften - Hypothekarzinsbescheinigung - Zürcher Kantonalbank CH12 0070 … - Schuld 480000.00, Hypothekarzinsen 7920.00.pdf
 5 Liegenschaften - Eigenmietwert.pdf                               ← «Neutral»: nur Über-Titel
 ```
 
@@ -120,8 +121,10 @@ Texteditor angepasst werden. Das Ergebnis entspricht den bereits sortierten Kund
 - Konten und Schulden ohne eigenen Titel; Institut, Kontoart und IBAN (in Vierergruppen) als ein Teil.
 - Beträge ohne «CHF», ohne Tausender-Apostroph, mit Rappen; Nettolohn in ganzen Franken; Saldo
   mit Vorzeichen; mehrere Beträge durch Komma getrennt.
-- Mehrere Lohnausweise: 1, 2, 3 … in der Reihenfolge des Scans. Punkt F/G erscheint nur, wenn
-  angekreuzt («F mit X»).
+- Mehrere Lohnausweise: 1, 2, 3 … in der Reihenfolge des Scans. Punkt F und G stehen **immer**
+  im Namen: «F mit X» / «F ohne X», «G mit X» / «G ohne X». Wird ein Kreuz nicht sicher erkannt,
+  meldet der Beleg «fehlt: Punkt F» – dann in der Prüfliste wählen.
+- Kita, Spenden, Mitgliederbeiträge: ohne Personennamen, nur Titel und Betrag.
 - Zeitraum `01.01.-31.12.2025` – das Jahr steht nur am Ende.
 - Umlaute bleiben; entfernt wird nur, was Windows verbietet; höchstens 150 Zeichen (Pfad < 260).
   Zwei gleiche Namen bekommen «(2)» – nichts wird überschrieben.

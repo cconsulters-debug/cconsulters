@@ -21,7 +21,7 @@ in einem Texteditor bearbeiten, um die Regeln zu ändern.
 ## Namensschema je Kategorie (Präfix = Kategorienummer)
 
 ### 1. Einkommen
-- **Lohnausweis:** Name Person + Arbeitgeber + Gültigkeitsdatum (von.-bis.JJJJ) + Nettolohn + mit oder ohne X bei Punkt F (Unentgeltiche Beföderung) + mit oder ohne X bei Punkt G(Kantinenverpflegung)
+- **Lohnausweis:** Name Person + Arbeitgeber + Gültigkeitsdatum (von.-bis.JJJJ) + Nettolohn + mit oder ohne ( X ) bei Punkt F (Unentgeltliche Beförderung) + mit oder ohne ( X ) bei Punkt G (Kantinenverpflegung)
   Bei mehreren Lohnausweisen pro Person mit 1, 2, 3 … nummerieren.
 - **Ersatzeinkünfte** (Taggelder IV/ALV/Unfall/Krankheit, Mutterschaft): Name Person.
 - **AHV-/IV-/Pensionskassen-Rentenbescheinigung:** Name Person (+ Betrag).
@@ -56,7 +56,7 @@ in einem Texteditor bearbeiten, um die Regeln zu ändern.
 
 ### 5. Liegenschaften
 - **Eigenmietwert / Mieteinnahmen:** Neutral.
-- **Hypothekarzinsbescheinigung:** Name Institut / IBAN.
+- **Hypothekarzinsbescheinigung:** Name Institut / IBAN + Schuld + bezahlte Hypothekarzinsen.
 - **Belege Unterhalts- & Renovationskosten:** Neutral (auch ausländische Liegenschaften,
   z.B. Kondominiums-/Verwalter-Belege).
 - **Liegenschaftssteuer / Nebenkosten:** Name Institut / IBAN.
