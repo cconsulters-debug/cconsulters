@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Calisthenics Trainer – kostenlos & offline</title>
+  <meta name="description" content="Kostenloser Calisthenics-Trainingsplan mit Übungsdatenbank, Satz-Timer und Fortschritts-Tracking. Läuft komplett offline im Browser, ohne Konto und ohne Bezahlung.">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="robots" content="noindex">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icon.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <main class="app" id="root"><noscript>
+    <h1>JavaScript wird benötigt</h1>
+    <p>Diese App läuft vollständig in deinem Browser und braucht dafür JavaScript.</p>
+  </noscript></main>
+
+  <nav class="tabbar hidden" id="tabbar" aria-label="Hauptnavigation">
+    <button data-go="home"><span class="ic">🏠</span>Heute</button>
+    <button data-go="plan"><span class="ic">🗓️</span>Plan</button>
+    <button data-go="library"><span class="ic">📖</span>Übungen</button>
+    <button data-go="progress"><span class="ic">📈</span>Fortschritt</button>
+  </nav>
+
+  <div class="modal-bg" id="modal-bg" hidden><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+
+  <script src="assets/data.js"></script>
+  <script src="assets/store.js"></script>
+  <script src="assets/plan.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

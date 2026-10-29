@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#0d1117"/>
+  <g stroke="#35d07f" stroke-width="26" stroke-linecap="round" fill="none">
+    <!-- Klimmzugstange -->
+    <path d="M96 132h320"/>
+    <!-- Arme -->
+    <path d="M186 140v66M326 140v66"/>
+    <!-- Kopf -->
+    <circle cx="256" cy="238" r="30" fill="#35d07f" stroke="none"/>
+    <!-- Rumpf -->
+    <path d="M256 272v92"/>
+    <!-- Schultern -->
+    <path d="M186 206l70 40 70-40"/>
+    <!-- Beine -->
+    <path d="M256 364l-52 66M256 364l52 66"/>
+  </g>
+</svg>
