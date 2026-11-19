@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Kundenprofil: Nutzer darf sein EIGENES Profil lesen, aber NICHT
+    // direkt schreiben — Guthaben/Preis-Felder sind Geld und werden
+    // ausschliesslich von den Netlify Functions (Admin SDK) verändert.
+    match /customers/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Dokument-Archiv: Nutzer darf nur seine eigenen Dokumente lesen.
+    match /documents/{docId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.customerId;
+      allow write: if false;
+    }
+
+    // Transaktionsverlauf: rein serverseitig, kein Client-Zugriff nötig.
+    match /transactions/{txId} {
+      allow read, write: if false;
+    }
+
+    // Stripe-Idempotenz-Sperre: nur Server.
+    match /processedStripeEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Uploads (temporär, TTL-Löschung serverseitig): nur eigene, nur lesen.
+    match /uploads/{uploadId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.customerId;
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

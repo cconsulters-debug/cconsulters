@@ -1,0 +1,13 @@
+{
+  "name": "mein-rechtshelfer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mein Rechtshelfer & Assistent — KI-Rechtsdokumente für die Schweiz (Backend)",
+  "scripts": {
+    "dev": "npx netlify dev"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.0",
+    "stripe": "^16.0.0"
+  }
+}
