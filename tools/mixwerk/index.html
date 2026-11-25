@@ -141,6 +141,22 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
   .btn{padding:8px 10px}
   .btn.file{margin-left:0}
 }
+.key{font-family:var(--f-mono);font-size:11px;color:var(--muted);display:block;margin-top:4px;white-space:nowrap}
+.key.match{color:var(--ok)}
+.seg.stems button{font-family:var(--f-disp);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:7px 9px}
+.automix{width:100%;justify-content:center;margin-top:8px}
+.sampler{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.sampler .pad{min-height:54px;font-family:var(--f-disp);font-size:11px;letter-spacing:.05em;text-transform:uppercase;touch-action:manipulation}
+.sampler .pad.hit{background:var(--fg);color:#111}
+@media (max-width:700px){
+  .ch{grid-template-columns:1fr;justify-items:center}
+  .knobs{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .knob{width:56px}
+  .vfader,.meter{height:150px}
+  .screen canvas{height:62px}
+  .overview{height:52px}
+  .brand{font-size:20px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
@@ -192,7 +208,9 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
     </div>
 
     <div class="panel">
-      <div class="phead"><h2>Effekte</h2></div>
+      <div class="phead"><h2>Sampler</h2><span class="hint">Tasten 1–8</span></div>
+      <div class="sampler" id="sampler"></div>
+      <div class="phead" style="margin-top:6px"><h2>Effekte</h2></div>
       <div class="group">
         <span class="lbl">Echo-Zeit (Beats)</span>
         <div class="seg" id="echoTimes">
@@ -216,6 +234,7 @@ kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border
     <span><kbd>Q</kbd> Play Deck A</span>
     <span><kbd>P</kbd> Play Deck B</span>
     <span><kbd>R</kbd> Aufnahme</span>
+    <span><kbd>1</kbd>–<kbd>8</kbd> Sampler</span>
     <span>Regler: ziehen, Mausrad, Pfeiltasten · <kbd>Shift</kbd> fein · Doppelklick = Nullstellung</span>
     <span>Eigene Songs: MP3, WAV, AAC, OGG, FLAC auf ein Deck ziehen. Alles bleibt in deinem Browser.</span>
   </footer>
@@ -399,6 +418,53 @@ function detectGrid(en) {
   return 0;
 }
 
+/* ---------- Tonart-Erkennung (Chroma + Krumhansl-Profile) ---------- */
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang), h = len >> 1;
+    for (let i = 0; i < n; i += len) { let cr = 1, ci = 0; for (let k = 0; k < h; k++) { const a = i + k, b = a + h, xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr; re[b] = re[a] - xr; im[b] = im[a] - xi; re[a] += xr; im[a] += xi; const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t; } }
+  }
+}
+const NOTE = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+function detectKey(buf) {
+  const N = 8192, sr = buf.sampleRate, c0 = buf.getChannelData(0), c1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : c0;
+  const frames = Math.min(90, Math.floor(buf.length / N) - 1); if (frames < 2) return null;
+  const step = Math.floor(buf.length / (frames + 1)), re = new Float64Array(N), im = new Float64Array(N), chroma = new Float64Array(12), fc = new Float64Array(12);
+  const pc = new Int8Array(N / 2).fill(-1);
+  for (let k = 1; k < N / 2; k++) { const f = k * sr / N; if (f < 100 || f > 2000) continue; const m = 69 + 12 * Math.log2(f / 440), r = Math.round(m); if (Math.abs(m - r) < 0.3) pc[k] = ((r % 12) + 12) % 12; }
+  for (let fr = 0; fr < frames; fr++) {
+    const s = (fr + 1) * step - N / 2;
+    for (let i = 0; i < N; i++) { const w = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / N); re[i] = (c0[s + i] + c1[s + i]) * 0.5 * w; im[i] = 0; }
+    fft(re, im); fc.fill(0); let sum = 0;
+    for (let k = 1; k < N / 2; k++) if (pc[k] >= 0) { const m = Math.sqrt(re[k] * re[k] + im[k] * im[k]); fc[pc[k]] += m; sum += m; }
+    if (sum > 0) for (let i = 0; i < 12; i++) chroma[i] += fc[i] / sum;
+  }
+  const MAJ = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88], MIN = [6.33, 2.68, 3.52, 5.38, 2.6, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17];
+  const corr = (prof, t) => { let ma = 0, mb = 0; for (let i = 0; i < 12; i++) { ma += chroma[(i + t) % 12]; mb += prof[i]; } ma /= 12; mb /= 12; let n = 0, da = 0, db = 0; for (let i = 0; i < 12; i++) { const a = chroma[(i + t) % 12] - ma, b = prof[i] - mb; n += a * b; da += a * a; db += b * b; } return n / Math.sqrt(da * db || 1); };
+  let best = { s: -2, t: 0, minor: false };
+  for (let t = 0; t < 12; t++) { const a = corr(MAJ, t), b = corr(MIN, t); if (a > best.s) best = { s: a, t, minor: false }; if (b > best.s) best = { s: b, t, minor: true }; }
+  return { t: best.t, minor: best.minor };
+}
+function keyInfo(d) {
+  if (!d.key) return null;
+  const t = (d.key.t + Math.round(12 * Math.log2(d.rate)) + 120) % 12;
+  const num = ((t * 7) % 12 + (d.key.minor ? 4 : 7)) % 12 + 1;
+  return { name: NOTE[t] + (d.key.minor ? "m" : ""), num, l: d.key.minor ? "A" : "B" };
+}
+function updKeys() {
+  const a = keyInfo(decks.A), b = keyInfo(decks.B);
+  let match = false;
+  if (a && b) { const dn = Math.abs(a.num - b.num); match = (a.l === b.l && (dn <= 1 || dn === 11)) || (a.num === b.num); }
+  [["A", a], ["B", b]].forEach(([X, k]) => { const el = $("key" + X); el.textContent = k ? `${k.num}${k.l} · ${k.name}${match ? " ✓" : ""}` : "Tonart ?"; el.classList.toggle("match", match); el.title = match ? "Tonarten passen harmonisch zusammen" : "Tonart (Camelot-Rad)"; });
+}
+
+/* ---------- Bildschirm wach halten ---------- */
+let wakeLock = null;
+function wake() { try { if (navigator.wakeLock && !wakeLock) navigator.wakeLock.request("screen").then(l => { wakeLock = l; l.addEventListener("release", () => wakeLock = null); }).catch(() => {}); } catch (e) {} }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && (decks.A.playing || decks.B.playing)) wake(); });
+
 /* ---------- Drehregler ---------- */
 function makeKnob(host, o) {
   const { label, min, max, def = o.value, bipolar = false, fmt = v => v.toFixed(1), onChange, color } = o;
@@ -449,6 +515,21 @@ class Deck {
   constructor(id) {
     this.id = id; this.color = COL[id];
     this.trim = ctx.createGain();
+    const mk = () => ctx.createGain(), bq = (type, f, q) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = f; if (q) b.Q.value = q; return b; };
+    this.stemIn = mk(); this.stemIn.channelCount = 2; this.stemIn.channelCountMode = "explicit"; this.stemIn.channelInterpretation = "speakers";
+    const G = this.stemG = { full: mk(), inst: mk(), voc: mk(), beat: mk() };
+    this.stemIn.connect(G.full);
+    const sp = ctx.createChannelSplitter(2); this.stemIn.connect(sp);
+    const sL = mk(), sR = mk(), side = mk(), mL = mk(), mR = mk(), mid = mk(), inv = mk(), im = ctx.createChannelMerger(2);
+    sL.gain.value = 0.8; sR.gain.value = -0.8; mL.gain.value = 0.5; mR.gain.value = 0.5; inv.gain.value = -1;
+    sp.connect(sL, 0); sp.connect(sR, 1); sL.connect(side); sR.connect(side);
+    sp.connect(mL, 0); sp.connect(mR, 1); mL.connect(mid); mR.connect(mid);
+    side.connect(im, 0, 0); side.connect(inv).connect(im, 0, 1); im.connect(G.inst);
+    mid.connect(bq("lowpass", 160)).connect(G.inst);
+    mid.connect(bq("highpass", 220, 0.7)).connect(bq("lowpass", 5500)).connect(G.voc);
+    this.stemIn.connect(bq("lowpass", 180)).connect(G.beat); this.stemIn.connect(bq("highpass", 6500)).connect(G.beat);
+    for (const k in G) { G[k].gain.value = k === "full" ? 1 : 0; G[k].connect(this.trim); }
+    this.stem = "full";
     this.lo = ctx.createBiquadFilter(); this.lo.type = "lowshelf"; this.lo.frequency.value = 220;
     this.mid = ctx.createBiquadFilter(); this.mid.type = "peaking"; this.mid.frequency.value = 1000; this.mid.Q.value = 0.7;
     this.hi = ctx.createBiquadFilter(); this.hi.type = "highshelf"; this.hi.frequency.value = 3800;
@@ -471,11 +552,12 @@ class Deck {
     if (this.loop && p >= this.loop.end) { const L = this.loop.end - this.loop.start; p = this.loop.start + ((p - this.loop.start) % L); }
     return Math.min(p, this.dur);
   }
-  load(buf, name, bpm, grid) {
+  load(buf, name, bpm, grid, key) {
     this.playing = false; this.stopSrc();
     this.buffer = buf; this.name = name; this.wf = analyse(buf);
     this.baseBpm = bpm || detectBpm(this.wf.en);
     this.grid = grid != null ? grid : detectGrid(this.wf.en);
+    this.key = key || detectKey(buf);
     this.offset = this.grid; this.cuePoint = this.grid; this.cues = [null, null, null, null]; this.loop = null;
     this.ovStatic.width = 0; ui.deck(this);
   }
@@ -486,7 +568,7 @@ class Deck {
     if (this.offset >= this.dur - 0.02) this.offset = 0;
     const s = ctx.createBufferSource(); s.buffer = this.buffer; s.playbackRate.value = this.rate;
     if (this.loop) { s.loop = true; s.loopStart = this.loop.start; s.loopEnd = this.loop.end; }
-    s.connect(this.trim);
+    s.connect(this.stemIn); wake();
     s.onended = () => { if (this.src === s) { this.src = null; this.playing = false; this.offset = 0; ui.deck(this); } };
     s.start(0, this.offset);
     this.src = s; this.startTime = ctx.currentTime; this.playing = true; ui.deck(this);
@@ -541,6 +623,7 @@ class Deck {
       if (Math.abs(np - p) > 0.004) this.seek(np);
     }
   }
+  setStem(m) { this.stem = m; for (const k in this.stemG) this.stemG[k].gain.setTargetAtTime(k === m ? (k === "voc" ? 1.5 : k === "inst" ? 1.2 : 1) : 0, ctx.currentTime, 0.03); }
   level() { this.an.getFloatTimeDomainData(this.anBuf); let m = 0; for (let i = 0; i < this.anBuf.length; i++) { const a = Math.abs(this.anBuf[i]); if (a > m) m = a; } return m; }
 
   renderStatic(cv) {
@@ -605,7 +688,7 @@ function deckHTML(X) {
   <div class="deck-head">
     <span class="badge">${X}</span>
     <div class="track"><div class="tname" id="name${X}">Lädt …</div><div class="tmeta"><span id="time${X}">0:00.0</span> · <span id="rem${X}">-0:00.0</span></div></div>
-    <div class="bpm"><span id="bpm${X}">—</span><small>BPM</small></div>
+    <div class="bpm"><span id="bpm${X}">—</span><small>BPM</small><span class="key" id="key${X}" title="Tonart (Camelot)">Tonart …</span></div>
   </div>
   <canvas class="overview" id="ov${X}" aria-label="Übersicht Deck ${X}, klicken zum Springen"></canvas>
   <div class="row">
@@ -634,6 +717,8 @@ function deckHTML(X) {
     <span class="lbl">Loop in Beats</span>
     <div class="pads loops" id="loops${X}">${[1, 2, 4, 8, 16].map(b => `<button class="pad" data-b="${b}">${b}</button>`).join("")}</div>
   </div>
+  <div class="row"><span class="lbl">Beat-Jump</span><span class="row" id="jump${X}" style="gap:4px"><button class="mini" data-j="-16">−16</button><button class="mini" data-j="-4">−4</button><button class="mini" data-j="4">+4</button><button class="mini" data-j="16">+16</button></span></div>
+  <div class="group"><span class="lbl">Schnell-Stems</span><div class="seg stems" id="stem${X}"><button data-m="full" aria-pressed="true">Voll</button><button data-m="inst" aria-pressed="false">Ohne Gesang</button><button data-m="voc" aria-pressed="false">Nur Gesang</button><button data-m="beat" aria-pressed="false">Nur Beat</button></div></div>
   <p class="hint">Audiodatei hierher ziehen oder «Song laden».</p>
 </section>`;
 }
@@ -644,7 +729,7 @@ function chHTML(X) {
 </div>`;
 }
 $("rack").innerHTML = deckHTML("A") + `<section class="panel mixer" aria-label="Mixer"><div class="chs">${chHTML("A")}${chHTML("B")}</div>
-  <div class="xf"><label class="lbl" for="xfader">Crossfader</label><input type="range" id="xfader" min="-1" max="1" step="0.001" value="0"><div class="xfl"><span>A</span><span>B</span></div></div></section>` + deckHTML("B");
+  <div class="xf"><label class="lbl" for="xfader">Crossfader</label><input type="range" id="xfader" min="-1" max="1" step="0.001" value="0"><div class="xfl"><span>A</span><span>B</span></div></div><button class="btn automix" id="autoMix" style="--c:var(--ok)" title="Blendet automatisch im Takt zum anderen Deck über (16 Beats, mit Bass-Tausch)">Auto-Mix ⇄</button></section>` + deckHTML("B");
 
 const decks = { A: new Deck("A"), B: new Deck("B") };
 const fmtT = t => { const s = Math.max(0, t), m = Math.floor(s / 60); return `${m}:${(s - m * 60).toFixed(1).padStart(4, "0")}`; };
@@ -661,6 +746,8 @@ const ui = {
     if (document.activeElement !== $("base" + X)) $("base" + X).value = d.baseBpm.toFixed(1);
     $("hot" + X).querySelectorAll(".pad").forEach((b, i) => { const c = d.cues[i]; b.classList.toggle("set", c != null); b.textContent = c != null ? `${i + 1} · ${fmtT(c)}` : String(i + 1); });
     $("loops" + X).querySelectorAll(".pad").forEach(b => b.classList.toggle("on", !!d.loop && d.loop.beats === +b.dataset.b));
+    $("stem" + X).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === d.stem ? "true" : "false"));
+    if (decks.A && decks.B) updKeys();
   }
 };
 
@@ -672,13 +759,14 @@ function setFilter(d, v) {
   else if (v > 0.02) { f.type = "highpass"; f.frequency.setTargetAtTime(20 * Math.pow(7000 / 20, v), t, 0.02); f.Q.setTargetAtTime(0.7 + v * 5, t, 0.02); }
   else { f.type = "lowpass"; f.frequency.setTargetAtTime(22000, t, 0.02); f.Q.setTargetAtTime(0.7, t, 0.02); }
 }
+const knobs = { A: {}, B: {} };
 const fmtDb = u => { if (u <= -0.98) return "KILL"; const v = eqDb(u); return (v > 0 ? "+" : "") + v.toFixed(1) + " dB"; };
 ["A", "B"].forEach(X => {
   const d = decks[X], c = COL[X], sm = (p, v) => p.setTargetAtTime(v, ctx.currentTime, 0.015);
   makeKnob($("kTrim" + X), { label: "Gain", min: 0, max: 2, value: 1, fmt: v => (20 * Math.log10(Math.max(v, 1e-4))).toFixed(1) + " dB", color: c, onChange: v => sm(d.trim.gain, v) });
   makeKnob($("kHi" + X), { label: "Höhen", min: -1, max: 1, value: 0, bipolar: true, fmt: fmtDb, color: c, onChange: v => sm(d.hi.gain, eqDb(v)) });
   makeKnob($("kMid" + X), { label: "Mitten", min: -1, max: 1, value: 0, bipolar: true, fmt: fmtDb, color: c, onChange: v => sm(d.mid.gain, eqDb(v)) });
-  makeKnob($("kLo" + X), { label: "Bass", min: -1, max: 1, value: 0, bipolar: true, fmt: fmtDb, color: c, onChange: v => sm(d.lo.gain, eqDb(v)) });
+  knobs[X].lo = makeKnob($("kLo" + X), { label: "Bass", min: -1, max: 1, value: 0, bipolar: true, fmt: fmtDb, color: c, onChange: v => sm(d.lo.gain, eqDb(v)) });
   makeKnob($("kFilt" + X), { label: "Filter", min: -1, max: 1, value: 0, bipolar: true, fmt: v => v < -0.02 ? "LP " + Math.round(-v * 100) : v > 0.02 ? "HP " + Math.round(v * 100) : "aus", color: c, onChange: v => setFilter(d, v) });
   makeKnob($("kFx" + X), { label: "FX", min: 0, max: 1, value: 0, fmt: v => Math.round(v * 100) + " %", color: c, onChange: v => sm(d.send.gain, v * v * 1.2) });
   const vol = $("vol" + X), applyVol = () => sm(d.fader.gain, Math.pow(+vol.value, 2));
@@ -700,6 +788,8 @@ const fmtDb = u => { if (u <= -0.98) return "KILL"; const v = eqDb(u); return (v
     d.hot(+b.dataset.i, isDel);
   });
   $("loops" + X).addEventListener("click", e => { const b = e.target.closest(".pad"); if (b) d.setLoop(+b.dataset.b); });
+  $("jump" + X).addEventListener("click", e => { const b = e.target.closest("button"); if (b && d.buffer) d.seek(d.pos + (+b.dataset.j) * d.beatLen); });
+  $("stem" + X).addEventListener("click", e => { const b = e.target.closest("button"); if (b) { d.setStem(b.dataset.m); ui.deck(d); } });
 
   const ov = $("ov" + X);
   ov.addEventListener("pointerdown", e => {
@@ -751,6 +841,55 @@ $("echoTimes").addEventListener("click", e => {
   echoBeats = +b.dataset.b;
   $("echoTimes").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
 });
+
+/* ---------- Auto-Mix ---------- */
+let amRun = false;
+function amLabel(on) { const b = $("autoMix"); b.classList.toggle("on", on); b.textContent = on ? "Auto-Mix läuft …" : "Auto-Mix ⇄"; }
+$("autoMix").onclick = () => {
+  if (amRun) return; resume();
+  const fromId = +xf.value <= 0 ? "A" : "B", toId = fromId === "A" ? "B" : "A", from = decks[fromId], to = decks[toId];
+  if (!from.buffer || !to.buffer) return;
+  if (!from.playing) { from.play(); return; }
+  amRun = true; amLabel(true);
+  if (to.playing) to.pause();
+  const c = to.cues.find(v => v != null); to.seek(c != null ? c : to.cuePoint);
+  to.sync(from); knobs[toId].lo.set(-1);
+  const bi = (from.pos - from.grid) / from.beatLen, nb = Math.ceil(bi / 4 + 1e-3) * 4;
+  setTimeout(() => {
+    to.play(); to.sync(from);
+    const T = 16 * 60 / from.bpm * 1000, t0 = performance.now(), x0 = +xf.value, x1 = toId === "B" ? 1 : -1; let swapped = false;
+    const iv = setInterval(() => {
+      const p = Math.min(1, (performance.now() - t0) / T);
+      xf.value = x0 + (x1 - x0) * p; applyXf();
+      if (!swapped && p >= 0.5) { swapped = true; knobs[fromId].lo.set(-1); knobs[toId].lo.set(0); }
+      if (p >= 1) { clearInterval(iv); from.pause(); knobs[fromId].lo.set(0); amRun = false; amLabel(false); }
+    }, 30);
+  }, (nb - bi) * 60 / from.bpm * 1000);
+};
+
+/* ---------- Sampler ---------- */
+const sampOut = ctx.createGain(); sampOut.gain.value = 0.8; sampOut.connect(masterIn);
+const sampFx = ctx.createGain(); sampFx.gain.value = 0.35; sampOut.connect(sampFx).connect(fxIn);
+function loopNoise(t, d) { const s = ctx.createBufferSource(); s.buffer = noise(ctx); s.loop = true; s.start(t); s.stop(t + d); return s; }
+function sweep(type, f0, f1, t, d, peak, wave = "sawtooth") { const o = ctx.createOscillator(); o.type = wave; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + d); o.connect(env(ctx, t, peak, d, 0.005)).connect(sampOut); o.start(t); o.stop(t + d + 0.05); }
+const SAMPLES = [
+  { n: "Air Horn", f: t => [0, 0.17, 0.34].forEach((o, i) => { const d = i === 2 ? 0.6 : 0.13; const lp = ctx.createBiquadFilter(); lp.frequency.value = 2800; const g = env(ctx, t + o, 0.22, d, 0.01); lp.connect(g).connect(sampOut); [466, 470, 233].forEach(fq => { const os = ctx.createOscillator(); os.type = "sawtooth"; os.frequency.value = fq; os.connect(lp); os.start(t + o); os.stop(t + o + d + 0.05); }); }) },
+  { n: "Sirene", f: t => { const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain(), g = ctx.createGain(); o.type = "square"; o.frequency.value = 900; l.frequency.value = 2.5; lg.gain.value = 320; l.connect(lg).connect(o.frequency); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.12, t + 0.05); g.gain.setValueAtTime(0.12, t + 1.8); g.gain.linearRampToValueAtTime(0, t + 2); const lp = ctx.createBiquadFilter(); lp.frequency.value = 2000; o.connect(lp).connect(g).connect(sampOut); o.start(t); l.start(t); o.stop(t + 2.05); l.stop(t + 2.05); } },
+  { n: "Riser", f: t => { const d = 60 / masterBpm() * 8, s = loopNoise(t, d + 0.05), bp = ctx.createBiquadFilter(), g = ctx.createGain(); bp.type = "bandpass"; bp.Q.value = 3; bp.frequency.setValueAtTime(250, t); bp.frequency.exponentialRampToValueAtTime(9000, t + d); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.7, t + d); g.gain.linearRampToValueAtTime(0, t + d + 0.04); s.connect(bp).connect(g).connect(sampOut); } },
+  { n: "Impact", f: t => { kick(ctx, sampOut, t, 1); const s = loopNoise(t, 2), lp = ctx.createBiquadFilter(); lp.frequency.setValueAtTime(3000, t); lp.frequency.exponentialRampToValueAtTime(90, t + 1.6); s.connect(lp).connect(env(ctx, t, 0.6, 1.8)).connect(sampOut); } },
+  { n: "Laser", f: t => sweep("", 3200, 90, t, 0.28, 0.25) },
+  { n: "Sub-Drop", f: t => sweep("", 130, 28, t, 1.7, 0.9, "sine") },
+  { n: "Zap", f: t => { sweep("", 180, 2200, t, 0.1, 0.2, "square"); sweep("", 180, 2200, t + 0.12, 0.1, 0.2, "square"); } },
+  { n: "Clap-Roll", f: t => { const sd = 60 / masterBpm() / 4; for (let i = 0; i < 12; i++) clap(ctx, sampOut, t + (i < 4 ? i * 2 : 4 + i) * sd, 0.3 + i * 0.05); } }
+];
+const sampler = $("sampler");
+SAMPLES.forEach((smp, i) => {
+  const b = document.createElement("button"); b.className = "pad"; b.textContent = smp.n; b.title = `Taste ${i + 1}`;
+  b.addEventListener("pointerdown", e => { e.preventDefault(); hitSample(i); });
+  b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); hitSample(i); } });
+  sampler.appendChild(b);
+});
+function hitSample(i) { resume(); SAMPLES[i].f(ctx.currentTime + 0.01); const b = sampler.children[i]; b.classList.add("hit"); setTimeout(() => b.classList.remove("hit"), 140); }
 
 /* ---------- Sequencer ---------- */
 const seqOut = ctx.createGain(); seqOut.gain.value = 0.8; seqOut.connect(masterIn);
@@ -874,6 +1013,7 @@ window.addEventListener("keydown", e => {
   const tag = (e.target.tagName || "").toLowerCase();
   if (tag === "input" && e.target.type !== "range" || tag === "select") return;
   const k = e.key.toLowerCase();
+  if (k >= "1" && k <= "8" && k.length === 1) { hitSample(+k - 1); e.preventDefault(); return; }
   if (k === "q") decks.A.toggle(); else if (k === "p") decks.B.toggle(); else if (k === "r") toggleRec(); else return;
   e.preventDefault();
 });
@@ -916,8 +1056,8 @@ requestAnimationFrame(frame);
 (async () => {
   try {
     const [a, b] = await Promise.all([renderDemo("A"), renderDemo("B")]);
-    decks.A.load(a, "Demo · Nachtbus (House-Groove, Am)", 124, 0);
-    decks.B.load(b, "Demo · Glasdach (Chord-Stabs, Am)", 124, 0);
+    decks.A.load(a, "Demo · Nachtbus (House-Groove, Am)", 124, 0, { t: 9, minor: true });
+    decks.B.load(b, "Demo · Glasdach (Chord-Stabs, Am)", 124, 0, { t: 9, minor: true });
     xf.value = -0.6; applyXf();
   } catch (e) {
     ["A", "B"].forEach(X => { $("name" + X).textContent = "Kein Demo. Lade einen eigenen Song."; });
